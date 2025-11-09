@@ -4,7 +4,7 @@
 
 ### Frontend
 - **Framework**: React with TypeScript
-- **Hosting**: AWS Amplify
+- **Hosting**: AWS CloudFront + S3
 - **API**: GraphQL (AWS Amplify)
 
 ### Backend
@@ -70,10 +70,10 @@
 - Use TypeScript for CDK code
 - Separate stacks for different concerns (auth, API, storage, etc.)
 
-### Amplify Integration
-- Use Amplify CLI for initial project setup
-- Leverage Amplify libraries for frontend AWS service integration
-- Use Amplify hosting for deployment
+### Frontend Deployment
+- Use CloudFront for global content delivery
+- S3 for static asset storage
+- Leverage Amplify libraries for frontend AWS service integration (Auth, API)
 
 ## Security Considerations
 

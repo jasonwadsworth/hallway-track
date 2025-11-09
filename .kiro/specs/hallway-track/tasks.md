@@ -235,15 +235,15 @@ This implementation plan breaks down the Hallway Track application into discrete
     - Implement optimistic updates for tag operations
     - _Requirements: All requirements - loading states are cross-cutting_
 
-- [ ] 13. Deploy infrastructure and application
-  - [ ] 13.1 Deploy CDK stacks to AWS
+- [x] 13. Deploy infrastructure and application
+  - [x] 13.1 Deploy CDK stacks to AWS
     - Deploy AuthStack (Cognito)
     - Deploy ApiStack (AppSync, DynamoDB, Lambda)
     - Verify all resources created successfully
     - Export API endpoint and User Pool ID
     - _Requirements: 1.1, 1.2_
 
-  - [ ] 13.2 Configure and deploy React app
+  - [x] 13.2 Configure and deploy React app
     - Update Amplify configuration with deployed resource IDs
     - Build React application
     - Deploy to Amplify Hosting
