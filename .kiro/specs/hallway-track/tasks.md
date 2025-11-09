@@ -29,15 +29,15 @@ This implementation plan breaks down the Hallway Track application into discrete
     - Customize Authenticator theme if needed
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-- [ ] 3. Implement DynamoDB tables and GraphQL schema
-  - [ ] 3.1 Define DynamoDB tables with CDK
+- [x] 3. Implement DynamoDB tables and GraphQL schema
+  - [x] 3.1 Define DynamoDB tables with CDK
     - Create Users table with partition key USER#{userId}
     - Create Connections table with partition key USER#{userId} and sort key CONNECTION#{connectionId}
     - Add GSI to Connections table for querying by connectedUserId
     - Configure on-demand billing mode
     - _Requirements: 2.6, 4.5, 6.5_
 
-  - [ ] 3.2 Create GraphQL schema for AppSync
+  - [x] 3.2 Create GraphQL schema for AppSync
     - Define User type with all profile fields
     - Define ContactLink embedded type
     - Define Connection type with tags
@@ -47,7 +47,7 @@ This implementation plan breaks down the Hallway Track application into discrete
     - Add Mutation operations (createConnection, tag management, contact link management)
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 4.1, 4.2, 5.1, 5.2, 5.3, 5.4, 5.5, 6.1, 6.2, 6.3, 6.4_
 
-  - [ ] 3.3 Create AppSync API with CDK
+  - [x] 3.3 Create AppSync API with CDK
     - Define ApiStack with AppSync GraphQL API
     - Configure Cognito User Pool authorization
     - Link DynamoDB tables as data sources

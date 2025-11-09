@@ -1,0 +1,69 @@
+type User {
+  id: ID!
+  email: AWSEmail!
+  displayName: String!
+  gravatarHash: String!
+  contactLinks: [ContactLink!]!
+  badges: [Badge!]!
+  connectionCount: Int!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type ContactLink {
+  id: ID!
+  label: String!
+  url: AWSURL!
+  visible: Boolean!
+}
+
+type Connection {
+  id: ID!
+  userId: ID!
+  connectedUserId: ID!
+  connectedUser: User
+  tags: [String!]!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type Badge {
+  id: ID!
+  name: String!
+  description: String!
+  threshold: Int!
+  iconUrl: AWSURL
+  earnedAt: AWSDateTime
+}
+
+type PublicProfile {
+  id: ID!
+  displayName: String!
+  gravatarHash: String!
+  contactLinks: [ContactLink!]!
+  badges: [Badge!]!
+}
+
+type Query {
+  getUser(id: ID!): User
+  getMyProfile: User
+  getPublicProfile(userId: ID!): PublicProfile
+  getMyConnections: [Connection!]!
+  checkConnection(userId: ID!): Boolean!
+}
+
+type Mutation {
+  createUser(email: AWSEmail!, displayName: String!): User!
+  updateDisplayName(displayName: String!): User!
+  addContactLink(label: String!, url: AWSURL!): User!
+  updateContactLink(contactLinkId: ID!, label: String, url: AWSURL, visible: Boolean): User!
+  removeContactLink(contactLinkId: ID!): User!
+  createConnection(connectedUserId: ID!): Connection!
+  addTagToConnection(connectionId: ID!, tag: String!): Connection!
+  removeTagFromConnection(connectionId: ID!, tag: String!): Connection!
+}
+
+schema {
+  query: Query
+  mutation: Mutation
+}
