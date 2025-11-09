@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { generateClient } from 'aws-amplify/api';
 import { checkConnection } from '../graphql/queries';
 import { createConnection } from '../graphql/mutations';
+import { LoadingSpinner } from './LoadingSpinner';
+import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import './ConnectButton.css';
 
 const client = generateClient();
@@ -34,7 +36,12 @@ export function ConnectButton({ userId }: ConnectButtonProps) {
       }
     } catch (err) {
       console.error('Error checking connection:', err);
-      setError('Failed to check connection status');
+      const errorInfo = parseGraphQLError(err);
+      setError(errorInfo.message);
+
+      if (errorInfo.isAuthError) {
+        await handleAuthError();
+      }
     } finally {
       setLoading(false);
     }
@@ -60,14 +67,13 @@ export function ConnectButton({ userId }: ConnectButtonProps) {
       }, 3000);
     } catch (err: unknown) {
       console.error('Error creating connection:', err);
+      const errorInfo = parseGraphQLError(err);
+      setError(errorInfo.message);
 
-      // Check if it's a duplicate connection error
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      if (errorMessage.includes('duplicate') || errorMessage.includes('already connected')) {
-        setError('Already connected with this user');
+      if (errorInfo.isAuthError) {
+        await handleAuthError();
+      } else if (errorInfo.message.includes('already connected')) {
         setIsConnected(true);
-      } else {
-        setError('Failed to create connection. Please try again.');
       }
     } finally {
       setConnecting(false);
@@ -78,7 +84,7 @@ export function ConnectButton({ userId }: ConnectButtonProps) {
     return (
       <div className="connect-button-container">
         <button className="btn-connect" disabled>
-          Checking...
+          <LoadingSpinner inline message="" /> Checking...
         </button>
       </div>
     );
@@ -96,7 +102,13 @@ export function ConnectButton({ userId }: ConnectButtonProps) {
           onClick={handleConnect}
           disabled={connecting}
         >
-          {connecting ? 'Connecting...' : 'Connect'}
+          {connecting ? (
+            <>
+              <LoadingSpinner inline message="" /> Connecting...
+            </>
+          ) : (
+            'Connect'
+          )}
         </button>
       )}
 

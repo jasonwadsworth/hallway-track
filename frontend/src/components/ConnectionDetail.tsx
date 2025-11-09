@@ -5,6 +5,9 @@ import type { Connection, PublicProfile } from '../types';
 import { getMyConnections, getPublicProfile } from '../graphql/queries';
 import { getGravatarUrl } from '../utils/gravatar';
 import { TagManager } from './TagManager';
+import { ErrorMessage } from './ErrorMessage';
+import { LoadingSpinner } from './LoadingSpinner';
+import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import './ConnectionDetail.css';
 
 const client = generateClient();
@@ -63,7 +66,12 @@ export function ConnectionDetail() {
       }
     } catch (err) {
       console.error('Error loading connection:', err);
-      setError('Failed to load connection');
+      const errorInfo = parseGraphQLError(err);
+      setError(errorInfo.message);
+
+      if (errorInfo.isAuthError) {
+        await handleAuthError();
+      }
     } finally {
       setLoading(false);
     }
@@ -78,16 +86,23 @@ export function ConnectionDetail() {
   };
 
   if (loading) {
-    return <div className="connection-detail loading">Loading connection...</div>;
+    return (
+      <div className="connection-detail">
+        <LoadingSpinner message="Loading connection..." />
+      </div>
+    );
   }
 
   if (error || !connection) {
     return (
-      <div className="connection-detail error">
+      <div className="connection-detail">
         <button onClick={handleBack} className="btn-back">
           ← Back to Connections
         </button>
-        <p>{error || 'Unable to load connection details'}</p>
+        <ErrorMessage
+          message={error || 'Unable to load connection details'}
+          onRetry={loadConnection}
+        />
       </div>
     );
   }
@@ -96,11 +111,14 @@ export function ConnectionDetail() {
 
   if (!connectedUser) {
     return (
-      <div className="connection-detail error">
+      <div className="connection-detail">
         <button onClick={handleBack} className="btn-back">
           ← Back to Connections
         </button>
-        <p>Unable to load connection details</p>
+        <ErrorMessage
+          message="Unable to load connection details"
+          onRetry={loadConnection}
+        />
       </div>
     );
   }

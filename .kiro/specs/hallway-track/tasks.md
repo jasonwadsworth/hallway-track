@@ -219,8 +219,8 @@ This implementation plan breaks down the Hallway Track application into discrete
     - Show recent connections (last 5)
     - _Requirements: 7.4, 7.5_
 
-- [ ] 12. Implement error handling and loading states
-  - [ ] 12.1 Add error handling to all components
+- [x] 12. Implement error handling and loading states
+  - [x] 12.1 Add error handling to all components
     - Create ErrorMessage component for displaying errors
     - Add try-catch blocks around GraphQL calls
     - Display user-friendly error messages
@@ -228,7 +228,7 @@ This implementation plan breaks down the Hallway Track application into discrete
     - Handle authentication errors with redirect to login
     - _Requirements: All requirements - error handling is cross-cutting_
 
-  - [ ] 12.2 Add loading states to all async operations
+  - [x] 12.2 Add loading states to all async operations
     - Create LoadingSpinner component
     - Add loading states to all GraphQL queries
     - Show loading indicators during mutations

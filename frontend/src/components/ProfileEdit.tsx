@@ -4,6 +4,8 @@ import type { User } from '../types';
 import { getMyProfile } from '../graphql/queries';
 import { updateDisplayName } from '../graphql/mutations';
 import { getGravatarUrl } from '../utils/gravatar';
+import { LoadingSpinner } from './LoadingSpinner';
+import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import './ProfileEdit.css';
 
 const client = generateClient();
@@ -38,7 +40,12 @@ export function ProfileEdit({ onCancel, onSave }: ProfileEditProps) {
       }
     } catch (err) {
       console.error('Error loading profile:', err);
-      setError('Failed to load profile. Please try again.');
+      const errorInfo = parseGraphQLError(err);
+      setError(errorInfo.message);
+
+      if (errorInfo.isAuthError) {
+        await handleAuthError();
+      }
     } finally {
       setLoading(false);
     }
@@ -69,13 +76,22 @@ export function ProfileEdit({ onCancel, onSave }: ProfileEditProps) {
       onSave();
     } catch (err) {
       console.error('Error updating profile:', err);
-      setError('Failed to update profile. Please try again.');
+      const errorInfo = parseGraphQLError(err);
+      setError(errorInfo.message);
+
+      if (errorInfo.isAuthError) {
+        await handleAuthError();
+      }
       setSaving(false);
     }
   }
 
   if (loading) {
-    return <div className="profile-edit loading">Loading profile...</div>;
+    return (
+      <div className="profile-edit">
+        <LoadingSpinner message="Loading profile..." />
+      </div>
+    );
   }
 
   if (!profile) {

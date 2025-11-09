@@ -3,6 +3,9 @@ import { generateClient } from 'aws-amplify/api';
 import type { User } from '../types';
 import { getMyProfile } from '../graphql/queries';
 import { getGravatarUrl } from '../utils/gravatar';
+import { ErrorMessage } from './ErrorMessage';
+import { LoadingSpinner } from './LoadingSpinner';
+import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import './ProfileView.css';
 
 const client = generateClient();
@@ -32,21 +35,32 @@ export function ProfileView({ onEdit }: ProfileViewProps) {
       }
     } catch (err) {
       console.error('Error loading profile:', err);
-      setError('Failed to load profile. Please try again.');
+      const errorInfo = parseGraphQLError(err);
+      setError(errorInfo.message);
+
+      if (errorInfo.isAuthError) {
+        await handleAuthError();
+      }
     } finally {
       setLoading(false);
     }
   }
 
   if (loading) {
-    return <div className="profile-view loading">Loading profile...</div>;
+    return (
+      <div className="profile-view">
+        <LoadingSpinner message="Loading profile..." />
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <div className="profile-view error">
-        <p>{error}</p>
-        <button onClick={loadProfile}>Retry</button>
+      <div className="profile-view">
+        <ErrorMessage
+          message={error}
+          onRetry={loadProfile}
+        />
       </div>
     );
   }

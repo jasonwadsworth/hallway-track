@@ -5,6 +5,9 @@ import type { PublicProfile as PublicProfileType } from '../types';
 import { getPublicProfile } from '../graphql/queries';
 import { getGravatarUrl } from '../utils/gravatar';
 import { ConnectButton } from './ConnectButton';
+import { ErrorMessage } from './ErrorMessage';
+import { LoadingSpinner } from './LoadingSpinner';
+import { parseGraphQLError } from '../utils/errorHandling';
 import './PublicProfile.css';
 
 const client = generateClient();
@@ -40,20 +43,28 @@ export function PublicProfile() {
       }
     } catch (err) {
       console.error('Error loading public profile:', err);
-      setError('User not found');
+      const errorInfo = parseGraphQLError(err);
+      setError(errorInfo.message);
     } finally {
       setLoading(false);
     }
   }
 
   if (loading) {
-    return <div className="public-profile loading">Loading profile...</div>;
+    return (
+      <div className="public-profile">
+        <LoadingSpinner message="Loading profile..." />
+      </div>
+    );
   }
 
   if (error || !profile) {
     return (
-      <div className="public-profile error">
-        <p>{error || 'User not found'}</p>
+      <div className="public-profile">
+        <ErrorMessage
+          message={error || 'User not found'}
+          onRetry={loadProfile}
+        />
       </div>
     );
   }

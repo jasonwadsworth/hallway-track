@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { generateClient } from 'aws-amplify/api';
 import type { Connection } from '../types';
 import { addTagToConnection, removeTagFromConnection } from '../graphql/mutations';
+import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import './TagManager.css';
 
 const client = generateClient();
@@ -34,6 +35,16 @@ export function TagManager({ connection, onTagsUpdated }: TagManagerProps) {
       return;
     }
 
+    const tagToAdd = newTag.trim();
+
+    // Optimistic update
+    const optimisticConnection = {
+      ...connection,
+      tags: [...connection.tags, tagToAdd],
+    };
+    onTagsUpdated(optimisticConnection);
+    setNewTag('');
+
     try {
       setLoading(true);
       setError(null);
@@ -42,7 +53,7 @@ export function TagManager({ connection, onTagsUpdated }: TagManagerProps) {
         query: addTagToConnection,
         variables: {
           connectionId: connection.id,
-          tag: newTag.trim(),
+          tag: tagToAdd,
         },
       });
 
@@ -53,17 +64,31 @@ export function TagManager({ connection, onTagsUpdated }: TagManagerProps) {
           updatedAt: response.data.addTagToConnection.updatedAt,
         };
         onTagsUpdated(updatedConnection);
-        setNewTag('');
       }
     } catch (err) {
       console.error('Error adding tag:', err);
-      setError('Failed to add tag');
+      const errorInfo = parseGraphQLError(err);
+      setError(errorInfo.message);
+
+      // Revert optimistic update on error
+      onTagsUpdated(connection);
+
+      if (errorInfo.isAuthError) {
+        await handleAuthError();
+      }
     } finally {
       setLoading(false);
     }
   }
 
   async function handleRemoveTag(tag: string) {
+    // Optimistic update
+    const optimisticConnection = {
+      ...connection,
+      tags: connection.tags.filter(t => t !== tag),
+    };
+    onTagsUpdated(optimisticConnection);
+
     try {
       setLoading(true);
       setError(null);
@@ -86,7 +111,15 @@ export function TagManager({ connection, onTagsUpdated }: TagManagerProps) {
       }
     } catch (err) {
       console.error('Error removing tag:', err);
-      setError('Failed to remove tag');
+      const errorInfo = parseGraphQLError(err);
+      setError(errorInfo.message);
+
+      // Revert optimistic update on error
+      onTagsUpdated(connection);
+
+      if (errorInfo.isAuthError) {
+        await handleAuthError();
+      }
     } finally {
       setLoading(false);
     }

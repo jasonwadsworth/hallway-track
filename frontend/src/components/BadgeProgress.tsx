@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { generateClient } from 'aws-amplify/api';
+import { ErrorMessage } from './ErrorMessage';
+import { LoadingSpinner } from './LoadingSpinner';
+import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import './BadgeProgress.css';
 
 const client = generateClient();
@@ -17,6 +20,7 @@ const BADGE_NAMES: Record<number, string> = {
 export function BadgeProgress() {
   const [connectionCount, setConnectionCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadConnectionCount();
@@ -24,6 +28,9 @@ export function BadgeProgress() {
 
   async function loadConnectionCount() {
     try {
+      setLoading(true);
+      setError(null);
+
       const query = `
         query GetMyProfile {
           getMyProfile {
@@ -34,15 +41,37 @@ export function BadgeProgress() {
 
       const result = await client.graphql({ query }) as { data: { getMyProfile: { connectionCount: number } } };
       setConnectionCount(result.data.getMyProfile.connectionCount);
-    } catch (error) {
-      console.error('Error loading connection count:', error);
+    } catch (err) {
+      console.error('Error loading connection count:', err);
+      const errorInfo = parseGraphQLError(err);
+      setError(errorInfo.message);
+
+      if (errorInfo.isAuthError) {
+        await handleAuthError();
+      }
     } finally {
       setLoading(false);
     }
   }
 
   if (loading) {
-    return <div className="badge-progress">Loading...</div>;
+    return (
+      <div className="badge-progress">
+        <LoadingSpinner inline message="Loading badge progress..." />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="badge-progress">
+        <ErrorMessage
+          message={error}
+          onRetry={loadConnectionCount}
+          onDismiss={() => setError(null)}
+        />
+      </div>
+    );
   }
   // Find the next badge threshold
   const nextThreshold = BADGE_THRESHOLDS.find(threshold => connectionCount < threshold);

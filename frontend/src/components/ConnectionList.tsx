@@ -5,6 +5,9 @@ import type { Connection, PublicProfile } from '../types';
 import { getMyConnections } from '../graphql/queries';
 import { getPublicProfile } from '../graphql/queries';
 import { ConnectionCard } from './ConnectionCard';
+import { ErrorMessage } from './ErrorMessage';
+import { LoadingSpinner } from './LoadingSpinner';
+import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import './ConnectionList.css';
 
 const client = generateClient();
@@ -63,23 +66,34 @@ export function ConnectionList() {
       }
     } catch (err) {
       console.error('Error loading connections:', err);
-      setError('Failed to load connections');
+      const errorInfo = parseGraphQLError(err);
+      setError(errorInfo.message);
+
+      if (errorInfo.isAuthError) {
+        await handleAuthError();
+      }
     } finally {
       setLoading(false);
     }
   }
 
   if (loading) {
-    return <div className="connection-list loading">Loading connections...</div>;
+    return (
+      <div className="connection-list">
+        <h2>My Connections</h2>
+        <LoadingSpinner message="Loading connections..." />
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <div className="connection-list error">
-        <p>{error}</p>
-        <button onClick={loadConnections} className="btn-retry">
-          Retry
-        </button>
+      <div className="connection-list">
+        <h2>My Connections</h2>
+        <ErrorMessage
+          message={error}
+          onRetry={loadConnections}
+        />
       </div>
     );
   }

@@ -3,6 +3,9 @@ import { QRCodeSVG } from 'qrcode.react';
 import { generateClient } from 'aws-amplify/api';
 import type { User } from '../types';
 import { getMyProfile } from '../graphql/queries';
+import { ErrorMessage } from './ErrorMessage';
+import { LoadingSpinner } from './LoadingSpinner';
+import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import './QRCodeDisplay.css';
 
 const client = generateClient();
@@ -28,21 +31,32 @@ export function QRCodeDisplay() {
       }
     } catch (err) {
       console.error('Error loading profile:', err);
-      setError('Failed to load profile. Please try again.');
+      const errorInfo = parseGraphQLError(err);
+      setError(errorInfo.message);
+
+      if (errorInfo.isAuthError) {
+        await handleAuthError();
+      }
     } finally {
       setLoading(false);
     }
   }
 
   if (loading) {
-    return <div className="qr-code-display loading">Loading QR code...</div>;
+    return (
+      <div className="qr-code-display">
+        <LoadingSpinner message="Loading QR code..." />
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <div className="qr-code-display error">
-        <p>{error}</p>
-        <button onClick={loadProfile}>Retry</button>
+      <div className="qr-code-display">
+        <ErrorMessage
+          message={error}
+          onRetry={loadProfile}
+        />
       </div>
     );
   }

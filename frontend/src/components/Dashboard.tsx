@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { generateClient } from 'aws-amplify/api'
 import { BadgeProgress } from './BadgeProgress'
+import { ErrorMessage } from './ErrorMessage'
+import { LoadingSpinner } from './LoadingSpinner'
+import { parseGraphQLError, handleAuthError } from '../utils/errorHandling'
 import './Dashboard.css'
 
 const client = generateClient()
@@ -19,6 +22,7 @@ interface Connection {
 export function Dashboard() {
   const [recentConnections, setRecentConnections] = useState<Connection[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     loadRecentConnections()
@@ -26,6 +30,9 @@ export function Dashboard() {
 
   const loadRecentConnections = async () => {
     try {
+      setLoading(true)
+      setError(null)
+
       const query = `
         query GetMyConnections {
           getMyConnections {
@@ -45,8 +52,14 @@ export function Dashboard() {
       // Get the 5 most recent connections
       const recent = result.data.getMyConnections.slice(0, 5)
       setRecentConnections(recent)
-    } catch (error) {
-      console.error('Error loading recent connections:', error)
+    } catch (err) {
+      console.error('Error loading recent connections:', err)
+      const errorInfo = parseGraphQLError(err)
+      setError(errorInfo.message)
+
+      if (errorInfo.isAuthError) {
+        await handleAuthError()
+      }
     } finally {
       setLoading(false)
     }
@@ -102,8 +115,14 @@ export function Dashboard() {
 
       <div className="dashboard-section">
         <h2>Recent Connections</h2>
-        {loading ? (
-          <p>Loading...</p>
+        {error ? (
+          <ErrorMessage
+            message={error}
+            onRetry={loadRecentConnections}
+            onDismiss={() => setError(null)}
+          />
+        ) : loading ? (
+          <LoadingSpinner message="Loading recent connections..." />
         ) : recentConnections.length > 0 ? (
           <div className="recent-connections">
             {recentConnections.map((connection) => (

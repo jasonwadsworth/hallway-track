@@ -3,6 +3,8 @@ import { generateClient } from 'aws-amplify/api';
 import type { ContactLink } from '../types';
 import { getMyProfile } from '../graphql/queries';
 import { addContactLink, updateContactLink, removeContactLink } from '../graphql/mutations';
+import { LoadingSpinner } from './LoadingSpinner';
+import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import './ContactLinkManager.css';
 
 const client = generateClient();
@@ -32,7 +34,12 @@ export function ContactLinkManager() {
       }
     } catch (err) {
       console.error('Error loading contact links:', err);
-      setError('Failed to load contact links. Please try again.');
+      const errorInfo = parseGraphQLError(err);
+      setError(errorInfo.message);
+
+      if (errorInfo.isAuthError) {
+        await handleAuthError();
+      }
     } finally {
       setLoading(false);
     }
@@ -69,7 +76,12 @@ export function ContactLinkManager() {
       }
     } catch (err) {
       console.error('Error adding contact link:', err);
-      setError('Failed to add contact link. Please check the URL format and try again.');
+      const errorInfo = parseGraphQLError(err);
+      setError(errorInfo.message);
+
+      if (errorInfo.isAuthError) {
+        await handleAuthError();
+      }
     } finally {
       setSubmitting(false);
     }
@@ -90,7 +102,12 @@ export function ContactLinkManager() {
       }
     } catch (err) {
       console.error('Error updating contact link:', err);
-      setError('Failed to update contact link visibility.');
+      const errorInfo = parseGraphQLError(err);
+      setError(errorInfo.message);
+
+      if (errorInfo.isAuthError) {
+        await handleAuthError();
+      }
     }
   }
 
@@ -112,12 +129,21 @@ export function ContactLinkManager() {
       }
     } catch (err) {
       console.error('Error removing contact link:', err);
-      setError('Failed to remove contact link.');
+      const errorInfo = parseGraphQLError(err);
+      setError(errorInfo.message);
+
+      if (errorInfo.isAuthError) {
+        await handleAuthError();
+      }
     }
   }
 
   if (loading) {
-    return <div className="contact-link-manager loading">Loading contact links...</div>;
+    return (
+      <div className="contact-link-manager">
+        <LoadingSpinner message="Loading contact links..." />
+      </div>
+    );
   }
 
   return (
