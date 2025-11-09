@@ -55,3 +55,16 @@ export const checkConnection = /* GraphQL */ `
     checkConnection(userId: $userId)
   }
 `;
+
+export const getMyConnections = /* GraphQL */ `
+  query GetMyConnections {
+    getMyConnections {
+      id
+      userId
+      connectedUserId
+      tags
+      createdAt
+      updatedAt
+    }
+  }
+`;

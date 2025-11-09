@@ -38,6 +38,7 @@ export interface Connection {
   id: string;
   userId: string;
   connectedUserId: string;
+  connectedUser?: PublicProfile;
   tags: string[];
   createdAt: string;
   updatedAt: string;

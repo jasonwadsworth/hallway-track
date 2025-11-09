@@ -158,8 +158,8 @@ This implementation plan breaks down the Hallway Track application into discrete
     - Handle duplicate connection error
     - _Requirements: 4.2, 4.3, 4.4, 4.5_
 
-- [ ] 9. Implement connection list and detail views
-  - [ ] 9.1 Create connection list component
+- [x] 9. Implement connection list and detail views
+  - [x] 9.1 Create connection list component
     - Implement ConnectionList component
     - Call getMyConnections GraphQL query
     - Display connections in reverse chronological order
@@ -168,7 +168,7 @@ This implementation plan breaks down the Hallway Track application into discrete
     - Add click handler to navigate to connection detail
     - _Requirements: 6.1, 6.2, 6.5_
 
-  - [ ] 9.2 Create connection detail component
+  - [x] 9.2 Create connection detail component
     - Implement ConnectionDetail component
     - Display full profile of connected user
     - Show display name, Gravatar, visible contact links
@@ -176,7 +176,7 @@ This implementation plan breaks down the Hallway Track application into discrete
     - Add TagManager component for adding/removing tags
     - _Requirements: 6.3, 6.4, 5.4_
 
-  - [ ] 9.3 Implement tag management UI
+  - [x] 9.3 Implement tag management UI
     - Create TagManager component
     - Add input field and button to add new tag
     - Display existing tags with remove button
