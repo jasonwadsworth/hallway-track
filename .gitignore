@@ -1,0 +1,45 @@
+*.js
+!jest.config.js
+*.d.ts
+node_modules
+dist
+
+# CDK asset staging dirory
+.cdk.staging
+cdk.out
+
+# Amplify
+amplify/
+.amplifyrc
+amplify-backup/
+#amplify-do-not-edit-begin
+amplify/\#current-cloud-backend
+amplify/.config/local-*
+amplify/logs
+amplify/mock-data
+amplify/mock-api-resources
+amplify/backend/amplify-meta.json
+amplify/backend/.temp
+#amplify-do-not-edit-end
+aws-exports.js
+awsconfiguration.json
+
+# Frontend
+frontend/node_modules
+frontend/build
+frontend/dist
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+
+
+!eslint.config.js
