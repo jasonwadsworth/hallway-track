@@ -1,0 +1,57 @@
+## Update the contact link in the list
+#if($ctx.error)
+  $util.error($ctx.error.message, $ctx.error.type)
+#end
+
+## Find the contact link index
+#set($contactLinks = $ctx.result.contactLinks)
+#set($linkIndex = -1)
+#set($counter = 0)
+
+#foreach($link in $contactLinks)
+  #if($link.id == $ctx.args.contactLinkId)
+    #set($linkIndex = $counter)
+    #break
+  #end
+  #set($counter = $counter + 1)
+#end
+
+#if($linkIndex == -1)
+  $util.error("Contact link not found", "NotFoundError")
+#end
+
+## Update the contact link
+#set($updatedLink = $contactLinks[$linkIndex])
+
+#if($ctx.args.label)
+  #set($updatedLink.label = $ctx.args.label)
+#end
+
+#if($ctx.args.url)
+  #set($updatedLink.url = $ctx.args.url)
+#end
+
+#if($ctx.args.visible != $util.defaultIfNull($null, $null))
+  #set($updatedLink.visible = $ctx.args.visible)
+#end
+
+#set($contactLinks[$linkIndex] = $updatedLink)
+
+## Store the updated list back
+#set($now = $util.time.nowISO8601())
+
+{
+  "version": "2018-05-29",
+  "operation": "UpdateItem",
+  "key": {
+    "PK": $util.dynamodb.toDynamoDBJson("USER#$userId"),
+    "SK": $util.dynamodb.toDynamoDBJson("PROFILE")
+  },
+  "update": {
+    "expression": "SET contactLinks = :contactLinks, updatedAt = :updatedAt",
+    "expressionValues": {
+      ":contactLinks": $util.dynamodb.toDynamoDBJson($contactLinks),
+      ":updatedAt": $util.dynamodb.toDynamoDBJson($now)
+    }
+  }
+}

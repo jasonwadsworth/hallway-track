@@ -1,0 +1,34 @@
+## Create user profile on first sign-in
+#set($userId = $ctx.identity.sub)
+#set($email = $ctx.identity.claims.email)
+
+## Calculate Gravatar hash (MD5 of lowercase trimmed email)
+#set($emailLower = $email.toLowerCase().trim())
+#set($gravatarHash = $util.crypto.hash($emailLower, "MD5", "UTF-8"))
+
+## Generate timestamp
+#set($now = $util.time.nowISO8601())
+
+## Create user item
+{
+  "version": "2018-05-29",
+  "operation": "PutItem",
+  "key": {
+    "PK": $util.dynamodb.toDynamoDBJson("USER#$userId"),
+    "SK": $util.dynamodb.toDynamoDBJson("PROFILE")
+  },
+  "attributeValues": {
+    "id": $util.dynamodb.toDynamoDBJson($userId),
+    "email": $util.dynamodb.toDynamoDBJson($email),
+    "displayName": $util.dynamodb.toDynamoDBJson($ctx.args.displayName),
+    "gravatarHash": $util.dynamodb.toDynamoDBJson($gravatarHash),
+    "contactLinks": $util.dynamodb.toDynamoDBJson([]),
+    "badges": $util.dynamodb.toDynamoDBJson([]),
+    "connectionCount": $util.dynamodb.toDynamoDBJson(0),
+    "createdAt": $util.dynamodb.toDynamoDBJson($now),
+    "updatedAt": $util.dynamodb.toDynamoDBJson($now)
+  },
+  "condition": {
+    "expression": "attribute_not_exists(PK)"
+  }
+}

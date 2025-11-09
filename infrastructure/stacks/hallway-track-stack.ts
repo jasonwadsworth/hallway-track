@@ -3,6 +3,7 @@ import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as path from 'path';
 import { Construct } from 'constructs';
 
@@ -128,6 +129,54 @@ export class HallwayTrackStack extends cdk.Stack {
       this.connectionsTable
     );
 
+    // Create Lambda function for contact link management
+    const contactLinksFunction = new NodejsFunction(
+      this,
+      'ContactLinksFunction',
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'handler',
+        entry: path.join(__dirname, '../lambda/contact-links/index.ts'),
+        bundling: {
+          externalModules: ['@aws-sdk/*'],
+        },
+        environment: {
+          USERS_TABLE_NAME: this.usersTable.tableName,
+        },
+      }
+    );
+
+    this.usersTable.grantReadWriteData(contactLinksFunction);
+
+    const contactLinksDataSource = this.api.addLambdaDataSource(
+      'ContactLinksDataSource',
+      contactLinksFunction
+    );
+
+    // Create Lambda function for public profile
+    const publicProfileFunction = new NodejsFunction(
+      this,
+      'PublicProfileFunction',
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'handler',
+        entry: path.join(__dirname, '../lambda/public-profile/index.ts'),
+        bundling: {
+          externalModules: ['@aws-sdk/*'],
+        },
+        environment: {
+          USERS_TABLE_NAME: this.usersTable.tableName,
+        },
+      }
+    );
+
+    this.usersTable.grantReadData(publicProfileFunction);
+
+    const publicProfileDataSource = this.api.addLambdaDataSource(
+      'PublicProfileDataSource',
+      publicProfileFunction
+    );
+
     // Create Lambda data source for custom resolvers
     const resolverFunction = new lambda.Function(this, 'ResolverFunction', {
       runtime: lambda.Runtime.NODEJS_20_X,
@@ -155,6 +204,81 @@ export class HallwayTrackStack extends cdk.Stack {
       'LambdaDataSource',
       resolverFunction
     );
+
+    // ===== AppSync Resolvers =====
+
+    // Profile operation resolvers (direct DynamoDB)
+    usersDataSource.createResolver('CreateUserResolver', {
+      typeName: 'Mutation',
+      fieldName: 'createUser',
+      requestMappingTemplate: appsync.MappingTemplate.fromFile(
+        path.join(__dirname, '../resolvers/Mutation.createUser.request.vtl')
+      ),
+      responseMappingTemplate: appsync.MappingTemplate.fromFile(
+        path.join(__dirname, '../resolvers/Mutation.createUser.response.vtl')
+      ),
+    });
+
+    usersDataSource.createResolver('UpdateDisplayNameResolver', {
+      typeName: 'Mutation',
+      fieldName: 'updateDisplayName',
+      requestMappingTemplate: appsync.MappingTemplate.fromFile(
+        path.join(__dirname, '../resolvers/Mutation.updateDisplayName.request.vtl')
+      ),
+      responseMappingTemplate: appsync.MappingTemplate.fromFile(
+        path.join(__dirname, '../resolvers/Mutation.updateDisplayName.response.vtl')
+      ),
+    });
+
+    usersDataSource.createResolver('GetMyProfileResolver', {
+      typeName: 'Query',
+      fieldName: 'getMyProfile',
+      requestMappingTemplate: appsync.MappingTemplate.fromFile(
+        path.join(__dirname, '../resolvers/Query.getMyProfile.request.vtl')
+      ),
+      responseMappingTemplate: appsync.MappingTemplate.fromFile(
+        path.join(__dirname, '../resolvers/Query.getMyProfile.response.vtl')
+      ),
+    });
+
+    usersDataSource.createResolver('GetUserResolver', {
+      typeName: 'Query',
+      fieldName: 'getUser',
+      requestMappingTemplate: appsync.MappingTemplate.fromFile(
+        path.join(__dirname, '../resolvers/Query.getUser.request.vtl')
+      ),
+      responseMappingTemplate: appsync.MappingTemplate.fromFile(
+        path.join(__dirname, '../resolvers/Query.getUser.response.vtl')
+      ),
+    });
+
+    // Contact link management resolvers
+    usersDataSource.createResolver('AddContactLinkResolver', {
+      typeName: 'Mutation',
+      fieldName: 'addContactLink',
+      requestMappingTemplate: appsync.MappingTemplate.fromFile(
+        path.join(__dirname, '../resolvers/Mutation.addContactLink.request.vtl')
+      ),
+      responseMappingTemplate: appsync.MappingTemplate.fromFile(
+        path.join(__dirname, '../resolvers/Mutation.addContactLink.response.vtl')
+      ),
+    });
+
+    contactLinksDataSource.createResolver('UpdateContactLinkResolver', {
+      typeName: 'Mutation',
+      fieldName: 'updateContactLink',
+    });
+
+    contactLinksDataSource.createResolver('RemoveContactLinkResolver', {
+      typeName: 'Mutation',
+      fieldName: 'removeContactLink',
+    });
+
+    // Public profile resolver
+    publicProfileDataSource.createResolver('GetPublicProfileResolver', {
+      typeName: 'Query',
+      fieldName: 'getPublicProfile',
+    });
 
     // ===== CloudFormation Outputs =====
 

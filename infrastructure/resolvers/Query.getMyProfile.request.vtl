@@ -1,0 +1,11 @@
+## Query own profile for authenticated user
+#set($userId = $ctx.identity.sub)
+
+{
+  "version": "2018-05-29",
+  "operation": "GetItem",
+  "key": {
+    "PK": $util.dynamodb.toDynamoDBJson("USER#$userId"),
+    "SK": $util.dynamodb.toDynamoDBJson("PROFILE")
+  }
+}

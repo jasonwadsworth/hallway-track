@@ -1,0 +1,13 @@
+## Update contact link (visibility toggle, edit label/URL)
+#set($userId = $ctx.identity.sub)
+#set($now = $util.time.nowISO8601())
+
+## First, get the current user to find the contact link
+{
+  "version": "2018-05-29",
+  "operation": "GetItem",
+  "key": {
+    "PK": $util.dynamodb.toDynamoDBJson("USER#$userId"),
+    "SK": $util.dynamodb.toDynamoDBJson("PROFILE")
+  }
+}

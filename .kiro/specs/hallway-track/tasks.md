@@ -54,15 +54,15 @@ This implementation plan breaks down the Hallway Track application into discrete
     - Create Lambda data source for custom resolvers
     - _Requirements: 1.4, 4.2, 4.3_
 
-- [ ] 4. Implement user profile backend logic
-  - [ ] 4.1 Create direct DynamoDB resolvers for profile operations
+- [x] 4. Implement user profile backend logic
+  - [x] 4.1 Create direct DynamoDB resolvers for profile operations
     - Implement resolver for creating user profile on first sign-in
     - Implement resolver for updating display name
     - Implement resolver for querying own profile
     - Calculate and store Gravatar hash from email
     - _Requirements: 2.1, 2.2, 2.6_
 
-  - [ ] 4.2 Implement contact link management resolvers
+  - [x] 4.2 Implement contact link management resolvers
     - Create addContactLink mutation resolver
     - Create updateContactLink mutation resolver (visibility toggle, edit label/URL)
     - Create removeContactLink mutation resolver
@@ -70,7 +70,7 @@ This implementation plan breaks down the Hallway Track application into discrete
     - Default new links to hidden visibility
     - _Requirements: 2.3, 2.4, 2.5, 2.6, 8.2, 8.3_
 
-  - [ ] 4.3 Implement public profile Lambda resolver
+  - [x] 4.3 Implement public profile Lambda resolver
     - Create Lambda function for getPublicProfile query
     - Fetch user from DynamoDB
     - Filter contact links to only return visible ones

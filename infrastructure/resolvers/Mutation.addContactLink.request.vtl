@@ -1,0 +1,36 @@
+## Add a new contact link (default to hidden visibility)
+#set($userId = $ctx.identity.sub)
+#set($now = $util.time.nowISO8601())
+#set($contactLinkId = $util.autoId())
+
+## Create new contact link object
+#set($newContactLink = {
+  "id": $contactLinkId,
+  "label": $ctx.args.label,
+  "url": $ctx.args.url,
+  "visible": false
+})
+
+{
+  "version": "2018-05-29",
+  "operation": "UpdateItem",
+  "key": {
+    "PK": $util.dynamodb.toDynamoDBJson("USER#$userId"),
+    "SK": $util.dynamodb.toDynamoDBJson("PROFILE")
+  },
+  "update": {
+    "expression": "SET contactLinks = list_append(if_not_exists(contactLinks, :emptyList), :newLink), updatedAt = :updatedAt",
+    "expressionValues": {
+      ":newLink": $util.dynamodb.toDynamoDBJson([$newContactLink]),
+      ":emptyList": $util.dynamodb.toDynamoDBJson([]),
+      ":updatedAt": $util.dynamodb.toDynamoDBJson($now)
+    }
+  },
+  "condition": {
+    "expression": "size(if_not_exists(contactLinks, :emptyList)) < :maxLinks",
+    "expressionValues": {
+      ":emptyList": $util.dynamodb.toDynamoDBJson([]),
+      ":maxLinks": $util.dynamodb.toDynamoDBJson(10)
+    }
+  }
+}
