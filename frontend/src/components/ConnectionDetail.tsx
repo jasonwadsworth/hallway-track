@@ -1,21 +1,103 @@
-import type { Connection } from '../types';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { generateClient } from 'aws-amplify/api';
+import type { Connection, PublicProfile } from '../types';
+import { getMyConnections, getPublicProfile } from '../graphql/queries';
 import { getGravatarUrl } from '../utils/gravatar';
 import { TagManager } from './TagManager';
 import './ConnectionDetail.css';
 
-interface ConnectionDetailProps {
-  connection: Connection;
-  onBack: () => void;
-  onTagsUpdated: (updatedConnection: Connection) => void;
-}
+const client = generateClient();
 
-export function ConnectionDetail({ connection, onBack, onTagsUpdated }: ConnectionDetailProps) {
+export function ConnectionDetail() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [connection, setConnection] = useState<Connection | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadConnection();
+  }, [id]);
+
+  async function loadConnection() {
+    if (!id) {
+      setError('Invalid connection ID');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Get all connections and find the one with matching ID
+      const response = await client.graphql({
+        query: getMyConnections,
+      });
+
+      if ('data' in response && response.data) {
+        const connections = response.data.getMyConnections as Connection[];
+        const foundConnection = connections.find(c => c.id === id);
+
+        if (!foundConnection) {
+          setError('Connection not found');
+          setLoading(false);
+          return;
+        }
+
+        // Fetch connected user details
+        const userResponse = await client.graphql({
+          query: getPublicProfile,
+          variables: { userId: foundConnection.connectedUserId },
+        });
+
+        if ('data' in userResponse && userResponse.data) {
+          setConnection({
+            ...foundConnection,
+            connectedUser: userResponse.data.getPublicProfile as PublicProfile,
+          });
+        } else {
+          setConnection(foundConnection);
+        }
+      }
+    } catch (err) {
+      console.error('Error loading connection:', err);
+      setError('Failed to load connection');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handleTagsUpdated = (updatedConnection: Connection) => {
+    setConnection(updatedConnection);
+  };
+
+  const handleBack = () => {
+    navigate('/connections');
+  };
+
+  if (loading) {
+    return <div className="connection-detail loading">Loading connection...</div>;
+  }
+
+  if (error || !connection) {
+    return (
+      <div className="connection-detail error">
+        <button onClick={handleBack} className="btn-back">
+          ← Back to Connections
+        </button>
+        <p>{error || 'Unable to load connection details'}</p>
+      </div>
+    );
+  }
+
   const { connectedUser, createdAt } = connection;
 
   if (!connectedUser) {
     return (
       <div className="connection-detail error">
-        <button onClick={onBack} className="btn-back">
+        <button onClick={handleBack} className="btn-back">
           ← Back to Connections
         </button>
         <p>Unable to load connection details</p>
@@ -33,7 +115,7 @@ export function ConnectionDetail({ connection, onBack, onTagsUpdated }: Connecti
 
   return (
     <div className="connection-detail">
-      <button onClick={onBack} className="btn-back">
+      <button onClick={handleBack} className="btn-back">
         ← Back to Connections
       </button>
 
@@ -69,7 +151,7 @@ export function ConnectionDetail({ connection, onBack, onTagsUpdated }: Connecti
         <h3>Tags</h3>
         <TagManager
           connection={connection}
-          onTagsUpdated={onTagsUpdated}
+          onTagsUpdated={handleTagsUpdated}
         />
       </div>
     </div>

@@ -1,8 +1,8 @@
+import { useState, useEffect } from 'react';
+import { generateClient } from 'aws-amplify/api';
 import './BadgeProgress.css';
 
-interface BadgeProgressProps {
-  connectionCount: number;
-}
+const client = generateClient();
 
 const BADGE_THRESHOLDS = [1, 5, 10, 25, 50];
 
@@ -14,7 +14,36 @@ const BADGE_NAMES: Record<number, string> = {
   50: 'Networking Legend',
 };
 
-export function BadgeProgress({ connectionCount }: BadgeProgressProps) {
+export function BadgeProgress() {
+  const [connectionCount, setConnectionCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadConnectionCount();
+  }, []);
+
+  async function loadConnectionCount() {
+    try {
+      const query = `
+        query GetMyProfile {
+          getMyProfile {
+            connectionCount
+          }
+        }
+      `;
+
+      const result = await client.graphql({ query }) as { data: { getMyProfile: { connectionCount: number } } };
+      setConnectionCount(result.data.getMyProfile.connectionCount);
+    } catch (error) {
+      console.error('Error loading connection count:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (loading) {
+    return <div className="badge-progress">Loading...</div>;
+  }
   // Find the next badge threshold
   const nextThreshold = BADGE_THRESHOLDS.find(threshold => connectionCount < threshold);
 

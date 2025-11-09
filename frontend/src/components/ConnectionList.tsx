@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
 import type { Connection, PublicProfile } from '../types';
 import { getMyConnections } from '../graphql/queries';
@@ -8,11 +9,8 @@ import './ConnectionList.css';
 
 const client = generateClient();
 
-interface ConnectionListProps {
-  onSelectConnection: (connection: Connection) => void;
-}
-
-export function ConnectionList({ onSelectConnection }: ConnectionListProps) {
+export function ConnectionList() {
+  const navigate = useNavigate();
   const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -102,7 +100,7 @@ export function ConnectionList({ onSelectConnection }: ConnectionListProps) {
           <ConnectionCard
             key={connection.id}
             connection={connection}
-            onClick={() => onSelectConnection(connection)}
+            onClick={() => navigate(`/connections/${connection.id}`)}
           />
         ))}
       </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
 import type { PublicProfile as PublicProfileType } from '../types';
 import { getPublicProfile } from '../graphql/queries';
@@ -8,20 +9,25 @@ import './PublicProfile.css';
 
 const client = generateClient();
 
-interface PublicProfileProps {
-  userId: string;
-}
-
-export function PublicProfile({ userId }: PublicProfileProps) {
+export function PublicProfile() {
+  const { userId } = useParams<{ userId: string }>();
   const [profile, setProfile] = useState<PublicProfileType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadProfile();
+    if (userId) {
+      loadProfile();
+    }
   }, [userId]);
 
   async function loadProfile() {
+    if (!userId) {
+      setError('Invalid user ID');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -65,7 +71,7 @@ export function PublicProfile({ userId }: PublicProfileProps) {
         <h2>{profile.displayName}</h2>
       </div>
 
-      <ConnectButton userId={userId} />
+      {userId && <ConnectButton userId={userId} />}
 
       {visibleLinks.length > 0 && (
         <div className="contact-links-section">

@@ -203,8 +203,8 @@ This implementation plan breaks down the Hallway Track application into discrete
     - Show progress bar or percentage
     - _Requirements: 7.4, 7.5_
 
-- [ ] 11. Implement navigation and routing
-  - [ ] 11.1 Set up React Router and navigation
+- [x] 11. Implement navigation and routing
+  - [x] 11.1 Set up React Router and navigation
     - Install and configure React Router
     - Define routes: /, /profile, /profile/:userId, /connections, /connections/:id, /qr-code
     - Implement AppNav component with navigation links
@@ -212,7 +212,7 @@ This implementation plan breaks down the Hallway Track application into discrete
     - Implement Dashboard component as home screen
     - _Requirements: 1.5, 6.1_
 
-  - [ ] 11.2 Create dashboard with quick actions
+  - [x] 11.2 Create dashboard with quick actions
     - Implement Dashboard component
     - Add quick action buttons: "View My QR Code", "My Connections", "Edit Profile"
     - Display badge progress widget
