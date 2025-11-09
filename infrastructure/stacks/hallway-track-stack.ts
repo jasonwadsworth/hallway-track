@@ -177,6 +177,32 @@ export class HallwayTrackStack extends cdk.Stack {
       publicProfileFunction
     );
 
+    // Create Lambda function for connections management
+    const connectionsFunction = new NodejsFunction(
+      this,
+      'ConnectionsFunction',
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'handler',
+        entry: path.join(__dirname, '../lambda/connections/index.ts'),
+        bundling: {
+          externalModules: ['@aws-sdk/*'],
+        },
+        environment: {
+          USERS_TABLE_NAME: this.usersTable.tableName,
+          CONNECTIONS_TABLE_NAME: this.connectionsTable.tableName,
+        },
+      }
+    );
+
+    this.usersTable.grantReadWriteData(connectionsFunction);
+    this.connectionsTable.grantReadWriteData(connectionsFunction);
+
+    const connectionsDataSourceLambda = this.api.addLambdaDataSource(
+      'ConnectionsDataSourceLambda',
+      connectionsFunction
+    );
+
     // Create Lambda data source for custom resolvers
     const resolverFunction = new lambda.Function(this, 'ResolverFunction', {
       runtime: lambda.Runtime.NODEJS_20_X,
@@ -278,6 +304,32 @@ export class HallwayTrackStack extends cdk.Stack {
     publicProfileDataSource.createResolver('GetPublicProfileResolver', {
       typeName: 'Query',
       fieldName: 'getPublicProfile',
+    });
+
+    // Connection management resolvers
+    connectionsDataSourceLambda.createResolver('CreateConnectionResolver', {
+      typeName: 'Mutation',
+      fieldName: 'createConnection',
+    });
+
+    connectionsDataSourceLambda.createResolver('CheckConnectionResolver', {
+      typeName: 'Query',
+      fieldName: 'checkConnection',
+    });
+
+    connectionsDataSourceLambda.createResolver('GetMyConnectionsResolver', {
+      typeName: 'Query',
+      fieldName: 'getMyConnections',
+    });
+
+    connectionsDataSourceLambda.createResolver('AddTagToConnectionResolver', {
+      typeName: 'Mutation',
+      fieldName: 'addTagToConnection',
+    });
+
+    connectionsDataSourceLambda.createResolver('RemoveTagFromConnectionResolver', {
+      typeName: 'Mutation',
+      fieldName: 'removeTagFromConnection',
     });
 
     // ===== CloudFormation Outputs =====

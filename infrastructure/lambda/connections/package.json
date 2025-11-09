@@ -1,0 +1,16 @@
+{
+  "name": "connections-lambda",
+  "version": "1.0.0",
+  "description": "Lambda function for connection management",
+  "main": "index.ts",
+  "scripts": {},
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.0.0",
+    "@aws-sdk/lib-dynamodb": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

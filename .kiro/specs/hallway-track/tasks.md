@@ -77,8 +77,8 @@ This implementation plan breaks down the Hallway Track application into discrete
     - Return display name, Gravatar hash, visible links, and badges
     - _Requirements: 2.5, 4.1, 8.4, 8.5_
 
-- [ ] 5. Implement connection creation and management backend
-  - [ ] 5.1 Create connection creation Lambda resolver
+- [-] 5. Implement connection creation and management backend
+  - [x] 5.1 Create connection creation Lambda resolver
     - Implement createConnection mutation Lambda function
     - Validate authenticated user
     - Check for duplicate connections using checkConnection logic
@@ -89,21 +89,21 @@ This implementation plan breaks down the Hallway Track application into discrete
     - Return error if duplicate connection exists
     - _Requirements: 4.2, 4.3, 4.4, 4.5, 7.2_
 
-  - [ ] 5.2 Implement badge award logic in connection Lambda
+  - [x] 5.2 Implement badge award logic in connection Lambda
     - Define badge thresholds in code (1, 5, 10, 25, 50)
     - After creating connection, check if new connectionCount meets any badge threshold
     - Add newly earned badges to user's badge list with earnedAt timestamp
     - Return updated user with new badges
     - _Requirements: 7.1, 7.2, 7.3_
 
-  - [ ] 5.3 Create connection query resolvers
+  - [x] 5.3 Create connection query resolvers
     - Implement getMyConnections query resolver
     - Query Connections table by userId
     - Sort by createdAt descending
     - Fetch connected user details for each connection
     - _Requirements: 6.1, 6.2, 6.5_
 
-  - [ ] 5.4 Implement tag management resolvers
+  - [x] 5.4 Implement tag management resolvers
     - Create addTagToConnection mutation resolver
     - Create removeTagFromConnection mutation resolver
     - Validate max 30 chars per tag and max 10 tags per connection
