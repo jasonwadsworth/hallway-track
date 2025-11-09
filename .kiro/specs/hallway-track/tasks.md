@@ -110,8 +110,8 @@ This implementation plan breaks down the Hallway Track application into discrete
     - Update connection record in DynamoDB
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [ ] 6. Implement user profile frontend components
-  - [ ] 6.1 Create profile view and edit components
+- [x] 6. Implement user profile frontend components
+  - [x] 6.1 Create profile view and edit components
     - Implement ProfileView component to display own profile
     - Implement ProfileEdit component with form for display name
     - Show Gravatar image based on email hash
@@ -119,7 +119,7 @@ This implementation plan breaks down the Hallway Track application into discrete
     - Call GraphQL mutations to update profile
     - _Requirements: 2.1, 2.2, 2.6_
 
-  - [ ] 6.2 Create contact link management UI
+  - [x] 6.2 Create contact link management UI
     - Implement ContactLinkManager component
     - Add form to create new contact links (label + URL)
     - Display list of existing contact links

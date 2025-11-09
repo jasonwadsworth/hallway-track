@@ -13,6 +13,13 @@ const amplifyConfig: ResourcesConfig = {
       },
     },
   },
+  API: {
+    GraphQL: {
+      endpoint: process.env.VITE_GRAPHQL_ENDPOINT || 'https://XXXXXXXXXXXXXXXXXXXXXXXXXX.appsync-api.us-east-1.amazonaws.com/graphql',
+      region: process.env.VITE_AWS_REGION || 'us-east-1',
+      defaultAuthMode: 'userPool',
+    },
+  },
 };
 
 export default amplifyConfig;
