@@ -129,8 +129,8 @@ This implementation plan breaks down the Hallway Track application into discrete
     - Call GraphQL mutations for add/update/remove operations
     - _Requirements: 2.3, 2.4, 2.5, 2.6, 8.2, 8.3_
 
-- [ ] 7. Implement QR code generation and display
-  - [ ] 7.1 Create QR code display component
+- [x] 7. Implement QR code generation and display
+  - [x] 7.1 Create QR code display component
     - Install qrcode.react library
     - Implement QRCodeDisplay component
     - Generate QR code containing profile URL: `https://app.hallwaytrack.com/profile/{userId}`

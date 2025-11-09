@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { ProfileView } from './ProfileView';
 import { ProfileEdit } from './ProfileEdit';
 import { ContactLinkManager } from './ContactLinkManager';
+import { QRCodeDisplay } from './QRCodeDisplay';
 import './Profile.css';
 
-type ProfileTab = 'view' | 'edit' | 'links';
+type ProfileTab = 'view' | 'edit' | 'links' | 'qr';
 
 export function Profile() {
   const [activeTab, setActiveTab] = useState<ProfileTab>('view');
@@ -30,6 +31,12 @@ export function Profile() {
         >
           Contact Links
         </button>
+        <button
+          className={`tab ${activeTab === 'qr' ? 'active' : ''}`}
+          onClick={() => setActiveTab('qr')}
+        >
+          My QR Code
+        </button>
       </div>
 
       <div className="profile-content">
@@ -43,6 +50,7 @@ export function Profile() {
           />
         )}
         {activeTab === 'links' && <ContactLinkManager />}
+        {activeTab === 'qr' && <QRCodeDisplay />}
       </div>
     </div>
   );
