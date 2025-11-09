@@ -186,8 +186,8 @@ This implementation plan breaks down the Hallway Track application into discrete
     - Show error if max 10 tags reached
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [ ] 10. Implement badge display components
-  - [ ] 10.1 Create badge display components
+- [x] 10. Implement badge display components
+  - [x] 10.1 Create badge display components
     - Implement BadgeDisplay component to show earned badges
     - Implement BadgeList component showing all badges (locked/unlocked)
     - Create badge icons or use emoji representations
@@ -195,7 +195,7 @@ This implementation plan breaks down the Hallway Track application into discrete
     - Display earnedAt date for earned badges
     - _Requirements: 7.3, 7.4_
 
-  - [ ] 10.2 Create badge progress component
+  - [x] 10.2 Create badge progress component
     - Implement BadgeProgress component
     - Display current connection count
     - Show next badge threshold

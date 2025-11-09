@@ -1,0 +1,86 @@
+.badge-display {
+  margin: 20px 0;
+}
+
+.badge-display h3 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.no-badges {
+  color: #666;
+  font-style: italic;
+  padding: 20px;
+  text-align: center;
+}
+
+.badge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.badge-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 15px;
+  border-radius: 8px;
+  background: #f5f5f5;
+  border: 2px solid #ddd;
+}
+
+.badge-item.earned {
+  background: #fff;
+  border-color: #4CAF50;
+}
+
+.badge-item.locked {
+  opacity: 0.5;
+  background: #f9f9f9;
+  border-color: #e0e0e0;
+}
+
+.badge-icon {
+  font-size: 40px;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+
+.badge-item.locked .badge-icon {
+  filter: grayscale(100%);
+}
+
+.badge-info {
+  flex: 1;
+}
+
+.badge-name {
+  font-weight: bold;
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.badge-description {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.badge-threshold {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 5px;
+}
+
+.badge-earned-date {
+  font-size: 12px;
+  color: #4CAF50;
+  font-weight: 500;
+}
+
+.badge-locked-text {
+  font-size: 12px;
+  color: #999;
+  font-style: italic;
+}
