@@ -25,3 +25,20 @@ export interface User {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface PublicProfile {
+  id: string;
+  displayName: string;
+  gravatarHash: string;
+  contactLinks: ContactLink[];
+  badges: Badge[];
+}
+
+export interface Connection {
+  id: string;
+  userId: string;
+  connectedUserId: string;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}

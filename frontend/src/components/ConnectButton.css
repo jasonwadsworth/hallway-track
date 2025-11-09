@@ -1,0 +1,56 @@
+.connect-button-container {
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.btn-connect {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  min-width: 200px;
+}
+
+.btn-connect:hover:not(:disabled) {
+  background: #218838;
+}
+
+.btn-connect:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.btn-connected {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: not-allowed;
+  min-width: 200px;
+}
+
+.error-message {
+  color: #dc3545;
+  padding: 0.75rem;
+  background: #f8d7da;
+  border-radius: 6px;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.success-message {
+  color: #155724;
+  padding: 0.75rem;
+  background: #d4edda;
+  border-radius: 6px;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}

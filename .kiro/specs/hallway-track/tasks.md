@@ -138,8 +138,8 @@ This implementation plan breaks down the Hallway Track application into discrete
     - Add user's display name below QR code
     - _Requirements: 3.1, 3.2, 3.3_
 
-- [ ] 8. Implement public profile viewing and connection creation
-  - [ ] 8.1 Create public profile view component
+- [x] 8. Implement public profile viewing and connection creation
+  - [x] 8.1 Create public profile view component
     - Implement PublicProfile component that accepts userId from URL
     - Call getPublicProfile GraphQL query
     - Display user's display name and Gravatar
@@ -148,7 +148,7 @@ This implementation plan breaks down the Hallway Track application into discrete
     - Handle "user not found" error case
     - _Requirements: 4.1, 2.5, 8.5_
 
-  - [ ] 8.2 Create connect button component
+  - [x] 8.2 Create connect button component
     - Implement ConnectButton component
     - Call checkConnection query to see if already connected
     - Show "Already Connected" if connection exists

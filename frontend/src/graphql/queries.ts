@@ -25,3 +25,33 @@ export const getMyProfile = /* GraphQL */ `
     }
   }
 `;
+
+export const getPublicProfile = /* GraphQL */ `
+  query GetPublicProfile($userId: ID!) {
+    getPublicProfile(userId: $userId) {
+      id
+      displayName
+      gravatarHash
+      contactLinks {
+        id
+        label
+        url
+        visible
+      }
+      badges {
+        id
+        name
+        description
+        threshold
+        iconUrl
+        earnedAt
+      }
+    }
+  }
+`;
+
+export const checkConnection = /* GraphQL */ `
+  query CheckConnection($userId: ID!) {
+    checkConnection(userId: $userId)
+  }
+`;

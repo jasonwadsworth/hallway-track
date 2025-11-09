@@ -80,3 +80,16 @@ export const createUser = /* GraphQL */ `
     }
   }
 `;
+
+export const createConnection = /* GraphQL */ `
+  mutation CreateConnection($connectedUserId: ID!) {
+    createConnection(connectedUserId: $connectedUserId) {
+      id
+      userId
+      connectedUserId
+      tags
+      createdAt
+      updatedAt
+    }
+  }
+`;
