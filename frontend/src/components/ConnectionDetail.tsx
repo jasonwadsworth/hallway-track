@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
 import type { Connection, PublicProfile } from '../types';
 import { getMyConnections, getPublicProfile } from '../graphql/queries';
-import { getGravatarUrl } from '../utils/gravatar';
+import { getGravatarUrl, getGravatarSrcSet } from '../utils/gravatar';
 import { TagManager } from './TagManager';
 import { ErrorMessage } from './ErrorMessage';
 import { LoadingSpinner } from './LoadingSpinner';
@@ -138,9 +138,13 @@ export function ConnectionDetail() {
 
       <div className="detail-header">
         <img
-          src={getGravatarUrl(connectedUser.gravatarHash)}
+          src={getGravatarUrl(connectedUser.gravatarHash, 100)}
+          srcSet={getGravatarSrcSet(connectedUser.gravatarHash, 100)}
           alt={connectedUser.displayName}
           className="detail-avatar"
+          width="100"
+          height="100"
+          loading="lazy"
         />
         <div className="detail-info">
           <h2>{connectedUser.displayName}</h2>

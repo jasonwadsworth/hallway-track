@@ -1,26 +1,72 @@
+/* Mobile-first base styles */
 .connection-list {
   max-width: 1000px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
 }
 
 .connection-list.loading,
 .connection-list.error,
 .connection-list.empty {
   text-align: center;
-  padding: 3rem;
+  padding: 2rem 1rem;
 }
 
 .connection-list h2 {
-  margin: 0 0 1.5rem 0;
-  font-size: 1.8rem;
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
   color: #333;
 }
 
 .connections-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: 1fr;
   gap: 1rem;
+}
+
+/* Landscape mode on mobile - use two columns */
+@media (orientation: landscape) and (max-width: 767px) {
+  .connection-list {
+    padding: 0.75rem;
+  }
+
+  .connection-list.loading,
+  .connection-list.error,
+  .connection-list.empty {
+    padding: 1.5rem 0.75rem;
+  }
+
+  .connection-list h2 {
+    margin: 0 0 0.75rem 0;
+    font-size: 1.35rem;
+  }
+
+  .connections-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+}
+
+/* Desktop styles */
+@media (min-width: 768px) {
+  .connection-list {
+    padding: 2rem;
+  }
+
+  .connection-list.loading,
+  .connection-list.error,
+  .connection-list.empty {
+    padding: 3rem;
+  }
+
+  .connection-list h2 {
+    margin: 0 0 1.5rem 0;
+    font-size: 1.8rem;
+  }
+
+  .connections-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
 }
 
 .btn-retry {

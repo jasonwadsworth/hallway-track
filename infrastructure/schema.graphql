@@ -13,7 +13,7 @@ type User {
 type ContactLink {
   id: ID!
   label: String!
-  url: AWSURL!
+  url: String!
   visible: Boolean!
 }
 
@@ -65,8 +65,8 @@ type Query {
 type Mutation {
   createUser(email: AWSEmail!, displayName: String!): User!
   updateDisplayName(displayName: String!): User!
-  addContactLink(label: String!, url: AWSURL!, visible: Boolean): User!
-  updateContactLink(contactLinkId: ID!, label: String, url: AWSURL, visible: Boolean): User!
+  addContactLink(label: String!, url: String!, visible: Boolean): User!
+  updateContactLink(contactLinkId: ID!, label: String, url: String, visible: Boolean): User!
   removeContactLink(contactLinkId: ID!): User!
   createConnection(connectedUserId: ID!): Connection!
   addTagToConnection(connectionId: ID!, tag: String!): Connection!

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { generateClient } from 'aws-amplify/api';
 import type { User } from '../types';
 import { getMyProfile } from '../graphql/queries';
-import { getGravatarUrl } from '../utils/gravatar';
+import { getGravatarUrl, getGravatarSrcSet } from '../utils/gravatar';
 import { ErrorMessage } from './ErrorMessage';
 import { LoadingSpinner } from './LoadingSpinner';
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
@@ -80,9 +80,13 @@ export function ProfileView({ onEdit }: ProfileViewProps) {
     <div className="profile-view">
       <div className="profile-header">
         <img
-          src={getGravatarUrl(profile.gravatarHash)}
+          src={getGravatarUrl(profile.gravatarHash, 120)}
+          srcSet={getGravatarSrcSet(profile.gravatarHash, 120)}
           alt={profile.displayName}
           className="profile-avatar"
+          width="120"
+          height="120"
+          loading="lazy"
         />
         <h2>{profile.displayName}</h2>
         <p className="profile-email">{profile.email}</p>
@@ -115,6 +119,9 @@ export function ProfileView({ onEdit }: ProfileViewProps) {
                           src={imageUrl}
                           alt={link.label}
                           className="link-type-image"
+                          width="24"
+                          height="24"
+                          loading="lazy"
                         />
                       )}
                       <span className="link-label">{link.label}</span>

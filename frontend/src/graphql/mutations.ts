@@ -9,7 +9,7 @@ export const updateDisplayName = /* GraphQL */ `
 `;
 
 export const addContactLink = /* GraphQL */ `
-  mutation AddContactLink($label: String!, $url: AWSURL!) {
+  mutation AddContactLink($label: String!, $url: String!) {
     addContactLink(label: $label, url: $url) {
       id
       contactLinks {
@@ -24,7 +24,7 @@ export const addContactLink = /* GraphQL */ `
 `;
 
 export const updateContactLink = /* GraphQL */ `
-  mutation UpdateContactLink($contactLinkId: ID!, $label: String, $url: AWSURL, $visible: Boolean) {
+  mutation UpdateContactLink($contactLinkId: ID!, $label: String, $url: String, $visible: Boolean) {
     updateContactLink(contactLinkId: $contactLinkId, label: $label, url: $url, visible: $visible) {
       id
       contactLinks {

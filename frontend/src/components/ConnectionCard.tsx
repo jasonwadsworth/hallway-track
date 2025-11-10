@@ -1,5 +1,5 @@
 import type { Connection } from '../types';
-import { getGravatarUrl } from '../utils/gravatar';
+import { getGravatarUrl, getGravatarSrcSet } from '../utils/gravatar';
 import './ConnectionCard.css';
 
 interface ConnectionCardProps {
@@ -22,9 +22,13 @@ export function ConnectionCard({ connection, onClick }: ConnectionCardProps) {
         {connectedUser ? (
           <>
             <img
-              src={getGravatarUrl(connectedUser.gravatarHash)}
+              src={getGravatarUrl(connectedUser.gravatarHash, 60)}
+              srcSet={getGravatarSrcSet(connectedUser.gravatarHash, 60)}
               alt={connectedUser.displayName}
               className="card-avatar"
+              width="60"
+              height="60"
+              loading="lazy"
             />
             <div className="card-info">
               <h3 className="card-name">{connectedUser.displayName}</h3>

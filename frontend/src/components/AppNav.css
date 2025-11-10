@@ -1,15 +1,19 @@
+/* Mobile-first base styles */
 .app-nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
+  padding: 1rem;
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
   background-color: #232f3e;
   color: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
 }
 
 .nav-brand a {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: bold;
   color: white;
   text-decoration: none;
@@ -19,35 +23,173 @@
   color: #ff9900;
 }
 
+/* Hamburger menu button - visible only on mobile */
+.hamburger-menu {
+  display: block;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.5rem;
+  touch-action: manipulation;
+  z-index: 1001;
+}
+
+.hamburger-menu:active {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+/* Mobile navigation menu - slide-out from right */
 .nav-links {
+  position: fixed;
+  top: 60px;
+  right: -100%;
+  width: 80%;
+  max-width: 300px;
+  height: calc(100vh - 60px);
+  background-color: #232f3e;
   display: flex;
-  gap: 1.5rem;
-  align-items: center;
+  flex-direction: column;
+  gap: 0;
+  align-items: stretch;
+  padding: 1rem 0;
+  transition: right 0.3s ease;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+.nav-links.open {
+  right: 0;
 }
 
 .nav-links a {
   color: white;
   text-decoration: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  padding: 1rem 1.5rem;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
   transition: background-color 0.2s;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  touch-action: manipulation;
 }
 
-.nav-links a:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+.nav-links a:active {
+  background-color: rgba(255, 255, 255, 0.15);
 }
 
 .nav-links .btn-signout {
   background-color: #ff9900;
   color: #232f3e;
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  padding: 1rem 1.5rem;
+  min-height: 48px;
   cursor: pointer;
   font-weight: 500;
+  font-size: 1rem;
   transition: background-color 0.2s;
+  text-align: left;
+  width: 100%;
+  margin-top: 0.5rem;
+  touch-action: manipulation;
 }
 
-.nav-links .btn-signout:hover {
+.nav-links .btn-signout:active {
   background-color: #ec7211;
+}
+
+/* Landscape mode on mobile - optimize navigation height */
+@media (orientation: landscape) and (max-width: 767px) {
+  .app-nav {
+    padding: 0.5rem 1rem;
+  }
+
+  .nav-brand a {
+    font-size: 1.1rem;
+  }
+
+  .hamburger-menu {
+    min-height: 40px;
+    min-width: 40px;
+    font-size: 1.25rem;
+  }
+
+  .nav-links {
+    top: 50px;
+    height: calc(100vh - 50px);
+    max-width: 250px;
+  }
+
+  .nav-links a {
+    padding: 0.75rem 1.25rem;
+    min-height: 44px;
+  }
+
+  .nav-links .btn-signout {
+    padding: 0.75rem 1.25rem;
+    min-height: 44px;
+  }
+}
+
+/* Desktop styles - 768px and above */
+@media (min-width: 768px) {
+  .app-nav {
+    padding: 1rem 2rem;
+  }
+
+  .nav-brand a {
+    font-size: 1.5rem;
+  }
+
+  /* Hide hamburger menu on desktop */
+  .hamburger-menu {
+    display: none;
+  }
+
+  /* Horizontal navigation on desktop */
+  .nav-links {
+    position: static;
+    flex-direction: row;
+    width: auto;
+    height: auto;
+    max-width: none;
+    background-color: transparent;
+    padding: 0;
+    gap: 1.5rem;
+    align-items: center;
+    box-shadow: none;
+    overflow-y: visible;
+  }
+
+  .nav-links a {
+    padding: 0.5rem 1rem;
+    min-height: auto;
+    border-bottom: none;
+    border-radius: 4px;
+  }
+
+  .nav-links a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .nav-links a:active {
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .nav-links .btn-signout {
+    padding: 0.5rem 1rem;
+    min-height: auto;
+    width: auto;
+    margin-top: 0;
+    border-radius: 4px;
+  }
+
+  .nav-links .btn-signout:hover {
+    background-color: #ec7211;
+  }
 }

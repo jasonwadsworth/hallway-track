@@ -242,7 +242,7 @@ export function ContactLinkManager() {
             <div className="form-group">
               <label htmlFor="url">URL</label>
               <input
-                type="url"
+                type="text"
                 id="url"
                 value={newUrl}
                 onChange={(e) => {
@@ -313,6 +313,9 @@ export function ContactLinkManager() {
                         src={imageUrl}
                         alt={link.label}
                         className="link-type-image"
+                        width="24"
+                        height="24"
+                        loading="lazy"
                       />
                     )}
                     <span className="link-label">{link.label}</span>

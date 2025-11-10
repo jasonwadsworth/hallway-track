@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
 import type { PublicProfile as PublicProfileType } from '../types';
 import { getPublicProfile } from '../graphql/queries';
-import { getGravatarUrl } from '../utils/gravatar';
+import { getGravatarUrl, getGravatarSrcSet } from '../utils/gravatar';
 import { ConnectButton } from './ConnectButton';
 import { ErrorMessage } from './ErrorMessage';
 import { LoadingSpinner } from './LoadingSpinner';
@@ -74,9 +74,13 @@ export function PublicProfile() {
     <div className="public-profile">
       <div className="profile-header">
         <img
-          src={getGravatarUrl(profile.gravatarHash)}
+          src={getGravatarUrl(profile.gravatarHash, 120)}
+          srcSet={getGravatarSrcSet(profile.gravatarHash, 120)}
           alt={profile.displayName}
           className="profile-avatar"
+          width="120"
+          height="120"
+          loading="lazy"
         />
         <h2>{profile.displayName}</h2>
       </div>

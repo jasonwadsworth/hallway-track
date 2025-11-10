@@ -12,9 +12,12 @@ export function QRCodeDisplay() {
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [canShare, setCanShare] = useState(false);
 
   useEffect(() => {
     loadProfile();
+    // Check if Web Share API is available
+    setCanShare(typeof navigator !== 'undefined' && 'share' in navigator);
   }, []);
 
   async function loadProfile() {
@@ -38,6 +41,26 @@ export function QRCodeDisplay() {
       }
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleShare(profileUrl: string, displayName: string) {
+    if (!navigator.share) {
+      return;
+    }
+
+    try {
+      await navigator.share({
+        title: 'My Hallway Track Profile',
+        text: `Connect with ${displayName} at the conference!`,
+        url: profileUrl,
+      });
+    } catch (err) {
+      // User cancelled the share or share failed
+      // This is expected behavior, so we don't show an error
+      if (err instanceof Error && err.name !== 'AbortError') {
+        console.error('Error sharing:', err);
+      }
     }
   }
 
@@ -81,6 +104,16 @@ export function QRCodeDisplay() {
         <p className="qr-code-instruction">
           Show this QR code to other attendees to connect
         </p>
+        {canShare && (
+          <button
+            className="share-button"
+            onClick={() => handleShare(profileUrl, profile.displayName)}
+            aria-label="Share profile"
+          >
+            <span>📤</span>
+            <span>Share Profile</span>
+          </button>
+        )}
       </div>
     </div>
   );

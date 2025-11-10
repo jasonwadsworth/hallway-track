@@ -11,12 +11,27 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Breakpoint */
+  --breakpoint-desktop: 768px;
+
+  /* Spacing scale */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+
+  /* Touch targets */
+  --touch-target-min: 44px;
+  --input-height-mobile: 48px;
 }
 
 a {
   font-weight: 500;
   color: #646cff;
   text-decoration: inherit;
+  touch-action: manipulation;
 }
 a:hover {
   color: #535bf2;
@@ -24,9 +39,15 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
+  min-height: 100vh;
+  font-size: 16px;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
   min-height: 100vh;
 }
 
@@ -45,6 +66,9 @@ button {
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+  touch-action: manipulation;
 }
 button:hover {
   border-color: #646cff;
@@ -52,6 +76,73 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* Global input styles for touch targets */
+input,
+select,
+textarea {
+  font-size: 16px;
+  min-height: var(--touch-target-min);
+  touch-action: manipulation;
+}
+
+/* Global error message styles - mobile-first */
+.error-message {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  right: 1rem;
+  background-color: #fee;
+  border: 1px solid #fcc;
+  border-radius: 8px;
+  padding: 1rem;
+  color: #c33;
+  font-size: 16px;
+  line-height: 1.5;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-width: calc(100vw - 2rem);
+}
+
+/* Desktop: Centered with max-width constraint */
+@media (min-width: 768px) {
+  .error-message {
+    position: static;
+    left: auto;
+    right: auto;
+    margin: 1rem auto;
+    max-width: 600px;
+    font-size: 14px;
+  }
+}
+
+/* Orientation change handling */
+@media (orientation: landscape) and (max-width: 767px) {
+  /* Landscape mode on mobile devices */
+  body {
+    min-height: 100vw; /* Adjust for landscape */
+  }
+
+  /* Reduce vertical spacing in landscape to maximize content visibility */
+  .error-message {
+    bottom: 0.5rem;
+    padding: 0.75rem;
+    font-size: 14px;
+  }
+}
+
+/* Smooth transition for orientation changes */
+* {
+  transition-property: none;
+  transition-duration: 0s;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  * {
+    transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+    transition-duration: 0.2s;
+  }
 }
 
 @media (prefers-color-scheme: light) {

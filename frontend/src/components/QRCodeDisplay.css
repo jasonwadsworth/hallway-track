@@ -1,17 +1,18 @@
+/* Mobile-first base styles */
 .qr-code-display {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
-  max-width: 400px;
+  padding: 1rem;
+  max-width: 100%;
   margin: 0 auto;
 }
 
 .qr-code-display.loading,
 .qr-code-display.error {
   text-align: center;
-  padding: 3rem;
+  padding: 2rem 1rem;
 }
 
 .qr-code-display.error p {
@@ -27,6 +28,7 @@
   border-radius: 4px;
   cursor: pointer;
   font-size: 1rem;
+  min-height: 44px;
 }
 
 .qr-code-display.error button:hover {
@@ -35,14 +37,28 @@
 
 .qr-code-container {
   background: white;
-  padding: 1.5rem;
+  padding: 1rem;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   margin-bottom: 1.5rem;
+  width: 100%;
+  max-width: min(300px, 80vw);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.qr-code-container svg {
+  width: 100% !important;
+  height: auto !important;
+  min-width: 200px;
+  max-width: 100%;
 }
 
 .qr-code-info {
   text-align: center;
+  width: 100%;
+  padding: 0 1rem;
 }
 
 .qr-code-info h2 {
@@ -54,5 +70,90 @@
 .qr-code-instruction {
   color: #666;
   font-size: 0.9rem;
-  margin: 0;
+  margin: 0 0 1rem 0;
+}
+
+.share-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  min-height: 44px;
+  min-width: 44px;
+  transition: background-color 0.2s;
+  margin-top: 1rem;
+}
+
+.share-button:active {
+  background-color: #1565c0;
+  transform: scale(0.98);
+}
+
+/* Landscape mode on mobile - optimize QR code size */
+@media (orientation: landscape) and (max-width: 767px) {
+  .qr-code-display {
+    padding: 0.75rem;
+  }
+
+  .qr-code-display.loading,
+  .qr-code-display.error {
+    padding: 1.5rem 0.75rem;
+  }
+
+  .qr-code-info h2 {
+    font-size: 1.35rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .qr-code-instruction {
+    font-size: 0.85rem;
+    margin: 0 0 0.75rem 0;
+  }
+
+  .qr-code-container {
+    padding: 0.75rem;
+    max-width: min(250px, 60vh);
+    margin-bottom: 1rem;
+  }
+
+  .qr-code-container svg {
+    min-width: 180px;
+  }
+
+  .share-button {
+    margin-top: 0.75rem;
+    padding: 0.5rem 1rem;
+    min-height: 44px;
+  }
+}
+
+/* Desktop styles */
+@media (min-width: 768px) {
+  .qr-code-display {
+    padding: 2rem;
+  }
+
+  .qr-code-display.loading,
+  .qr-code-display.error {
+    padding: 3rem;
+  }
+
+  .qr-code-container {
+    padding: 1.5rem;
+    max-width: 400px;
+  }
+
+  .qr-code-container svg {
+    min-width: 256px;
+  }
+
+  .share-button:hover {
+    background-color: #1565c0;
+  }
 }

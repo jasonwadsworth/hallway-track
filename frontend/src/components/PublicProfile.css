@@ -1,32 +1,110 @@
+/* Mobile-first base styles */
 .public-profile {
   max-width: 600px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
 }
 
 .public-profile.loading,
 .public-profile.error {
   text-align: center;
-  padding: 3rem;
+  padding: 2rem 1rem;
 }
 
 .profile-header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .profile-avatar {
-  width: 120px;
-  height: 120px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
   margin-bottom: 1rem;
   border: 3px solid #e0e0e0;
+  object-fit: cover;
+  image-rendering: auto;
 }
 
 .profile-header h2 {
   margin: 0.5rem 0;
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   color: #333;
+}
+
+/* Landscape mode on mobile */
+@media (orientation: landscape) and (max-width: 767px) {
+  .public-profile {
+    padding: 0.75rem;
+  }
+
+  .public-profile.loading,
+  .public-profile.error {
+    padding: 1.5rem 0.75rem;
+  }
+
+  .profile-header {
+    margin-bottom: 1rem;
+  }
+
+  .profile-avatar {
+    width: 70px;
+    height: 70px;
+    margin-bottom: 0.75rem;
+  }
+
+  .profile-header h2 {
+    font-size: 1.35rem;
+  }
+
+  .contact-links-section,
+  .badges-section {
+    margin: 1rem 0;
+    padding: 1rem;
+  }
+
+  .contact-links-section h3,
+  .badges-section h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .contact-link-item {
+    padding: 0.5rem 0;
+  }
+
+  .badge-item {
+    padding: 0.75rem;
+  }
+
+  .badge-icon {
+    font-size: 1.75rem;
+  }
+}
+
+/* Desktop */
+@media (min-width: 768px) {
+  .public-profile {
+    padding: 2rem;
+  }
+
+  .public-profile.loading,
+  .public-profile.error {
+    padding: 3rem;
+  }
+
+  .profile-header {
+    margin-bottom: 2rem;
+  }
+
+  .profile-avatar {
+    width: 120px;
+    height: 120px;
+  }
+
+  .profile-header h2 {
+    font-size: 1.8rem;
+  }
 }
 
 .contact-links-section {

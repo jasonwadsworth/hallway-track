@@ -1,16 +1,28 @@
+/* Mobile-first base styles */
 .connection-card {
   background: white;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   padding: 1.5rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform 0.1s, background-color 0.2s, box-shadow 0.2s, border-color 0.2s;
+  min-height: 100px;
+  touch-action: manipulation;
 }
 
-.connection-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-  border-color: #007bff;
+/* Touch feedback for mobile */
+.connection-card:active {
+  transform: scale(0.98);
+  background-color: #f8f9fa;
+}
+
+/* Hover effects only on desktop */
+@media (min-width: 768px) {
+  .connection-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+    border-color: #007bff;
+  }
 }
 
 .card-header {
@@ -26,6 +38,8 @@
   border-radius: 50%;
   border: 2px solid #e0e0e0;
   flex-shrink: 0;
+  object-fit: cover;
+  image-rendering: auto;
 }
 
 .card-info {

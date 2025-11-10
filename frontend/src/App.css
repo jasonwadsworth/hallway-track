@@ -7,3 +7,16 @@ main {
   min-height: calc(100vh - 60px);
   background-color: #f5f5f5;
 }
+
+/* Ensure smooth layout adaptation during orientation changes */
+@media (orientation: landscape) and (max-width: 767px) {
+  main {
+    min-height: calc(100vh - 50px);
+  }
+}
+
+/* Prevent layout shift during orientation change */
+html {
+  overflow-y: scroll;
+  scroll-behavior: smooth;
+}
