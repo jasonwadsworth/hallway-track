@@ -46,7 +46,17 @@
   flex-shrink: 0;
 }
 
+.badge-icon-image {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
 .badge-item.locked .badge-icon {
+  filter: grayscale(100%);
+}
+
+.badge-item.locked .badge-icon-image {
   filter: grayscale(100%);
 }
 

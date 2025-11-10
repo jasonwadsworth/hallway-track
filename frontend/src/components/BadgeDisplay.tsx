@@ -5,13 +5,9 @@ interface BadgeDisplayProps {
   badges: Badge[];
 }
 
-const BADGE_EMOJIS: Record<string, string> = {
-  'first-connection': '🎉',
-  'networker': '🤝',
-  'socialite': '⭐',
-  'connector': '🚀',
-  'legend': '👑',
-};
+function getBadgeImageUrl(badgeId: string): string {
+  return `/badge-images/${badgeId}.svg`;
+}
 
 export function BadgeDisplay({ badges }: BadgeDisplayProps) {
   if (badges.length === 0) {
@@ -28,7 +24,16 @@ export function BadgeDisplay({ badges }: BadgeDisplayProps) {
       <div className="badge-grid">
         {badges.map((badge) => (
           <div key={badge.id} className="badge-item earned">
-            <div className="badge-icon">{BADGE_EMOJIS[badge.id] || '🏆'}</div>
+            <div className="badge-icon">
+              <img
+                src={getBadgeImageUrl(badge.id)}
+                alt={badge.name}
+                className="badge-icon-image"
+                onError={(e) => {
+                  e.currentTarget.src = '/badge-images/default.svg';
+                }}
+              />
+            </div>
             <div className="badge-info">
               <div className="badge-name">{badge.name}</div>
               <div className="badge-description">{badge.description}</div>

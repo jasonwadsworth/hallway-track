@@ -5,6 +5,7 @@ import type { Connection, PublicProfile } from '../types';
 import { getMyConnections, getPublicProfile } from '../graphql/queries';
 import { getGravatarUrl, getGravatarSrcSet } from '../utils/gravatar';
 import { TagManager } from './TagManager';
+import { BadgeDisplay } from './BadgeDisplay';
 import { ErrorMessage } from './ErrorMessage';
 import { LoadingSpinner } from './LoadingSpinner';
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
@@ -165,6 +166,13 @@ export function ConnectionDetail() {
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {connectedUser.badges.length > 0 && (
+        <div className="detail-section">
+          <h3>Badges</h3>
+          <BadgeDisplay badges={connectedUser.badges} />
         </div>
       )}
 

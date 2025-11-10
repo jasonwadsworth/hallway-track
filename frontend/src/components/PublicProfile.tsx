@@ -10,6 +10,10 @@ import { LoadingSpinner } from './LoadingSpinner';
 import { parseGraphQLError } from '../utils/errorHandling';
 import './PublicProfile.css';
 
+function getBadgeImageUrl(badgeId: string): string {
+  return `/badge-images/${badgeId}.svg`;
+}
+
 export function PublicProfile() {
   const { userId } = useParams<{ userId: string }>();
   const [profile, setProfile] = useState<PublicProfileType | null>(null);
@@ -109,7 +113,16 @@ export function PublicProfile() {
           <div className="badges-grid">
             {profile.badges.map(badge => (
               <div key={badge.id} className="badge-item">
-                <div className="badge-icon">🏆</div>
+                <div className="badge-icon">
+                  <img
+                    src={getBadgeImageUrl(badge.id)}
+                    alt={badge.name}
+                    className="badge-icon-image"
+                    onError={(e) => {
+                      e.currentTarget.src = '/badge-images/default.svg';
+                    }}
+                  />
+                </div>
                 <div className="badge-info">
                   <div className="badge-name">{badge.name}</div>
                   <div className="badge-description">{badge.description}</div>

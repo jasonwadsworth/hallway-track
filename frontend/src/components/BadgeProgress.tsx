@@ -16,6 +16,18 @@ const BADGE_NAMES: Record<number, string> = {
   50: 'Networking Legend',
 };
 
+const BADGE_IDS: Record<number, string> = {
+  1: 'first-connection',
+  5: 'networker',
+  10: 'socialite',
+  25: 'connector',
+  50: 'legend',
+};
+
+function getBadgeImageUrl(badgeId: string): string {
+  return `/badge-images/${badgeId}.svg`;
+}
+
 export function BadgeProgress() {
   const [connectionCount, setConnectionCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -77,11 +89,21 @@ export function BadgeProgress() {
 
   if (!nextThreshold) {
     // User has earned all badges
+    const legendBadgeId = BADGE_IDS[50];
     return (
       <div className="badge-progress">
         <h3>Badge Progress</h3>
         <div className="progress-complete">
-          <div className="progress-icon">🏆</div>
+          <div className="progress-icon">
+            <img
+              src={getBadgeImageUrl(legendBadgeId)}
+              alt="Networking Legend"
+              className="progress-badge-image"
+              onError={(e) => {
+                e.currentTarget.src = '/badge-images/default.svg';
+              }}
+            />
+          </div>
           <div className="progress-text">
             <div className="progress-title">All Badges Earned!</div>
             <div className="progress-subtitle">
@@ -120,8 +142,20 @@ export function BadgeProgress() {
 
         <div className="progress-next-badge">
           <div className="next-badge-label">Next Badge</div>
-          <div className="next-badge-name">{BADGE_NAMES[nextThreshold]}</div>
-          <div className="next-badge-threshold">{nextThreshold} connections</div>
+          <div className="next-badge-preview">
+            <img
+              src={getBadgeImageUrl(BADGE_IDS[nextThreshold])}
+              alt={BADGE_NAMES[nextThreshold]}
+              className="next-badge-image"
+              onError={(e) => {
+                e.currentTarget.src = '/badge-images/default.svg';
+              }}
+            />
+            <div className="next-badge-info">
+              <div className="next-badge-name">{BADGE_NAMES[nextThreshold]}</div>
+              <div className="next-badge-threshold">{nextThreshold} connections</div>
+            </div>
+          </div>
         </div>
 
         <div className="progress-bar-container">

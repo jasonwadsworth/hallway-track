@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Bronze colored badge for first connection -->
+  <circle cx="32" cy="32" r="30" fill="#CD7F32" stroke="#8B5A2B" stroke-width="2"/>
+  <circle cx="32" cy="32" r="24" fill="#E6A85C" opacity="0.3"/>
+  <!-- Handshake icon -->
+  <path d="M 20 28 L 24 24 L 28 28 L 32 24 L 36 28 L 40 24 L 44 28"
+        stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <circle cx="32" cy="36" r="3" fill="white"/>
+  <text x="32" y="48" font-family="Arial, sans-serif" font-size="10" fill="white" text-anchor="middle" font-weight="bold">1</text>
+</svg>

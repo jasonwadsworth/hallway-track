@@ -5,6 +5,7 @@ import { getMyProfile } from '../graphql/queries';
 import { getGravatarUrl, getGravatarSrcSet } from '../utils/gravatar';
 import { ErrorMessage } from './ErrorMessage';
 import { LoadingSpinner } from './LoadingSpinner';
+import { BadgeDisplay } from './BadgeDisplay';
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import { useLinkTypes } from '../hooks/useLinkTypes';
 import './ProfileView.css';
@@ -138,6 +139,12 @@ export function ProfileView({ onEdit }: ProfileViewProps) {
                 );
               })}
           </div>
+        </div>
+      )}
+
+      {profile.badges && profile.badges.length > 0 && (
+        <div className="profile-badges">
+          <BadgeDisplay badges={profile.badges} />
         </div>
       )}
 

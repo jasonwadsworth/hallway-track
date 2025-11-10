@@ -14,13 +14,9 @@ const ALL_BADGES = [
   { id: 'legend', name: 'Networking Legend', threshold: 50, description: 'Connected with 50 people' },
 ];
 
-const BADGE_EMOJIS: Record<string, string> = {
-  'first-connection': '🎉',
-  'networker': '🤝',
-  'socialite': '⭐',
-  'connector': '🚀',
-  'legend': '👑',
-};
+function getBadgeImageUrl(badgeId: string): string {
+  return `/badge-images/${badgeId}.svg`;
+}
 
 export function BadgeList({ earnedBadges, connectionCount }: BadgeListProps) {
   const earnedBadgeIds = new Set(earnedBadges.map(b => b.id));
@@ -36,7 +32,21 @@ export function BadgeList({ earnedBadges, connectionCount }: BadgeListProps) {
 
           return (
             <div key={badge.id} className={`badge-item ${isEarned ? 'earned' : 'locked'}`}>
-              <div className="badge-icon">{BADGE_EMOJIS[badge.id] || '🏆'}</div>
+              <div className="badge-icon">
+                <img
+                  src={getBadgeImageUrl(badge.id)}
+                  alt={badge.name}
+                  className="badge-icon-image"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (target.src.includes('default.svg')) {
+                      target.style.display = 'none';
+                    } else {
+                      target.src = '/badge-images/default.svg';
+                    }
+                  }}
+                />
+              </div>
               <div className="badge-info">
                 <div className="badge-name">{badge.name}</div>
                 <div className="badge-description">{badge.description}</div>
