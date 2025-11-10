@@ -10,8 +10,6 @@ import { LoadingSpinner } from './LoadingSpinner';
 import { parseGraphQLError } from '../utils/errorHandling';
 import './PublicProfile.css';
 
-const client = generateClient();
-
 export function PublicProfile() {
   const { userId } = useParams<{ userId: string }>();
   const [profile, setProfile] = useState<PublicProfileType | null>(null);
@@ -31,6 +29,7 @@ export function PublicProfile() {
       return;
     }
 
+    const client = generateClient();
     try {
       setLoading(true);
       setError(null);

@@ -10,8 +10,6 @@ import { LoadingSpinner } from './LoadingSpinner';
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import './ConnectionDetail.css';
 
-const client = generateClient();
-
 export function ConnectionDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -30,6 +28,7 @@ export function ConnectionDetail() {
       return;
     }
 
+    const client = generateClient();
     try {
       setLoading(true);
       setError(null);

@@ -8,8 +8,6 @@ import { LoadingSpinner } from './LoadingSpinner';
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import './ProfileEdit.css';
 
-const client = generateClient();
-
 interface ProfileEditProps {
   onCancel: () => void;
   onSave: () => void;
@@ -27,16 +25,20 @@ export function ProfileEdit({ onCancel, onSave }: ProfileEditProps) {
   }, []);
 
   async function loadProfile() {
+    const client = generateClient();
     try {
       setLoading(true);
       setError(null);
       const response = await client.graphql({
         query: getMyProfile,
       });
-      if ('data' in response && response.data) {
+      if ('data' in response && response.data?.getMyProfile) {
         const userProfile = response.data.getMyProfile as User;
         setProfile(userProfile);
         setDisplayName(userProfile.displayName);
+      } else {
+        // Profile doesn't exist yet - this shouldn't happen but handle gracefully
+        setError('Profile not found. Please try refreshing the page or contact support.');
       }
     } catch (err) {
       console.error('Error loading profile:', err);
@@ -67,6 +69,7 @@ export function ProfileEdit({ onCancel, onSave }: ProfileEditProps) {
     try {
       setSaving(true);
       setError(null);
+      const client = generateClient();
       await client.graphql({
         query: updateDisplayName,
         variables: {

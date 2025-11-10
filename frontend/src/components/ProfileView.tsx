@@ -8,8 +8,6 @@ import { LoadingSpinner } from './LoadingSpinner';
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import './ProfileView.css';
 
-const client = generateClient();
-
 interface ProfileViewProps {
   onEdit: () => void;
 }
@@ -24,6 +22,7 @@ export function ProfileView({ onEdit }: ProfileViewProps) {
   }, []);
 
   async function loadProfile() {
+    const client = generateClient();
     try {
       setLoading(true);
       setError(null);

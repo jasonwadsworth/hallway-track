@@ -7,8 +7,6 @@ import { LoadingSpinner } from './LoadingSpinner'
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling'
 import './Dashboard.css'
 
-const client = generateClient()
-
 interface Connection {
   id: string
   connectedUserId: string
@@ -29,29 +27,57 @@ export function Dashboard() {
   }, [])
 
   const loadRecentConnections = async () => {
+    const client = generateClient()
     try {
       setLoading(true)
       setError(null)
 
-      const query = `
-        query GetMyConnections {
-          getMyConnections {
-            id
-            connectedUserId
-            connectedUser {
-              displayName
-              gravatarHash
+      const { getMyConnections: connectionsQuery } = await import('../graphql/queries')
+      const { getPublicProfile } = await import('../graphql/queries')
+
+      const response = await client.graphql({
+        query: connectionsQuery,
+      })
+
+      if ('data' in response && response.data) {
+        const connections = response.data.getMyConnections as Array<{
+          id: string
+          connectedUserId: string
+          createdAt: string
+        }>
+
+        // Get the 5 most recent connections and fetch their user details
+        const recentIds = connections
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .slice(0, 5)
+
+        const connectionsWithUsers = await Promise.all(
+          recentIds.map(async (connection) => {
+            try {
+              const userResponse = await client.graphql({
+                query: getPublicProfile,
+                variables: { userId: connection.connectedUserId },
+              })
+
+              if ('data' in userResponse && userResponse.data) {
+                return {
+                  ...connection,
+                  connectedUser: {
+                    displayName: userResponse.data.getPublicProfile.displayName,
+                    gravatarHash: userResponse.data.getPublicProfile.gravatarHash,
+                  },
+                }
+              }
+              return null
+            } catch (err) {
+              console.error('Error loading connected user:', err)
+              return null
             }
-            createdAt
-          }
-        }
-      `
+          })
+        )
 
-      const result = await client.graphql({ query }) as { data: { getMyConnections: Connection[] } }
-
-      // Get the 5 most recent connections
-      const recent = result.data.getMyConnections.slice(0, 5)
-      setRecentConnections(recent)
+        setRecentConnections(connectionsWithUsers.filter((c): c is Connection => c !== null))
+      }
     } catch (err) {
       console.error('Error loading recent connections:', err)
       const errorInfo = parseGraphQLError(err)

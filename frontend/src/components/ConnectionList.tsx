@@ -10,8 +10,6 @@ import { LoadingSpinner } from './LoadingSpinner';
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import './ConnectionList.css';
 
-const client = generateClient();
-
 export function ConnectionList() {
   const navigate = useNavigate();
   const [connections, setConnections] = useState<Connection[]>([]);
@@ -23,6 +21,7 @@ export function ConnectionList() {
   }, []);
 
   async function loadConnections() {
+    const client = generateClient();
     try {
       setLoading(true);
       setError(null);

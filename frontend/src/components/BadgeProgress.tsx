@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { generateClient } from 'aws-amplify/api';
+import { getMyProfile } from '../graphql/queries';
 import { ErrorMessage } from './ErrorMessage';
 import { LoadingSpinner } from './LoadingSpinner';
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import './BadgeProgress.css';
-
-const client = generateClient();
 
 const BADGE_THRESHOLDS = [1, 5, 10, 25, 50];
 
@@ -27,20 +26,20 @@ export function BadgeProgress() {
   }, []);
 
   async function loadConnectionCount() {
+    const client = generateClient();
     try {
       setLoading(true);
       setError(null);
 
-      const query = `
-        query GetMyProfile {
-          getMyProfile {
-            connectionCount
-          }
-        }
-      `;
+      const response = await client.graphql({
+        query: getMyProfile,
+      });
 
-      const result = await client.graphql({ query }) as { data: { getMyProfile: { connectionCount: number } } };
-      setConnectionCount(result.data.getMyProfile.connectionCount);
+      if ('data' in response && response.data?.getMyProfile) {
+        setConnectionCount(response.data.getMyProfile.connectionCount || 0);
+      } else {
+        setConnectionCount(0);
+      }
     } catch (err) {
       console.error('Error loading connection count:', err);
       const errorInfo = parseGraphQLError(err);

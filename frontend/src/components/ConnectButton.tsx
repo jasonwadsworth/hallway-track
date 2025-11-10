@@ -6,8 +6,6 @@ import { LoadingSpinner } from './LoadingSpinner';
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import './ConnectButton.css';
 
-const client = generateClient();
-
 interface ConnectButtonProps {
   userId: string;
 }
@@ -24,6 +22,7 @@ export function ConnectButton({ userId }: ConnectButtonProps) {
   }, [userId]);
 
   async function checkIfConnected() {
+    const client = generateClient();
     try {
       setLoading(true);
       setError(null);
@@ -48,6 +47,7 @@ export function ConnectButton({ userId }: ConnectButtonProps) {
   }
 
   async function handleConnect() {
+    const client = generateClient();
     try {
       setConnecting(true);
       setError(null);

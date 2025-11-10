@@ -7,8 +7,6 @@ import { LoadingSpinner } from './LoadingSpinner';
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import './ContactLinkManager.css';
 
-const client = generateClient();
-
 export function ContactLinkManager() {
   const [contactLinks, setContactLinks] = useState<ContactLink[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,6 +21,7 @@ export function ContactLinkManager() {
   }, []);
 
   async function loadContactLinks() {
+    const client = generateClient();
     try {
       setLoading(true);
       setError(null);
@@ -61,6 +60,7 @@ export function ContactLinkManager() {
     try {
       setSubmitting(true);
       setError(null);
+      const client = generateClient();
       const response = await client.graphql({
         query: addContactLink,
         variables: {
@@ -88,6 +88,7 @@ export function ContactLinkManager() {
   }
 
   async function handleToggleVisibility(link: ContactLink) {
+    const client = generateClient();
     try {
       setError(null);
       const response = await client.graphql({
@@ -118,6 +119,7 @@ export function ContactLinkManager() {
 
     try {
       setError(null);
+      const client = generateClient();
       const response = await client.graphql({
         query: removeContactLink,
         variables: {

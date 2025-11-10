@@ -25,7 +25,44 @@ export class HallwayTrackStack extends cdk.Stack {
 
     // ===== Authentication =====
 
-    // Create Cognito User Pool
+    // Create DynamoDB table first (needed for post-confirmation Lambda)
+    // Note: Moving table creation before User Pool so Lambda can reference it
+
+    // Create Users DynamoDB Table
+    this.usersTable = new dynamodb.Table(this, 'UsersTable', {
+      tableName: 'hallway-track-users',
+      partitionKey: {
+        name: 'PK',
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'SK',
+        type: dynamodb.AttributeType.STRING,
+      },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    // Create post-confirmation Lambda function
+    const postConfirmationFunction = new NodejsFunction(
+      this,
+      'PostConfirmationFunction',
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'handler',
+        entry: path.join(__dirname, '../lambda/post-confirmation/index.ts'),
+        bundling: {
+          externalModules: ['@aws-sdk/*'],
+        },
+        environment: {
+          TABLE_NAME: this.usersTable.tableName,
+        },
+      }
+    );
+
+    this.usersTable.grantWriteData(postConfirmationFunction);
+
+    // Create Cognito User Pool with post-confirmation trigger
     this.userPool = new cognito.UserPool(this, 'UserPool', {
       userPoolName: 'hallway-track-users',
       selfSignUpEnabled: true,
@@ -44,6 +81,9 @@ export class HallwayTrackStack extends cdk.Stack {
       },
       accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
+      lambdaTriggers: {
+        postConfirmation: postConfirmationFunction,
+      },
     });
 
     // Create User Pool Client for web app
@@ -59,20 +99,7 @@ export class HallwayTrackStack extends cdk.Stack {
 
     // ===== DynamoDB Tables =====
 
-    // Create Users DynamoDB Table
-    this.usersTable = new dynamodb.Table(this, 'UsersTable', {
-      tableName: 'hallway-track-users',
-      partitionKey: {
-        name: 'PK',
-        type: dynamodb.AttributeType.STRING,
-      },
-      sortKey: {
-        name: 'SK',
-        type: dynamodb.AttributeType.STRING,
-      },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-    });
+    // Users table already created above (before User Pool)
 
     // Create Connections DynamoDB Table
     this.connectionsTable = new dynamodb.Table(this, 'ConnectionsTable', {

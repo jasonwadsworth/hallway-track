@@ -8,8 +8,6 @@ import { LoadingSpinner } from './LoadingSpinner';
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import './QRCodeDisplay.css';
 
-const client = generateClient();
-
 export function QRCodeDisplay() {
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -20,6 +18,7 @@ export function QRCodeDisplay() {
   }, []);
 
   async function loadProfile() {
+    const client = generateClient();
     try {
       setLoading(true);
       setError(null);

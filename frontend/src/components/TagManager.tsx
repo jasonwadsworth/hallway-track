@@ -5,8 +5,6 @@ import { addTagToConnection, removeTagFromConnection } from '../graphql/mutation
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import './TagManager.css';
 
-const client = generateClient();
-
 const MAX_TAG_LENGTH = 30;
 const MAX_TAGS = 10;
 
@@ -49,6 +47,7 @@ export function TagManager({ connection, onTagsUpdated }: TagManagerProps) {
       setLoading(true);
       setError(null);
 
+      const client = generateClient();
       const response = await client.graphql({
         query: addTagToConnection,
         variables: {
@@ -93,6 +92,7 @@ export function TagManager({ connection, onTagsUpdated }: TagManagerProps) {
       setLoading(true);
       setError(null);
 
+      const client = generateClient();
       const response = await client.graphql({
         query: removeTagFromConnection,
         variables: {
