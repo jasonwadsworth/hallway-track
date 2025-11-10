@@ -68,16 +68,18 @@ export const handler = async (event: AppSyncResolverEvent<Record<string, unknown
       throw new Error('Contact link not found');
     }
 
-    // Update the contact link
-    if (label !== undefined) {
-      contactLinks[linkIndex].label = label;
+    // Update the contact link (only update fields that are provided)
+    const updatedLink = { ...contactLinks[linkIndex] };
+    if (label !== undefined && label !== null) {
+      updatedLink.label = label;
     }
-    if (url !== undefined) {
-      contactLinks[linkIndex].url = url;
+    if (url !== undefined && url !== null) {
+      updatedLink.url = url;
     }
-    if (visible !== undefined) {
-      contactLinks[linkIndex].visible = visible;
+    if (visible !== undefined && visible !== null) {
+      updatedLink.visible = visible;
     }
+    contactLinks[linkIndex] = updatedLink;
   } else if (fieldName === 'removeContactLink') {
     const { contactLinkId } = event.arguments as { contactLinkId: string };
 

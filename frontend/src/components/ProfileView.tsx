@@ -6,6 +6,7 @@ import { getGravatarUrl } from '../utils/gravatar';
 import { ErrorMessage } from './ErrorMessage';
 import { LoadingSpinner } from './LoadingSpinner';
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
+import { useLinkTypes } from '../hooks/useLinkTypes';
 import './ProfileView.css';
 
 interface ProfileViewProps {
@@ -16,6 +17,7 @@ export function ProfileView({ onEdit }: ProfileViewProps) {
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { linkTypes } = useLinkTypes();
 
   useEffect(() => {
     loadProfile();
@@ -44,6 +46,12 @@ export function ProfileView({ onEdit }: ProfileViewProps) {
       setLoading(false);
     }
   }
+
+  // Helper function to get image URL for a link label
+  const getLinkImage = (label: string): string | null => {
+    const linkType = linkTypes.find(type => type.label === label);
+    return linkType?.imageUrl || null;
+  };
 
   if (loading) {
     return (
@@ -90,6 +98,41 @@ export function ProfileView({ onEdit }: ProfileViewProps) {
           <span className="stat-label">Badges</span>
         </div>
       </div>
+
+      {profile.contactLinks && profile.contactLinks.length > 0 && (
+        <div className="profile-contact-links">
+          <h3>Contact Links</h3>
+          <div className="contact-links-list">
+            {profile.contactLinks
+              .filter(link => link.visible)
+              .map((link) => {
+                const imageUrl = getLinkImage(link.label);
+                return (
+                  <div key={link.id} className="contact-link-item">
+                    <div className="link-header">
+                      {imageUrl && (
+                        <img
+                          src={imageUrl}
+                          alt={link.label}
+                          className="link-type-image"
+                        />
+                      )}
+                      <span className="link-label">{link.label}</span>
+                    </div>
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="link-url"
+                    >
+                      {link.url}
+                    </a>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
 
       <div className="profile-actions">
         <button onClick={onEdit} className="btn-primary">

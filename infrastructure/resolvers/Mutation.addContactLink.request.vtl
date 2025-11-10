@@ -1,14 +1,21 @@
-## Add a new contact link (default to hidden visibility)
+## Add a new contact link with optional visibility (default to true if not specified)
 #set($userId = $ctx.identity.sub)
 #set($now = $util.time.nowISO8601())
 #set($contactLinkId = $util.autoId())
+
+## Set visibility - default to true if not provided
+#if($ctx.args.visible == true || $ctx.args.visible == false)
+  #set($visible = $ctx.args.visible)
+#else
+  #set($visible = true)
+#end
 
 ## Create new contact link object
 #set($newContactLink = {
   "id": $contactLinkId,
   "label": $ctx.args.label,
   "url": $ctx.args.url,
-  "visible": false
+  "visible": $visible
 })
 
 {
@@ -27,9 +34,8 @@
     }
   },
   "condition": {
-    "expression": "size(if_not_exists(contactLinks, :emptyList)) < :maxLinks",
+    "expression": "(attribute_not_exists(contactLinks) OR size(contactLinks) < :maxLinks)",
     "expressionValues": {
-      ":emptyList": $util.dynamodb.toDynamoDBJson([]),
       ":maxLinks": $util.dynamodb.toDynamoDBJson(10)
     }
   }

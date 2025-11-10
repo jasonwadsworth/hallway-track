@@ -36,6 +36,15 @@ type Badge {
   earnedAt: AWSDateTime
 }
 
+type LinkType {
+  id: ID!
+  label: String!
+  imageUrl: String!
+  placeholder: String!
+  urlPattern: String
+  sortOrder: Int!
+}
+
 type PublicProfile {
   id: ID!
   displayName: String!
@@ -50,12 +59,13 @@ type Query {
   getPublicProfile(userId: ID!): PublicProfile
   getMyConnections: [Connection!]!
   checkConnection(userId: ID!): Boolean!
+  getLinkTypes: [LinkType!]!
 }
 
 type Mutation {
   createUser(email: AWSEmail!, displayName: String!): User!
   updateDisplayName(displayName: String!): User!
-  addContactLink(label: String!, url: AWSURL!): User!
+  addContactLink(label: String!, url: AWSURL!, visible: Boolean): User!
   updateContactLink(contactLinkId: ID!, label: String, url: AWSURL, visible: Boolean): User!
   removeContactLink(contactLinkId: ID!): User!
   createConnection(connectedUserId: ID!): Connection!

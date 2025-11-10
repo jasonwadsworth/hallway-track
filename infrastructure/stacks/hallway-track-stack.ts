@@ -445,6 +445,31 @@ export class HallwayTrackStack extends cdk.Stack {
       comment: 'Hallway Track Frontend Distribution',
     });
 
+    // Create Lambda function for link types
+    const linkTypesFunction = new NodejsFunction(
+      this,
+      'LinkTypesFunction',
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'handler',
+        entry: path.join(__dirname, '../lambda/link-types/index.ts'),
+        bundling: {
+          externalModules: ['@aws-sdk/*'],
+        },
+      }
+    );
+
+    const linkTypesDataSource = this.api.addLambdaDataSource(
+      'LinkTypesDataSource',
+      linkTypesFunction
+    );
+
+    // Link types resolver
+    linkTypesDataSource.createResolver('GetLinkTypesResolver', {
+      typeName: 'Query',
+      fieldName: 'getLinkTypes',
+    });
+
     // Deploy website assets to S3 (if dist folder exists)
     const frontendDistPath = path.join(__dirname, '../../frontend/dist');
     new s3deploy.BucketDeployment(this, 'DeployWebsite', {

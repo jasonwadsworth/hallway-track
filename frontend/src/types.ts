@@ -1,3 +1,12 @@
+export interface LinkType {
+  id: string;
+  label: string;
+  imageUrl: string;
+  placeholder: string;
+  urlPattern?: string;
+  sortOrder: number;
+}
+
 export interface ContactLink {
   id: string;
   label: string;

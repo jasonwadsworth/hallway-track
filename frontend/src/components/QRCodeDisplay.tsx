@@ -64,7 +64,7 @@ export function QRCodeDisplay() {
     return <div className="qr-code-display">No profile found.</div>;
   }
 
-  const profileUrl = `https://app.hallwaytrack.com/profile/${profile.id}`;
+  const profileUrl = `${window.location.origin}/profile/${profile.id}`;
 
   return (
     <div className="qr-code-display">

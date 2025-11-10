@@ -68,3 +68,16 @@ export const getMyConnections = /* GraphQL */ `
     }
   }
 `;
+
+export const getLinkTypes = /* GraphQL */ `
+  query GetLinkTypes {
+    getLinkTypes {
+      id
+      label
+      imageUrl
+      placeholder
+      urlPattern
+      sortOrder
+    }
+  }
+`;
