@@ -121,6 +121,12 @@ export function Dashboard() {
           <p>Show your QR code to connect with others</p>
         </Link>
 
+        <Link to="/scan" className="action-card">
+          <div className="action-card-icon">📷</div>
+          <h3>Scan QR Code</h3>
+          <p>Scan another attendee's QR code to connect</p>
+        </Link>
+
         <Link to="/connections" className="action-card">
           <div className="action-card-icon">👥</div>
           <h3>My Connections</h3>

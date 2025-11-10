@@ -37,6 +37,7 @@ export function AppNav({ signOut }: AppNavProps) {
         <Link to="/profile" onClick={closeMobileMenu}>My Profile</Link>
         <Link to="/connections" onClick={closeMobileMenu}>Connections</Link>
         <Link to="/qr-code" onClick={closeMobileMenu}>My QR Code</Link>
+        <Link to="/scan" onClick={closeMobileMenu}>📷 Scan QR Code</Link>
         {signOut && (
           <button onClick={() => { closeMobileMenu(); signOut(); }} className="btn-signout">
             Sign Out

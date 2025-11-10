@@ -7,6 +7,7 @@ import { AppNav } from './components/AppNav'
 import { Dashboard } from './components/Dashboard'
 import { Profile } from './components/Profile'
 import { QRCodeDisplay } from './components/QRCodeDisplay'
+import { QRCodeScanner } from './components/QRCodeScanner'
 import { ConnectionList } from './components/ConnectionList'
 import { ConnectionDetail } from './components/ConnectionDetail'
 import { PublicProfile } from './components/PublicProfile'
@@ -83,6 +84,11 @@ function App() {
               <Route path="/qr-code" element={
                 <ProtectedRoute>
                   <QRCodeDisplay />
+                </ProtectedRoute>
+              } />
+              <Route path="/scan" element={
+                <ProtectedRoute>
+                  <QRCodeScanner />
                 </ProtectedRoute>
               } />
               <Route path="*" element={<Navigate to="/" replace />} />
