@@ -95,37 +95,89 @@ export function BadgeProgress() {
     );
   }
 
+  // Separate threshold and special badges
+  // For backward compatibility, treat badges without a category as threshold badges
+  const thresholdBadges = earnedBadges.filter(badge => !badge.category || badge.category === 'threshold');
+  const specialBadges = earnedBadges.filter(badge => badge.category === 'special');
+
   // If user has earned badges, display them
   if (earnedBadges.length > 0) {
     return (
       <div className="badge-progress">
         <h3>Your Badges</h3>
-        <div className="earned-badges-container">
-          {earnedBadges.map((badge) => (
-            <div
-              key={badge.id}
-              className="earned-badge-item"
-              onClick={handleBadgeClick}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  handleBadgeClick();
-                }
-              }}
-            >
-              <img
-                src={getBadgeImageUrl(badge.id)}
-                alt={badge.name}
-                className="earned-badge-image"
-                onError={(e) => {
-                  e.currentTarget.src = '/badge-images/default.svg';
-                }}
-              />
-              <div className="earned-badge-name">{badge.name}</div>
+
+        {/* Threshold Badges */}
+        {thresholdBadges.length > 0 && (
+          <div className="badge-section">
+            <h4 className="badge-section-title">Connection Milestones</h4>
+            <div className="earned-badges-container">
+              {thresholdBadges.map((badge) => (
+                <div
+                  key={badge.id}
+                  className="earned-badge-item"
+                  onClick={handleBadgeClick}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      handleBadgeClick();
+                    }
+                  }}
+                >
+                  <img
+                    src={getBadgeImageUrl(badge.id)}
+                    alt={badge.name}
+                    className="earned-badge-image"
+                    onError={(e) => {
+                      e.currentTarget.src = '/badge-images/default.svg';
+                    }}
+                  />
+                  <div className="earned-badge-name">{badge.name}</div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        )}
+
+        {/* Special Badges */}
+        {specialBadges.length > 0 && (
+          <div className="badge-section">
+            <h4 className="badge-section-title">Special Achievements</h4>
+            <div className="earned-badges-container">
+              {specialBadges.map((badge, index) => {
+                const badgeKey = badge.metadata?.eventYear
+                  ? `${badge.id}-${badge.metadata.eventYear}`
+                  : `${badge.id}-${index}`;
+
+                return (
+                  <div
+                    key={badgeKey}
+                    className="earned-badge-item special"
+                    onClick={handleBadgeClick}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        handleBadgeClick();
+                      }
+                    }}
+                  >
+                    <img
+                      src={getBadgeImageUrl(badge.id)}
+                      alt={badge.name}
+                      className="earned-badge-image"
+                      onError={(e) => {
+                        e.currentTarget.src = '/badge-images/default.svg';
+                      }}
+                    />
+                    <div className="earned-badge-name">{badge.name}</div>
+                    <div className="earned-badge-status">Earned</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     );
   }

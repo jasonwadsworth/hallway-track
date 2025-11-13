@@ -18,6 +18,14 @@ export const getMyProfile = /* GraphQL */ `
         threshold
         iconUrl
         earnedAt
+        category
+        metadata {
+          relatedUserId
+          relatedUserName
+          eventYear
+          count
+          triangleUsers
+        }
       }
       connectionCount
       createdAt
@@ -45,6 +53,14 @@ export const getPublicProfile = /* GraphQL */ `
         threshold
         iconUrl
         earnedAt
+        category
+        metadata {
+          relatedUserId
+          relatedUserName
+          eventYear
+          count
+          triangleUsers
+        }
       }
     }
   }

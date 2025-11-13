@@ -141,10 +141,89 @@ To test:
 5. Scan another user's QR code to create a connection
 6. Earn badges as you make more connections
 
+## Badge System Configuration
+
+The application includes a special badge system with configurable parameters.
+
+### Configuration File
+
+Edit `infrastructure/config.ts` to configure badge settings:
+
+```typescript
+export const config: HallwayTrackConfig = {
+  badges: {
+    // Set this to your user ID to enable "Met the Maker" badge
+    makerUserId: 'your-cognito-user-id-here',
+
+    // Configure re:Invent dates for event badges
+    reinventDates: [
+      {
+        year: 2024,
+        start: '2024-12-02',
+        end: '2024-12-06'
+      },
+      {
+        year: 2025,
+        start: '2025-12-01',
+        end: '2025-12-05'
+      }
+    ]
+  }
+};
+```
+
+#### Finding Your User ID
+
+To find your user ID for the maker badge:
+1. Sign in to the application
+2. Open browser DevTools → Console
+3. Run: `localStorage.getItem('CognitoIdentityServiceProvider.3u3h1edvnc0baes8gb8bcptefr.LastAuthUser')`
+4. Or query DynamoDB Users table for your email
+
+### Deploying with Configuration
+
+```bash
+# Edit infrastructure/config.ts with your values
+# Then deploy
+npm run cdk:deploy
+```
+
+### Special Badge Types
+
+1. **Met the Maker** - Awarded when connecting with the configured maker user
+2. **Early Supporter** - Awarded to first 10 connections when someone reaches 500 connections
+3. **VIP Connection** - Awarded for connecting with users who have 50+ connections
+4. **Triangle Complete** - Awarded when creating a mutual connection triangle
+5. **re:Invent Connector** - Awarded for connections made during configured event dates
+
+### Running Badge Migration
+
+After deploying the badge system, run the migration Lambda to award badges retroactively:
+
+```bash
+# Invoke the migration Lambda
+aws lambda invoke \
+  --function-name HallwayTrackStack-BadgeMigrationFunction-XXXXX \
+  --region us-west-2 \
+  response.json
+
+# Check the response
+cat response.json
+```
+
+Find the exact function name:
+```bash
+aws lambda list-functions --region us-west-2 | grep BadgeMigration
+```
+
 ## Architecture
 
 ```
 Users → CloudFront (CDN) → S3 (Static Assets)
                 ↓
         Cognito (Auth) → AppSync (GraphQL) → Lambda Functions → DynamoDB
+                                                      ↓
+                                              EventBridge (Badge Events)
+                                                      ↓
+                                              Badge Handler Lambdas
 ```

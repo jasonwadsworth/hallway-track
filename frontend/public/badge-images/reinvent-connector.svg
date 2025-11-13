@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <circle cx="50" cy="50" r="45" fill="#FF6347" stroke="#DC143C" stroke-width="3"/>
+  <path d="M50 20 L62 42 L86 45 L68 62 L73 86 L50 73 L27 86 L32 62 L14 45 L38 42 Z" fill="#DC143C"/>
+  <text x="50" y="95" font-family="Arial" font-size="6" text-anchor="middle" fill="#333">re:Invent</text>
+</svg>

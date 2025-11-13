@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <circle cx="50" cy="50" r="45" fill="#9370DB" stroke="#8A2BE2" stroke-width="3"/>
+  <path d="M50 20 L58 38 L78 41 L64 54 L68 74 L50 64 L32 74 L36 54 L22 41 L42 38 Z" fill="#8A2BE2"/>
+  <text x="50" y="95" font-family="Arial" font-size="8" text-anchor="middle" fill="#333">VIP</text>
+</svg>

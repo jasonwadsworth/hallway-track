@@ -16,6 +16,7 @@ interface Badge {
   threshold: number;
   iconUrl?: string;
   earnedAt?: string;
+  category?: string;
 }
 
 interface User {
@@ -244,6 +245,7 @@ async function checkAndAwardBadges(user: User): Promise<void> {
         name: badgeDef.name,
         description: badgeDef.description,
         threshold: badgeDef.threshold,
+        category: 'threshold',
         earnedAt: new Date().toISOString(),
       });
     }

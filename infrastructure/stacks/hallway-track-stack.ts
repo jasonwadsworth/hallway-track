@@ -8,8 +8,18 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
+import * as events from 'aws-cdk-lib/aws-events';
+import * as targets from 'aws-cdk-lib/aws-events-targets';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as logs from 'aws-cdk-lib/aws-logs';
+import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources';
 import * as path from 'path';
 import { Construct } from 'constructs';
+import { HallwayTrackConfig } from '../config';
+
+export interface HallwayTrackStackProps extends cdk.StackProps {
+  config: HallwayTrackConfig;
+}
 
 export class HallwayTrackStack extends cdk.Stack {
   public readonly userPool: cognito.UserPool;
@@ -19,9 +29,12 @@ export class HallwayTrackStack extends cdk.Stack {
   public readonly api: appsync.GraphqlApi;
   public readonly websiteBucket: s3.Bucket;
   public readonly distribution: cloudfront.Distribution;
+  public readonly badgeEventBus: events.EventBus;
 
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: HallwayTrackStackProps) {
     super(scope, id, props);
+
+    const { config } = props;
 
     // ===== Authentication =====
 
@@ -41,6 +54,7 @@ export class HallwayTrackStack extends cdk.Stack {
       },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
+      stream: dynamodb.StreamViewType.NEW_AND_OLD_IMAGES,
     });
 
     // Create post-confirmation Lambda function
@@ -114,6 +128,7 @@ export class HallwayTrackStack extends cdk.Stack {
       },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
+      stream: dynamodb.StreamViewType.NEW_AND_OLD_IMAGES,
     });
 
     // Add GSI for querying connections by connectedUserId
@@ -127,6 +142,20 @@ export class HallwayTrackStack extends cdk.Stack {
         name: 'GSI1SK',
         type: dynamodb.AttributeType.STRING,
       },
+    });
+
+    // ===== EventBridge for Badge System =====
+
+    // Create EventBridge event bus for badge events
+    this.badgeEventBus = new events.EventBus(this, 'BadgeEventBus', {
+      eventBusName: 'hallway-track-badges',
+    });
+
+    // Create CloudWatch log group for event bus
+    const eventBusLogGroup = new logs.LogGroup(this, 'BadgeEventBusLogGroup', {
+      logGroupName: '/aws/events/hallway-track-badges',
+      retention: logs.RetentionDays.ONE_WEEK,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
     // ===== AppSync GraphQL API =====
@@ -235,6 +264,257 @@ export class HallwayTrackStack extends cdk.Stack {
       'ConnectionsDataSourceLambda',
       connectionsFunction
     );
+
+    // ===== Badge Stream Processor =====
+
+    // Create Lambda function for processing DynamoDB streams
+    const badgeStreamProcessor = new NodejsFunction(
+      this,
+      'BadgeStreamProcessor',
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'handler',
+        entry: path.join(__dirname, '../lambda/badge-stream-processor/index.ts'),
+        bundling: {
+          externalModules: ['@aws-sdk/*'],
+        },
+        environment: {
+          EVENT_BUS_NAME: this.badgeEventBus.eventBusName,
+        },
+      }
+    );
+
+    // Grant permissions to publish events to EventBridge
+    this.badgeEventBus.grantPutEventsTo(badgeStreamProcessor);
+
+    // Connect Lambda to DynamoDB streams
+    badgeStreamProcessor.addEventSource(
+      new lambdaEventSources.DynamoEventSource(this.usersTable, {
+        startingPosition: lambda.StartingPosition.LATEST,
+        batchSize: 10,
+        retryAttempts: 3,
+      })
+    );
+
+    badgeStreamProcessor.addEventSource(
+      new lambdaEventSources.DynamoEventSource(this.connectionsTable, {
+        startingPosition: lambda.StartingPosition.LATEST,
+        batchSize: 10,
+        retryAttempts: 3,
+      })
+    );
+
+    // ===== Badge Handler Lambdas =====
+
+    // Create DLQ for failed badge events
+    const badgeDLQ = new sqs.Queue(this, 'BadgeDLQ', {
+      queueName: 'hallway-track-badge-dlq',
+      retentionPeriod: cdk.Duration.days(14),
+    });
+
+    // Maker Badge Handler
+    const makerBadgeHandler = new NodejsFunction(
+      this,
+      'MakerBadgeHandler',
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'handler',
+        entry: path.join(__dirname, '../lambda/badge-handlers/maker-badge/index.ts'),
+        bundling: {
+          externalModules: ['@aws-sdk/*'],
+        },
+        environment: {
+          USERS_TABLE_NAME: this.usersTable.tableName,
+          MAKER_USER_ID: config.badges.makerUserId || '',
+        },
+      }
+    );
+
+    this.usersTable.grantReadWriteData(makerBadgeHandler);
+
+    // Create EventBridge rule for maker badge
+    new events.Rule(this, 'MakerBadgeRule', {
+      eventBus: this.badgeEventBus,
+      eventPattern: {
+        source: ['hallway-track.connections'],
+        detailType: ['ConnectionCreated'],
+      },
+      targets: [
+        new targets.LambdaFunction(makerBadgeHandler, {
+          deadLetterQueue: badgeDLQ,
+          retryAttempts: 2,
+        }),
+      ],
+    });
+
+    // VIP Badge Handler
+    const vipBadgeHandler = new NodejsFunction(
+      this,
+      'VIPBadgeHandler',
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'handler',
+        entry: path.join(__dirname, '../lambda/badge-handlers/vip-badge/index.ts'),
+        bundling: {
+          externalModules: ['@aws-sdk/*'],
+        },
+        environment: {
+          USERS_TABLE_NAME: this.usersTable.tableName,
+        },
+      }
+    );
+
+    this.usersTable.grantReadWriteData(vipBadgeHandler);
+
+    // Create EventBridge rule for VIP badge
+    new events.Rule(this, 'VIPBadgeRule', {
+      eventBus: this.badgeEventBus,
+      eventPattern: {
+        source: ['hallway-track.connections'],
+        detailType: ['ConnectionCreated'],
+      },
+      targets: [
+        new targets.LambdaFunction(vipBadgeHandler, {
+          deadLetterQueue: badgeDLQ,
+          retryAttempts: 2,
+        }),
+      ],
+    });
+
+    // Triangle Badge Handler
+    const triangleBadgeHandler = new NodejsFunction(
+      this,
+      'TriangleBadgeHandler',
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'handler',
+        entry: path.join(__dirname, '../lambda/badge-handlers/triangle-badge/index.ts'),
+        bundling: {
+          externalModules: ['@aws-sdk/*'],
+        },
+        environment: {
+          USERS_TABLE_NAME: this.usersTable.tableName,
+          CONNECTIONS_TABLE_NAME: this.connectionsTable.tableName,
+        },
+      }
+    );
+
+    this.usersTable.grantReadWriteData(triangleBadgeHandler);
+    this.connectionsTable.grantReadData(triangleBadgeHandler);
+
+    // Create EventBridge rule for triangle badge
+    new events.Rule(this, 'TriangleBadgeRule', {
+      eventBus: this.badgeEventBus,
+      eventPattern: {
+        source: ['hallway-track.connections'],
+        detailType: ['ConnectionCreated'],
+      },
+      targets: [
+        new targets.LambdaFunction(triangleBadgeHandler, {
+          deadLetterQueue: badgeDLQ,
+          retryAttempts: 2,
+        }),
+      ],
+    });
+
+    // Event Badge Handler
+    const eventBadgeHandler = new NodejsFunction(
+      this,
+      'EventBadgeHandler',
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'handler',
+        entry: path.join(__dirname, '../lambda/badge-handlers/event-badge/index.ts'),
+        bundling: {
+          externalModules: ['@aws-sdk/*'],
+        },
+        environment: {
+          USERS_TABLE_NAME: this.usersTable.tableName,
+          REINVENT_DATES: JSON.stringify(config.badges.reinventDates),
+        },
+      }
+    );
+
+    this.usersTable.grantReadWriteData(eventBadgeHandler);
+
+    // Create EventBridge rule for event badge
+    new events.Rule(this, 'EventBadgeRule', {
+      eventBus: this.badgeEventBus,
+      eventPattern: {
+        source: ['hallway-track.connections'],
+        detailType: ['ConnectionCreated'],
+      },
+      targets: [
+        new targets.LambdaFunction(eventBadgeHandler, {
+          deadLetterQueue: badgeDLQ,
+          retryAttempts: 2,
+        }),
+      ],
+    });
+
+    // Early Supporter Badge Handler
+    const earlySupporterBadgeHandler = new NodejsFunction(
+      this,
+      'EarlySupporterBadgeHandler',
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'handler',
+        entry: path.join(__dirname, '../lambda/badge-handlers/early-supporter-badge/index.ts'),
+        bundling: {
+          externalModules: ['@aws-sdk/*'],
+        },
+        environment: {
+          USERS_TABLE_NAME: this.usersTable.tableName,
+          CONNECTIONS_TABLE_NAME: this.connectionsTable.tableName,
+        },
+        timeout: cdk.Duration.minutes(1),
+      }
+    );
+
+    this.usersTable.grantReadWriteData(earlySupporterBadgeHandler);
+    this.connectionsTable.grantReadData(earlySupporterBadgeHandler);
+
+    // Create EventBridge rule for early supporter badge
+    new events.Rule(this, 'EarlySupporterBadgeRule', {
+      eventBus: this.badgeEventBus,
+      eventPattern: {
+        source: ['hallway-track.users'],
+        detailType: ['UserConnectionCountUpdated'],
+      },
+      targets: [
+        new targets.LambdaFunction(earlySupporterBadgeHandler, {
+          deadLetterQueue: badgeDLQ,
+          retryAttempts: 2,
+        }),
+      ],
+    });
+
+    // ===== Badge Migration Lambda =====
+
+    // Create Lambda function for one-time badge migration
+    const badgeMigrationFunction = new NodejsFunction(
+      this,
+      'BadgeMigrationFunction',
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'handler',
+        entry: path.join(__dirname, '../lambda/badge-migration/index.ts'),
+        bundling: {
+          externalModules: ['@aws-sdk/*'],
+        },
+        environment: {
+          USERS_TABLE_NAME: this.usersTable.tableName,
+          CONNECTIONS_TABLE_NAME: this.connectionsTable.tableName,
+          EVENT_BUS_NAME: this.badgeEventBus.eventBusName,
+        },
+        timeout: cdk.Duration.minutes(15),
+        memorySize: 512,
+      }
+    );
+
+    this.usersTable.grantReadData(badgeMigrationFunction);
+    this.connectionsTable.grantReadData(badgeMigrationFunction);
+    this.badgeEventBus.grantPutEventsTo(badgeMigrationFunction);
 
     // Create Lambda data source for custom resolvers
     const resolverFunction = new lambda.Function(this, 'ResolverFunction', {

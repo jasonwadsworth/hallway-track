@@ -14,6 +14,14 @@ export interface ContactLink {
   visible: boolean;
 }
 
+export interface BadgeMetadata {
+  relatedUserId?: string;
+  relatedUserName?: string;
+  eventYear?: number;
+  count?: number;
+  triangleUsers?: string[];
+}
+
 export interface Badge {
   id: string;
   name: string;
@@ -21,6 +29,8 @@ export interface Badge {
   threshold: number;
   iconUrl?: string;
   earnedAt?: string;
+  category?: 'threshold' | 'special';
+  metadata?: BadgeMetadata;
 }
 
 export interface User {

@@ -94,3 +94,19 @@
   color: #999;
   font-style: italic;
 }
+
+.badge-item.special-badge {
+  border-color: #FFD700;
+  background: linear-gradient(135deg, #FFF9E6 0%, #FFFFFF 100%);
+}
+
+.badge-item.special-badge .badge-name {
+  color: #FF8C00;
+}
+
+.badge-metadata {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 5px;
+  font-style: italic;
+}

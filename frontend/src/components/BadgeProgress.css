@@ -235,3 +235,34 @@
     font-size: 11px;
   }
 }
+
+.badge-section {
+  margin-bottom: 25px;
+}
+
+.badge-section-title {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 15px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.earned-badge-item.special {
+  background: linear-gradient(135deg, #FFF9E6 0%, #FFFFFF 100%);
+  border-color: #FFD700;
+}
+
+.earned-badge-item.special:hover {
+  border-color: #FFA500;
+  background: linear-gradient(135deg, #FFF5CC 0%, #FFFFFF 100%);
+}
+
+.earned-badge-status {
+  font-size: 10px;
+  color: #4CAF50;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-top: 5px;
+}

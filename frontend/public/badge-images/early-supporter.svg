@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <circle cx="50" cy="50" r="45" fill="#4169E1" stroke="#1E90FF" stroke-width="3"/>
+  <path d="M50 25 L55 45 L75 45 L60 57 L65 77 L50 65 L35 77 L40 57 L25 45 L45 45 Z" fill="#1E90FF"/>
+  <text x="50" y="95" font-family="Arial" font-size="7" text-anchor="middle" fill="#333">Early</text>
+</svg>
