@@ -114,32 +114,6 @@ export function Dashboard() {
     <div className="dashboard">
       <h1>Welcome to Hallway Track</h1>
 
-      <div className="quick-actions">
-        <Link to="/qr-code" className="action-card">
-          <div className="action-card-icon">📱</div>
-          <h3>View My QR Code</h3>
-          <p>Show your QR code to connect with others</p>
-        </Link>
-
-        <Link to="/scan" className="action-card">
-          <div className="action-card-icon">📷</div>
-          <h3>Scan QR Code</h3>
-          <p>Scan another attendee's QR code to connect</p>
-        </Link>
-
-        <Link to="/connections" className="action-card">
-          <div className="action-card-icon">👥</div>
-          <h3>My Connections</h3>
-          <p>View all your connections</p>
-        </Link>
-
-        <Link to="/profile" className="action-card">
-          <div className="action-card-icon">✏️</div>
-          <h3>Edit Profile</h3>
-          <p>Update your display name and contact links</p>
-        </Link>
-      </div>
-
       <div className="dashboard-section">
         <h2>Badge Progress</h2>
         <BadgeProgress />
