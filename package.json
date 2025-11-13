@@ -13,22 +13,33 @@
     "cdk:bootstrap": "cdk bootstrap",
     "frontend:install": "cd frontend && npm install",
     "frontend:dev": "cd frontend && npm run dev",
-    "frontend:build": "cd frontend && npm run build"
+    "frontend:build": "cd frontend && npm run build",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "lint:check": "eslint . --max-warnings 0"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@eslint/js": "^9.39.1",
     "@types/aws-lambda": "^8.10.0",
     "@types/node": "^24.10.0",
+    "@types/source-map-support": "^0.5.10",
     "aws-cdk-lib": "^2.222.0",
     "constructs": "^10.4.3",
-    "esbuild": "^0.19.0",
+    "esbuild": "^0.27.0",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.4"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.0.0",
+    "@aws-sdk/client-eventbridge": "^3.931.0",
     "@aws-sdk/lib-dynamodb": "^3.0.0",
     "aws-cdk": "^2.1031.2",
     "source-map-support": "^0.5.21"

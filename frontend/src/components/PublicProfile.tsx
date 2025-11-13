@@ -22,36 +22,42 @@ export function PublicProfile() {
 
   useEffect(() => {
     if (userId) {
+      async function loadProfile() {
+        if (!userId) {
+          setError('Invalid user ID');
+          setLoading(false);
+          return;
+        }
+
+        const client = generateClient();
+        try {
+          setLoading(true);
+          setError(null);
+          const response = await client.graphql({
+            query: getPublicProfile,
+            variables: { userId },
+          });
+          if ('data' in response && response.data) {
+            setProfile(response.data.getPublicProfile as PublicProfileType);
+          }
+        } catch (err) {
+          console.error('Error loading public profile:', err);
+          const errorInfo = parseGraphQLError(err);
+          setError(errorInfo.message);
+        } finally {
+          setLoading(false);
+        }
+      }
+
       loadProfile();
     }
   }, [userId]);
 
-  async function loadProfile() {
-    if (!userId) {
-      setError('Invalid user ID');
-      setLoading(false);
-      return;
-    }
-
-    const client = generateClient();
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await client.graphql({
-        query: getPublicProfile,
-        variables: { userId },
-      });
-      if ('data' in response && response.data) {
-        setProfile(response.data.getPublicProfile as PublicProfileType);
-      }
-    } catch (err) {
-      console.error('Error loading public profile:', err);
-      const errorInfo = parseGraphQLError(err);
-      setError(errorInfo.message);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const handleRetry = () => {
+    setError(null);
+    setLoading(true);
+    // The useEffect will run again because we're changing state
+  };
 
   if (loading) {
     return (
@@ -66,7 +72,7 @@ export function PublicProfile() {
       <div className="public-profile">
         <ErrorMessage
           message={error || 'User not found'}
-          onRetry={loadProfile}
+          onRetry={handleRetry}
         />
       </div>
     );

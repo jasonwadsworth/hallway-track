@@ -64,6 +64,11 @@ type PublicProfile {
   badges: [Badge!]!
 }
 
+type RemoveConnectionResult {
+  success: Boolean!
+  message: String
+}
+
 type Query {
   getUser(id: ID!): User
   getMyProfile: User
@@ -80,6 +85,7 @@ type Mutation {
   updateContactLink(contactLinkId: ID!, label: String, url: String, visible: Boolean): User!
   removeContactLink(contactLinkId: ID!): User!
   createConnection(connectedUserId: ID!): Connection!
+  removeConnection(connectionId: ID!): RemoveConnectionResult!
   addTagToConnection(connectionId: ID!, tag: String!): Connection!
   removeTagFromConnection(connectionId: ID!, tag: String!): Connection!
   updateConnectionNote(connectionId: ID!, note: String): Connection!

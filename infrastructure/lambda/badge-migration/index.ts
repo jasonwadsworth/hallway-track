@@ -127,15 +127,6 @@ export async function handler(): Promise<void> {
     } while (lastEvaluatedKey);
 
     console.log(`Migration complete! Processed ${processedUsers} users, published ${publishedEvents} events`);
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        message: 'Migration completed successfully',
-        processedUsers,
-        publishedEvents
-      })
-    } as any;
   } catch (error) {
     console.error('Migration failed:', error);
     throw error;

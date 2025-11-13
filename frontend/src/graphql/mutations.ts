@@ -94,6 +94,15 @@ export const createConnection = /* GraphQL */ `
   }
 `;
 
+export const removeConnection = /* GraphQL */ `
+  mutation RemoveConnection($connectionId: ID!) {
+    removeConnection(connectionId: $connectionId) {
+      success
+      message
+    }
+  }
+`;
+
 export const addTagToConnection = /* GraphQL */ `
   mutation AddTagToConnection($connectionId: ID!, $tag: String!) {
     addTagToConnection(connectionId: $connectionId, tag: $tag) {

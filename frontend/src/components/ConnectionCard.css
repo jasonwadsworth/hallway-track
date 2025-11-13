@@ -102,3 +102,32 @@
     color: #007bff;
   }
 }
+
+.remove-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: color 0.2s, background-color 0.2s;
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+}
+
+.remove-button:hover {
+  color: #dc3545;
+  background-color: #fee;
+}
+
+.remove-button:active {
+  transform: scale(0.95);
+}
+
+.remove-button svg {
+  width: 20px;
+  height: 20px;
+}

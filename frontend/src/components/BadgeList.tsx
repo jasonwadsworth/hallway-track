@@ -22,8 +22,6 @@ const SPECIAL_BADGES = [
   { id: 'reinvent-connector', name: 're:Invent Connector', threshold: 0, description: 'Connected during AWS re:Invent', category: 'special' },
 ];
 
-const ALL_BADGES = [...THRESHOLD_BADGES, ...SPECIAL_BADGES];
-
 function getBadgeImageUrl(badgeId: string): string {
   return `/badge-images/${badgeId}.svg`;
 }

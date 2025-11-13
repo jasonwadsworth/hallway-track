@@ -1,4 +1,4 @@
-import { LINK_TYPES, LinkTypeDefinition } from './linkTypeConfig';
+import { LINK_TYPES } from './linkTypeConfig';
 
 interface LinkTypeResponse {
   id: string;

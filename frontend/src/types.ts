@@ -63,3 +63,8 @@ export interface Connection {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface RemoveConnectionResult {
+  success: boolean;
+  message?: string;
+}

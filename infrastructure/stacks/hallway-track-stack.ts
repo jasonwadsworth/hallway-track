@@ -152,7 +152,7 @@ export class HallwayTrackStack extends cdk.Stack {
     });
 
     // Create CloudWatch log group for event bus
-    const eventBusLogGroup = new logs.LogGroup(this, 'BadgeEventBusLogGroup', {
+    new logs.LogGroup(this, 'BadgeEventBusLogGroup', {
       logGroupName: '/aws/events/hallway-track-badges',
       retention: logs.RetentionDays.ONE_WEEK,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
@@ -186,7 +186,7 @@ export class HallwayTrackStack extends cdk.Stack {
       this.usersTable
     );
 
-    const connectionsDataSource = this.api.addDynamoDbDataSource(
+    this.api.addDynamoDbDataSource(
       'ConnectionsDataSource',
       this.connectionsTable
     );
@@ -539,7 +539,7 @@ export class HallwayTrackStack extends cdk.Stack {
     this.usersTable.grantReadWriteData(resolverFunction);
     this.connectionsTable.grantReadWriteData(resolverFunction);
 
-    const lambdaDataSource = this.api.addLambdaDataSource(
+    this.api.addLambdaDataSource(
       'LambdaDataSource',
       resolverFunction
     );

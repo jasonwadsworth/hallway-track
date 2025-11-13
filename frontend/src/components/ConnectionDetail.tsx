@@ -24,66 +24,70 @@ export function ConnectionDetail() {
   const [noteSaveError, setNoteSaveError] = useState<string | null>(null);
 
   useEffect(() => {
+    async function loadConnection() {
+      if (!id) {
+        setError('Invalid connection ID');
+        setLoading(false);
+        return;
+      }
+
+      const client = generateClient();
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Get all connections and find the one with matching ID
+        const response = await client.graphql({
+          query: getMyConnections,
+        });
+
+        if ('data' in response && response.data) {
+          const connections = response.data.getMyConnections as Connection[];
+          const foundConnection = connections.find(c => c.id === id);
+
+          if (!foundConnection) {
+            setError('Connection not found');
+            setLoading(false);
+            return;
+          }
+
+          // Fetch connected user details
+          const userResponse = await client.graphql({
+            query: getPublicProfile,
+            variables: { userId: foundConnection.connectedUserId },
+          });
+
+          if ('data' in userResponse && userResponse.data) {
+            const userProfile = userResponse.data.getPublicProfile as PublicProfile;
+            setConnection({
+              ...foundConnection,
+              connectedUser: userProfile,
+            });
+            setNoteText(foundConnection.note || '');
+          }
+        }
+      } catch (err) {
+        console.error('Error loading connection:', err);
+        const errorInfo = parseGraphQLError(err);
+        setError(errorInfo.message);
+
+        if (errorInfo.isAuthError) {
+          await handleAuthError();
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+
     loadConnection();
   }, [id]);
 
-  async function loadConnection() {
-    if (!id) {
-      setError('Invalid connection ID');
-      setLoading(false);
-      return;
-    }
-
-    const client = generateClient();
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Get all connections and find the one with matching ID
-      const response = await client.graphql({
-        query: getMyConnections,
-      });
-
-      if ('data' in response && response.data) {
-        const connections = response.data.getMyConnections as Connection[];
-        const foundConnection = connections.find(c => c.id === id);
-
-        if (!foundConnection) {
-          setError('Connection not found');
-          setLoading(false);
-          return;
-        }
-
-        // Fetch connected user details
-        const userResponse = await client.graphql({
-          query: getPublicProfile,
-          variables: { userId: foundConnection.connectedUserId },
-        });
-
-        if ('data' in userResponse && userResponse.data) {
-          const conn = {
-            ...foundConnection,
-            connectedUser: userResponse.data.getPublicProfile as PublicProfile,
-          };
-          setConnection(conn);
-          setNoteText(conn.note || '');
-        } else {
-          setConnection(foundConnection);
-          setNoteText(foundConnection.note || '');
-        }
-      }
-    } catch (err) {
-      console.error('Error loading connection:', err);
-      const errorInfo = parseGraphQLError(err);
-      setError(errorInfo.message);
-
-      if (errorInfo.isAuthError) {
-        await handleAuthError();
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
+  const handleRetry = () => {
+    // Trigger a re-render by updating a dependency
+    setError(null);
+    setLoading(true);
+    // The useEffect will run again because we're changing state
+  };
 
   const handleTagsUpdated = (updatedConnection: Connection) => {
     setConnection(updatedConnection);
@@ -172,7 +176,7 @@ export function ConnectionDetail() {
         </button>
         <ErrorMessage
           message={error || 'Unable to load connection details'}
-          onRetry={loadConnection}
+          onRetry={handleRetry}
         />
       </div>
     );
@@ -188,7 +192,7 @@ export function ConnectionDetail() {
         </button>
         <ErrorMessage
           message="Unable to load connection details"
-          onRetry={loadConnection}
+          onRetry={handleRetry}
         />
       </div>
     );

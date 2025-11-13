@@ -18,33 +18,33 @@ export function ConnectButton({ userId }: ConnectButtonProps) {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    async function checkIfConnected() {
+      const client = generateClient();
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await client.graphql({
+          query: checkConnection,
+          variables: { userId },
+        });
+        if ('data' in response && response.data) {
+          setIsConnected(response.data.checkConnection as boolean);
+        }
+      } catch (err) {
+        console.error('Error checking connection:', err);
+        const errorInfo = parseGraphQLError(err);
+        setError(errorInfo.message);
+
+        if (errorInfo.isAuthError) {
+          await handleAuthError();
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+
     checkIfConnected();
   }, [userId]);
-
-  async function checkIfConnected() {
-    const client = generateClient();
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await client.graphql({
-        query: checkConnection,
-        variables: { userId },
-      });
-      if ('data' in response && response.data) {
-        setIsConnected(response.data.checkConnection as boolean);
-      }
-    } catch (err) {
-      console.error('Error checking connection:', err);
-      const errorInfo = parseGraphQLError(err);
-      setError(errorInfo.message);
-
-      if (errorInfo.isAuthError) {
-        await handleAuthError();
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function handleConnect() {
     const client = generateClient();

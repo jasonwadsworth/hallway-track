@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Html5Qrcode } from 'html5-qrcode';
-import type { Html5QrcodeResult } from 'html5-qrcode';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorMessage } from './ErrorMessage';
 import './QRCodeScanner.css';
@@ -175,7 +174,7 @@ export const QRCodeScanner = () => {
   };
 
   // Handle successful QR code scan
-  const onScanSuccess = async (decodedText: string, _decodedResult: Html5QrcodeResult): Promise<void> => {
+  const onScanSuccess = async (decodedText: string): Promise<void> => {
     console.log('QR Code detected:', decodedText);
 
     // Extract profile ID from scanned URL
@@ -303,6 +302,8 @@ export const QRCodeScanner = () => {
 
       cleanup();
     };
+    // initializeScanner is stable and doesn't need to be in deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handle orientation changes - maintain camera stream

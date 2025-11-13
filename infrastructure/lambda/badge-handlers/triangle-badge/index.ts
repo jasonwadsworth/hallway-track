@@ -83,7 +83,7 @@ export async function handler(
     );
 
     const userConnectionIds = new Set(
-      (userConnectionsResult.Items || []).map((c: Connection) => c.connectedUserId)
+      (userConnectionsResult.Items || []).map((item) => (item as Connection).connectedUserId)
     );
 
     // Query connected user's connections
@@ -100,7 +100,10 @@ export async function handler(
 
     // Find mutual connections (excluding the new connection)
     const mutualConnection = (connectedUserConnectionsResult.Items || []).find(
-      (c: Connection) => userConnectionIds.has(c.connectedUserId) && c.connectedUserId !== userId
+      (item) => {
+        const c = item as Connection;
+        return userConnectionIds.has(c.connectedUserId) && c.connectedUserId !== userId;
+      }
     );
 
     if (!mutualConnection) {

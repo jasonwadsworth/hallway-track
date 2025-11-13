@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
-import type { Connection, PublicProfile } from '../types';
+import type { Connection, PublicProfile, RemoveConnectionResult } from '../types';
 import { getMyConnections } from '../graphql/queries';
 import { getPublicProfile } from '../graphql/queries';
+import { removeConnection } from '../graphql/mutations';
 import { ConnectionCard } from './ConnectionCard';
 import { ErrorMessage } from './ErrorMessage';
 import { LoadingSpinner } from './LoadingSpinner';
@@ -15,6 +16,8 @@ export function ConnectionList() {
   const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
+  const [removing, setRemoving] = useState(false);
 
   useEffect(() => {
     loadConnections();
@@ -76,6 +79,51 @@ export function ConnectionList() {
     }
   }
 
+  function handleRemoveClick(connectionId: string) {
+    setConfirmRemove(connectionId);
+  }
+
+  async function handleConfirmRemove() {
+    if (!confirmRemove) return;
+
+    const client = generateClient();
+    try {
+      setRemoving(true);
+      setError(null);
+
+      const response = await client.graphql({
+        query: removeConnection,
+        variables: { connectionId: confirmRemove },
+      });
+
+      if ('data' in response && response.data) {
+        const result = response.data.removeConnection as RemoveConnectionResult;
+
+        if (result.success) {
+          // Remove connection from local state
+          setConnections(prev => prev.filter(c => c.id !== confirmRemove));
+          setConfirmRemove(null);
+        } else {
+          setError(result.message || 'Failed to remove connection');
+        }
+      }
+    } catch (err) {
+      console.error('Error removing connection:', err);
+      const errorInfo = parseGraphQLError(err);
+      setError(errorInfo.message);
+
+      if (errorInfo.isAuthError) {
+        await handleAuthError();
+      }
+    } finally {
+      setRemoving(false);
+    }
+  }
+
+  function handleCancelRemove() {
+    setConfirmRemove(null);
+  }
+
   if (loading) {
     return (
       <div className="connection-list">
@@ -105,6 +153,8 @@ export function ConnectionList() {
     );
   }
 
+  const connectionToRemove = connections.find(c => c.id === confirmRemove);
+
   return (
     <div className="connection-list">
       <h2>My Connections ({connections.length})</h2>
@@ -114,9 +164,39 @@ export function ConnectionList() {
             key={connection.id}
             connection={connection}
             onClick={() => navigate(`/connections/${connection.id}`)}
+            onRemove={handleRemoveClick}
           />
         ))}
       </div>
+
+      {confirmRemove && (
+        <div className="modal-overlay" onClick={handleCancelRemove}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>Remove Connection</h3>
+            <p>
+              Are you sure you want to remove your connection with{' '}
+              <strong>{connectionToRemove?.connectedUser?.displayName || 'this user'}</strong>?
+            </p>
+            <p className="warning-text">This action cannot be undone.</p>
+            <div className="modal-actions">
+              <button
+                className="button-secondary"
+                onClick={handleCancelRemove}
+                disabled={removing}
+              >
+                Cancel
+              </button>
+              <button
+                className="button-danger"
+                onClick={handleConfirmRemove}
+                disabled={removing}
+              >
+                {removing ? 'Removing...' : 'Remove Connection'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
