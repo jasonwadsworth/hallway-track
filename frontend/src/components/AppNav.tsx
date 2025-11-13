@@ -57,6 +57,7 @@ export function AppNav({ signOut }: AppNavProps) {
         <Link to="/" onClick={closeMobileMenu}>🏠 Home</Link>
         <Link to="/profile" onClick={closeMobileMenu}>👤 My Profile</Link>
         <Link to="/connections" onClick={closeMobileMenu}>👥 Connections</Link>
+        <Link to="/badges" onClick={closeMobileMenu}>🏆 Badges</Link>
         <Link to="/qr-code" onClick={closeMobileMenu}>📱 My QR Code</Link>
         <Link to="/scan" onClick={closeMobileMenu}>📷 Scan QR Code</Link>
         {signOut && (

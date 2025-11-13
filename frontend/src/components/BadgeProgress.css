@@ -152,6 +152,53 @@
   text-align: right;
 }
 
+.earned-badges-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 20px;
+  padding: 10px 0;
+}
+
+.earned-badge-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.earned-badge-item:hover {
+  background: #f0f0f0;
+  border-color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.earned-badge-item:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.earned-badge-image {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  margin-bottom: 10px;
+}
+
+.earned-badge-name {
+  font-size: 12px;
+  color: #333;
+  text-align: center;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
 @media (max-width: 600px) {
   .progress-stats {
     flex-direction: column;
@@ -163,5 +210,28 @@
 
   .next-badge-name {
     font-size: 18px;
+  }
+
+  .earned-badges-container {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 15px;
+    overflow-x: auto;
+    display: flex;
+    flex-wrap: nowrap;
+    padding: 10px 5px;
+  }
+
+  .earned-badge-item {
+    flex: 0 0 80px;
+    padding: 10px;
+  }
+
+  .earned-badge-image {
+    width: 48px;
+    height: 48px;
+  }
+
+  .earned-badge-name {
+    font-size: 11px;
   }
 }

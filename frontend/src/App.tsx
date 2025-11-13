@@ -11,6 +11,7 @@ import { QRCodeScanner } from './components/QRCodeScanner'
 import { ConnectionList } from './components/ConnectionList'
 import { ConnectionDetail } from './components/ConnectionDetail'
 import { PublicProfile } from './components/PublicProfile'
+import { BadgeShowcase } from './components/BadgeShowcase'
 import { ProtectedRoute } from './components/ProtectedRoute'
 
 function App() {
@@ -79,6 +80,11 @@ function App() {
               <Route path="/connections/:id" element={
                 <ProtectedRoute>
                   <ConnectionDetail />
+                </ProtectedRoute>
+              } />
+              <Route path="/badges" element={
+                <ProtectedRoute>
+                  <BadgeShowcase />
                 </ProtectedRoute>
               } />
               <Route path="/qr-code" element={

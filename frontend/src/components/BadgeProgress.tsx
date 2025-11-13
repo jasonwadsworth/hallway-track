@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
 import { getMyProfile } from '../graphql/queries';
 import { ErrorMessage } from './ErrorMessage';
 import { LoadingSpinner } from './LoadingSpinner';
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
+import type { Badge } from '../types';
 import './BadgeProgress.css';
 
 const BADGE_THRESHOLDS = [1, 5, 10, 25, 50];
@@ -29,7 +31,9 @@ function getBadgeImageUrl(badgeId: string): string {
 }
 
 export function BadgeProgress() {
+  const navigate = useNavigate();
   const [connectionCount, setConnectionCount] = useState(0);
+  const [earnedBadges, setEarnedBadges] = useState<Badge[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,8 +53,10 @@ export function BadgeProgress() {
 
       if ('data' in response && response.data?.getMyProfile) {
         setConnectionCount(response.data.getMyProfile.connectionCount || 0);
+        setEarnedBadges(response.data.getMyProfile.badges || []);
       } else {
         setConnectionCount(0);
+        setEarnedBadges([]);
       }
     } catch (err) {
       console.error('Error loading connection count:', err);
@@ -63,6 +69,10 @@ export function BadgeProgress() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleBadgeClick() {
+    navigate('/badges');
   }
 
   if (loading) {
@@ -84,26 +94,51 @@ export function BadgeProgress() {
       </div>
     );
   }
+
+  // If user has earned badges, display them
+  if (earnedBadges.length > 0) {
+    return (
+      <div className="badge-progress">
+        <h3>Your Badges</h3>
+        <div className="earned-badges-container">
+          {earnedBadges.map((badge) => (
+            <div
+              key={badge.id}
+              className="earned-badge-item"
+              onClick={handleBadgeClick}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  handleBadgeClick();
+                }
+              }}
+            >
+              <img
+                src={getBadgeImageUrl(badge.id)}
+                alt={badge.name}
+                className="earned-badge-image"
+                onError={(e) => {
+                  e.currentTarget.src = '/badge-images/default.svg';
+                }}
+              />
+              <div className="earned-badge-name">{badge.name}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   // Find the next badge threshold
   const nextThreshold = BADGE_THRESHOLDS.find(threshold => connectionCount < threshold);
 
   if (!nextThreshold) {
-    // User has earned all badges
-    const legendBadgeId = BADGE_IDS[50];
+    // User has earned all badges (shouldn't reach here if earnedBadges.length > 0)
     return (
       <div className="badge-progress">
         <h3>Badge Progress</h3>
         <div className="progress-complete">
-          <div className="progress-icon">
-            <img
-              src={getBadgeImageUrl(legendBadgeId)}
-              alt="Networking Legend"
-              className="progress-badge-image"
-              onError={(e) => {
-                e.currentTarget.src = '/badge-images/default.svg';
-              }}
-            />
-          </div>
           <div className="progress-text">
             <div className="progress-title">All Badges Earned!</div>
             <div className="progress-subtitle">
