@@ -23,6 +23,7 @@ type Connection {
   connectedUserId: ID!
   connectedUser: User
   tags: [String!]!
+  note: String
   createdAt: AWSDateTime!
   updatedAt: AWSDateTime!
 }
@@ -71,6 +72,7 @@ type Mutation {
   createConnection(connectedUserId: ID!): Connection!
   addTagToConnection(connectionId: ID!, tag: String!): Connection!
   removeTagFromConnection(connectionId: ID!, tag: String!): Connection!
+  updateConnectionNote(connectionId: ID!, note: String): Connection!
 }
 
 schema {

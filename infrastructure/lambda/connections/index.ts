@@ -41,6 +41,7 @@ interface Connection {
   userId: string;
   connectedUserId: string;
   tags: string[];
+  note?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -77,6 +78,8 @@ export const handler = async (event: AppSyncResolverEvent<Record<string, unknown
     return await addTagToConnection(userId, event.arguments as { connectionId: string; tag: string });
   } else if (fieldName === 'removeTagFromConnection') {
     return await removeTagFromConnection(userId, event.arguments as { connectionId: string; tag: string });
+  } else if (fieldName === 'updateConnectionNote') {
+    return await updateConnectionNote(userId, event.arguments as { connectionId: string; note?: string | null });
   }
 
   throw new Error(`Unknown field: ${fieldName}`);
@@ -416,4 +419,68 @@ async function removeTagFromConnection(userId: string, args: { connectionId: str
   );
 
   return updateResult.Attributes as Connection;
+}
+
+async function updateConnectionNote(userId: string, args: { connectionId: string; note?: string | null }): Promise<Connection> {
+  const { connectionId, note } = args;
+
+  // Validate note length if provided
+  if (note && note.length > 1000) {
+    throw new Error('Note must be 1000 characters or less');
+  }
+
+  // Get the connection to verify ownership
+  const result = await docClient.send(
+    new GetCommand({
+      TableName: CONNECTIONS_TABLE_NAME,
+      Key: {
+        PK: `USER#${userId}`,
+        SK: `CONNECTION#${connectionId}`,
+      },
+    })
+  );
+
+  if (!result.Item) {
+    throw new Error('Connection not found');
+  }
+
+  const now = new Date().toISOString();
+
+  // Update or remove note
+  if (note === null || note === undefined || note.trim() === '') {
+    // Remove note
+    const updateResult = await docClient.send(
+      new UpdateCommand({
+        TableName: CONNECTIONS_TABLE_NAME,
+        Key: {
+          PK: `USER#${userId}`,
+          SK: `CONNECTION#${connectionId}`,
+        },
+        UpdateExpression: 'REMOVE note SET updatedAt = :now',
+        ExpressionAttributeValues: {
+          ':now': now,
+        },
+        ReturnValues: 'ALL_NEW',
+      })
+    );
+    return updateResult.Attributes as Connection;
+  } else {
+    // Add or update note
+    const updateResult = await docClient.send(
+      new UpdateCommand({
+        TableName: CONNECTIONS_TABLE_NAME,
+        Key: {
+          PK: `USER#${userId}`,
+          SK: `CONNECTION#${connectionId}`,
+        },
+        UpdateExpression: 'SET note = :note, updatedAt = :now',
+        ExpressionAttributeValues: {
+          ':note': note.trim(),
+          ':now': now,
+        },
+        ReturnValues: 'ALL_NEW',
+      })
+    );
+    return updateResult.Attributes as Connection;
+  }
 }

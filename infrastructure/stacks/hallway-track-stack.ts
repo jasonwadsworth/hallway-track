@@ -365,6 +365,11 @@ export class HallwayTrackStack extends cdk.Stack {
       fieldName: 'removeTagFromConnection',
     });
 
+    connectionsDataSourceLambda.createResolver('UpdateConnectionNoteResolver', {
+      typeName: 'Mutation',
+      fieldName: 'updateConnectionNote',
+    });
+
     // ===== CloudFormation Outputs =====
 
     new cdk.CfnOutput(this, 'UserPoolId', {

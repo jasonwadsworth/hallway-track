@@ -179,3 +179,152 @@
 .link-url:hover {
   text-decoration: underline;
 }
+
+/* Notes Section */
+.notes-section {
+  margin-top: 2rem;
+}
+
+.notes-description {
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+  color: #666;
+  font-style: italic;
+}
+
+.notes-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  font-family: inherit;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  resize: vertical;
+  min-height: 120px;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.notes-textarea:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.notes-textarea::placeholder {
+  color: #999;
+}
+
+.notes-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.75rem;
+  gap: 1rem;
+}
+
+.character-counter {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.btn-save-note {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 0.625rem 1.5rem;
+  font-size: 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.btn-save-note:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.btn-save-note:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.note-status {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.note-status-success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.note-status-error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.note-status-error p {
+  margin: 0 0 0.5rem 0;
+}
+
+.btn-retry {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-retry:hover {
+  background-color: #c82333;
+}
+
+/* Responsive adjustments for notes section */
+@media (max-width: 767px) {
+  .notes-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .character-counter {
+    text-align: center;
+    order: 2;
+    margin-top: 0.5rem;
+  }
+
+  .btn-save-note {
+    order: 1;
+    width: 100%;
+  }
+}
+
+/* Landscape mode on mobile */
+@media (orientation: landscape) and (max-width: 767px) {
+  .notes-section {
+    margin-top: 1rem;
+  }
+
+  .notes-textarea {
+    min-height: 100px;
+  }
+
+  .notes-description {
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+  }
+}
+
+/* Desktop */
+@media (min-width: 768px) {
+  .notes-textarea {
+    min-height: 150px;
+  }
+}

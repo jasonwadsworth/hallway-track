@@ -49,6 +49,7 @@ export interface Connection {
   connectedUserId: string;
   connectedUser?: PublicProfile;
   tags: string[];
+  note?: string;
   createdAt: string;
   updatedAt: string;
 }

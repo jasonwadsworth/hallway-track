@@ -63,6 +63,7 @@ export const getMyConnections = /* GraphQL */ `
       userId
       connectedUserId
       tags
+      note
       createdAt
       updatedAt
     }

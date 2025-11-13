@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
 import type { Connection, PublicProfile } from '../types';
 import { getMyConnections, getPublicProfile } from '../graphql/queries';
+import { updateConnectionNote } from '../graphql/mutations';
 import { getGravatarUrl, getGravatarSrcSet } from '../utils/gravatar';
 import { TagManager } from './TagManager';
 import { BadgeDisplay } from './BadgeDisplay';
@@ -17,6 +18,10 @@ export function ConnectionDetail() {
   const [connection, setConnection] = useState<Connection | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [noteText, setNoteText] = useState('');
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [noteSaveStatus, setNoteSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [noteSaveError, setNoteSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     loadConnection();
@@ -56,12 +61,15 @@ export function ConnectionDetail() {
         });
 
         if ('data' in userResponse && userResponse.data) {
-          setConnection({
+          const conn = {
             ...foundConnection,
             connectedUser: userResponse.data.getPublicProfile as PublicProfile,
-          });
+          };
+          setConnection(conn);
+          setNoteText(conn.note || '');
         } else {
           setConnection(foundConnection);
+          setNoteText(foundConnection.note || '');
         }
       }
     } catch (err) {
@@ -83,6 +91,69 @@ export function ConnectionDetail() {
 
   const handleBack = () => {
     navigate('/connections');
+  };
+
+  const handleNoteChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    if (value.length <= 1000) {
+      setNoteText(value);
+      setNoteSaveStatus('idle');
+      setNoteSaveError(null);
+    }
+  };
+
+  const handleNoteSave = async () => {
+    if (!connection) return;
+
+    const client = generateClient();
+    try {
+      setNoteSaving(true);
+      setNoteSaveStatus('idle');
+      setNoteSaveError(null);
+
+      const noteValue = noteText.trim() === '' ? null : noteText.trim();
+
+      const response = await client.graphql({
+        query: updateConnectionNote,
+        variables: {
+          connectionId: connection.id,
+          note: noteValue,
+        },
+      });
+
+      if ('data' in response && response.data) {
+        const updatedConnection = response.data.updateConnectionNote as Connection;
+        setConnection({
+          ...connection,
+          note: updatedConnection.note,
+          updatedAt: updatedConnection.updatedAt,
+        });
+        setNoteText(updatedConnection.note || '');
+        setNoteSaveStatus('success');
+
+        // Clear success message after 3 seconds
+        setTimeout(() => {
+          setNoteSaveStatus('idle');
+        }, 3000);
+      }
+    } catch (err) {
+      console.error('Error saving note:', err);
+      const errorInfo = parseGraphQLError(err);
+      setNoteSaveError(errorInfo.message);
+      setNoteSaveStatus('error');
+
+      if (errorInfo.isAuthError) {
+        await handleAuthError();
+      }
+    } finally {
+      setNoteSaving(false);
+    }
+  };
+
+  const handleNoteRetry = () => {
+    setNoteSaveError(null);
+    setNoteSaveStatus('idle');
+    handleNoteSave();
   };
 
   if (loading) {
@@ -182,6 +253,46 @@ export function ConnectionDetail() {
           connection={connection}
           onTagsUpdated={handleTagsUpdated}
         />
+      </div>
+
+      <div className="detail-section notes-section">
+        <h3>Notes</h3>
+        <p className="notes-description">
+          Add private notes about this connection. Only you can see these notes.
+        </p>
+        <textarea
+          className="notes-textarea"
+          value={noteText}
+          onChange={handleNoteChange}
+          placeholder="Add a note about this connection..."
+          maxLength={1000}
+          rows={6}
+        />
+        <div className="notes-footer">
+          <span className="character-counter">
+            {noteText.length} / 1000 characters
+          </span>
+          <button
+            className="btn-save-note"
+            onClick={handleNoteSave}
+            disabled={noteSaving}
+          >
+            {noteSaving ? 'Saving...' : 'Save Note'}
+          </button>
+        </div>
+        {noteSaveStatus === 'success' && (
+          <div className="note-status note-status-success">
+            Note saved successfully!
+          </div>
+        )}
+        {noteSaveStatus === 'error' && noteSaveError && (
+          <div className="note-status note-status-error">
+            <p>{noteSaveError}</p>
+            <button onClick={handleNoteRetry} className="btn-retry">
+              Retry
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
