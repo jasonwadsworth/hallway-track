@@ -8,6 +8,7 @@ const docClient = DynamoDBDocumentClient.from(client);
 
 const USERS_TABLE_NAME = process.env.USERS_TABLE_NAME!;
 const CONNECTIONS_TABLE_NAME = process.env.CONNECTIONS_TABLE_NAME!;
+const CONNECTION_REQUESTS_TABLE_NAME = process.env.CONNECTION_REQUESTS_TABLE_NAME!;
 
 interface BadgeMetadata {
   relatedUserId?: string;
@@ -95,9 +96,7 @@ export const handler = async (event: AppSyncResolverEvent<Record<string, unknown
     throw new Error('Unauthorized');
   }
 
-  if (fieldName === 'createConnection') {
-    return await createConnection(userId, event.arguments as { connectedUserId: string });
-  } else if (fieldName === 'checkConnection') {
+  if (fieldName === 'checkConnection') {
     return await checkConnection(userId, event.arguments as { userId: string });
   } else if (fieldName === 'getMyConnections') {
     return await getMyConnections(userId);
@@ -135,7 +134,7 @@ async function checkConnection(userId: string, args: { userId: string }): Promis
   return connectionExists;
 }
 
-async function createConnection(userId: string, args: { connectedUserId: string }): Promise<Connection> {
+async function createApprovedConnection(userId: string, args: { connectedUserId: string }): Promise<Connection> {
   const { connectedUserId } = args;
 
   // Validate that user is not connecting with themselves
@@ -840,3 +839,6 @@ async function updateConnectionNote(userId: string, args: { connectionId: string
     return updateResult.Attributes as Connection;
   }
 }
+
+// Export for use by connection-requests Lambda
+export { createApprovedConnection };

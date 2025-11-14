@@ -5,6 +5,7 @@ import { BadgeProgress } from './BadgeProgress'
 import { ErrorMessage } from './ErrorMessage'
 import { LoadingSpinner } from './LoadingSpinner'
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling'
+import type { ConnectionRequest } from '../types'
 import './Dashboard.css'
 
 interface Connection {
@@ -19,6 +20,7 @@ interface Connection {
 
 export function Dashboard() {
   const [recentConnections, setRecentConnections] = useState<Connection[]>([])
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -32,12 +34,22 @@ export function Dashboard() {
       setLoading(true)
       setError(null)
 
-      const { getMyConnections: connectionsQuery } = await import('../graphql/queries')
+      const { getMyConnections: connectionsQuery, getIncomingConnectionRequests } = await import('../graphql/queries')
       const { getPublicProfile } = await import('../graphql/queries')
 
-      const response = await client.graphql({
-        query: connectionsQuery,
-      })
+      // Load both connections and pending requests
+      const [connectionsResponse, requestsResponse] = await Promise.all([
+        client.graphql({ query: connectionsQuery }),
+        client.graphql({ query: getIncomingConnectionRequests }),
+      ])
+
+      // Handle pending requests count
+      if ('data' in requestsResponse && requestsResponse.data) {
+        const requests = requestsResponse.data.getIncomingConnectionRequests as ConnectionRequest[]
+        setPendingRequestsCount(requests.length)
+      }
+
+      const response = connectionsResponse
 
       if ('data' in response && response.data) {
         const connections = response.data.getMyConnections as Array<{
@@ -118,6 +130,18 @@ export function Dashboard() {
         <h2>Badge Progress</h2>
         <BadgeProgress />
       </div>
+
+      {pendingRequestsCount > 0 && (
+        <div className="dashboard-section">
+          <h2>Connection Requests</h2>
+          <div className="connection-requests-summary">
+            <p>You have {pendingRequestsCount} pending connection request{pendingRequestsCount !== 1 ? 's' : ''}</p>
+            <Link to="/connection-requests" className="btn-primary">
+              View Requests
+            </Link>
+          </div>
+        </div>
+      )}
 
       <div className="dashboard-section">
         <h2>Recent Connections</h2>

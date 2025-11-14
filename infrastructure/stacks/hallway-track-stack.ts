@@ -26,6 +26,7 @@ export class HallwayTrackStack extends cdk.Stack {
   public readonly userPoolClient: cognito.UserPoolClient;
   public readonly usersTable: dynamodb.Table;
   public readonly connectionsTable: dynamodb.Table;
+  public readonly connectionRequestsTable: dynamodb.Table;
   public readonly api: appsync.GraphqlApi;
   public readonly websiteBucket: s3.Bucket;
   public readonly distribution: cloudfront.Distribution;
@@ -134,6 +135,34 @@ export class HallwayTrackStack extends cdk.Stack {
     // Add GSI for querying connections by connectedUserId
     this.connectionsTable.addGlobalSecondaryIndex({
       indexName: 'ByConnectedUser',
+      partitionKey: {
+        name: 'GSI1PK',
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'GSI1SK',
+        type: dynamodb.AttributeType.STRING,
+      },
+    });
+
+    // Create Connection Requests DynamoDB Table
+    this.connectionRequestsTable = new dynamodb.Table(this, 'ConnectionRequestsTable', {
+      tableName: 'hallway-track-connection-requests',
+      partitionKey: {
+        name: 'PK',
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'SK',
+        type: dynamodb.AttributeType.STRING,
+      },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    // Add GSI for querying outgoing requests by initiator
+    this.connectionRequestsTable.addGlobalSecondaryIndex({
+      indexName: 'ByInitiator',
       partitionKey: {
         name: 'GSI1PK',
         type: dynamodb.AttributeType.STRING,
@@ -253,6 +282,7 @@ export class HallwayTrackStack extends cdk.Stack {
         environment: {
           USERS_TABLE_NAME: this.usersTable.tableName,
           CONNECTIONS_TABLE_NAME: this.connectionsTable.tableName,
+          CONNECTION_REQUESTS_TABLE_NAME: this.connectionRequestsTable.tableName,
           MAKER_USER_ID: config.badges.makerUserId || '',
         },
       }
@@ -260,10 +290,39 @@ export class HallwayTrackStack extends cdk.Stack {
 
     this.usersTable.grantReadWriteData(connectionsFunction);
     this.connectionsTable.grantReadWriteData(connectionsFunction);
+    this.connectionRequestsTable.grantReadWriteData(connectionsFunction);
 
     const connectionsDataSourceLambda = this.api.addLambdaDataSource(
       'ConnectionsDataSourceLambda',
       connectionsFunction
+    );
+
+    // Create Lambda function for connection requests management
+    const connectionRequestsFunction = new NodejsFunction(
+      this,
+      'ConnectionRequestsFunction',
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'handler',
+        entry: path.join(__dirname, '../lambda/connection-requests/index.ts'),
+        bundling: {
+          externalModules: ['@aws-sdk/*'],
+        },
+        environment: {
+          USERS_TABLE_NAME: this.usersTable.tableName,
+          CONNECTIONS_TABLE_NAME: this.connectionsTable.tableName,
+          CONNECTION_REQUESTS_TABLE_NAME: this.connectionRequestsTable.tableName,
+        },
+      }
+    );
+
+    this.usersTable.grantReadWriteData(connectionRequestsFunction);
+    this.connectionsTable.grantReadWriteData(connectionRequestsFunction);
+    this.connectionRequestsTable.grantReadWriteData(connectionRequestsFunction);
+
+    const connectionRequestsDataSource = this.api.addLambdaDataSource(
+      'ConnectionRequestsDataSource',
+      connectionRequestsFunction
     );
 
     // ===== Badge Stream Processor =====
@@ -656,6 +715,42 @@ export class HallwayTrackStack extends cdk.Stack {
       fieldName: 'removeConnection',
     });
 
+    // Connection request resolvers
+    connectionRequestsDataSource.createResolver('CreateConnectionRequestResolver', {
+      typeName: 'Mutation',
+      fieldName: 'createConnectionRequest',
+    });
+
+    connectionRequestsDataSource.createResolver('ApproveConnectionRequestResolver', {
+      typeName: 'Mutation',
+      fieldName: 'approveConnectionRequest',
+    });
+
+    connectionRequestsDataSource.createResolver('DenyConnectionRequestResolver', {
+      typeName: 'Mutation',
+      fieldName: 'denyConnectionRequest',
+    });
+
+    connectionRequestsDataSource.createResolver('CancelConnectionRequestResolver', {
+      typeName: 'Mutation',
+      fieldName: 'cancelConnectionRequest',
+    });
+
+    connectionRequestsDataSource.createResolver('GetIncomingConnectionRequestsResolver', {
+      typeName: 'Query',
+      fieldName: 'getIncomingConnectionRequests',
+    });
+
+    connectionRequestsDataSource.createResolver('GetOutgoingConnectionRequestsResolver', {
+      typeName: 'Query',
+      fieldName: 'getOutgoingConnectionRequests',
+    });
+
+    connectionRequestsDataSource.createResolver('CheckConnectionOrRequestResolver', {
+      typeName: 'Query',
+      fieldName: 'checkConnectionOrRequest',
+    });
+
     // ===== CloudFormation Outputs =====
 
     new cdk.CfnOutput(this, 'UserPoolId', {
@@ -681,6 +776,11 @@ export class HallwayTrackStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'ConnectionsTableName', {
       value: this.connectionsTable.tableName,
       description: 'Connections DynamoDB Table Name',
+    });
+
+    new cdk.CfnOutput(this, 'ConnectionRequestsTableName', {
+      value: this.connectionRequestsTable.tableName,
+      description: 'Connection Requests DynamoDB Table Name',
     });
 
     new cdk.CfnOutput(this, 'GraphQLApiUrl', {

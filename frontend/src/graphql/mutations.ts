@@ -140,3 +140,74 @@ export const updateConnectionNote = /* GraphQL */ `
     }
   }
 `;
+
+export const createConnectionRequest = /* GraphQL */ `
+  mutation CreateConnectionRequest($recipientUserId: ID!) {
+    createConnectionRequest(recipientUserId: $recipientUserId) {
+      success
+      message
+      request {
+        id
+        initiatorUserId
+        recipientUserId
+        status
+        createdAt
+        updatedAt
+      }
+    }
+  }
+`;
+
+export const approveConnectionRequest = /* GraphQL */ `
+  mutation ApproveConnectionRequest($requestId: ID!) {
+    approveConnectionRequest(requestId: $requestId) {
+      success
+      message
+      request {
+        id
+        initiatorUserId
+        recipientUserId
+        status
+        createdAt
+        updatedAt
+        actionedAt
+      }
+    }
+  }
+`;
+
+export const denyConnectionRequest = /* GraphQL */ `
+  mutation DenyConnectionRequest($requestId: ID!) {
+    denyConnectionRequest(requestId: $requestId) {
+      success
+      message
+      request {
+        id
+        initiatorUserId
+        recipientUserId
+        status
+        createdAt
+        updatedAt
+        actionedAt
+      }
+    }
+  }
+`;
+
+export const cancelConnectionRequest = /* GraphQL */ `
+  mutation CancelConnectionRequest($requestId: ID!) {
+    cancelConnectionRequest(requestId: $requestId) {
+      success
+      message
+      request {
+        id
+        initiatorUserId
+        recipientUserId
+        status
+        createdAt
+        updatedAt
+        actionedAt
+      }
+    }
+  }
+`;

@@ -69,6 +69,37 @@ type RemoveConnectionResult {
   message: String
 }
 
+enum ConnectionRequestStatus {
+  PENDING
+  APPROVED
+  DENIED
+  CANCELLED
+}
+
+type ConnectionRequest {
+  id: ID!
+  initiatorUserId: ID!
+  recipientUserId: ID!
+  initiator: PublicProfile
+  recipient: PublicProfile
+  status: ConnectionRequestStatus!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+  actionedAt: AWSDateTime
+}
+
+type ConnectionRequestResult {
+  success: Boolean!
+  message: String
+  request: ConnectionRequest
+}
+
+type ConnectionStatus {
+  isConnected: Boolean!
+  hasPendingRequest: Boolean!
+  requestDirection: String
+}
+
 type Query {
   getUser(id: ID!): User
   getMyProfile: User
@@ -76,6 +107,9 @@ type Query {
   getMyConnections: [Connection!]!
   checkConnection(userId: ID!): Boolean!
   getLinkTypes: [LinkType!]!
+  getIncomingConnectionRequests: [ConnectionRequest!]!
+  getOutgoingConnectionRequests: [ConnectionRequest!]!
+  checkConnectionOrRequest(userId: ID!): ConnectionStatus!
 }
 
 type Mutation {
@@ -89,6 +123,10 @@ type Mutation {
   addTagToConnection(connectionId: ID!, tag: String!): Connection!
   removeTagFromConnection(connectionId: ID!, tag: String!): Connection!
   updateConnectionNote(connectionId: ID!, note: String): Connection!
+  createConnectionRequest(recipientUserId: ID!): ConnectionRequestResult!
+  approveConnectionRequest(requestId: ID!): ConnectionRequestResult!
+  denyConnectionRequest(requestId: ID!): ConnectionRequestResult!
+  cancelConnectionRequest(requestId: ID!): ConnectionRequestResult!
 }
 
 schema {

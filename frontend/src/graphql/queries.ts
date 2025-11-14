@@ -98,3 +98,95 @@ export const getLinkTypes = /* GraphQL */ `
     }
   }
 `;
+
+export const getIncomingConnectionRequests = /* GraphQL */ `
+  query GetIncomingConnectionRequests {
+    getIncomingConnectionRequests {
+      id
+      initiatorUserId
+      recipientUserId
+      initiator {
+        id
+        displayName
+        gravatarHash
+        contactLinks {
+          id
+          label
+          url
+          visible
+        }
+        badges {
+          id
+          name
+          description
+          threshold
+          iconUrl
+          earnedAt
+          category
+          metadata {
+            relatedUserId
+            relatedUserName
+            eventYear
+            count
+            triangleUsers
+          }
+        }
+      }
+      status
+      createdAt
+      updatedAt
+      actionedAt
+    }
+  }
+`;
+
+export const getOutgoingConnectionRequests = /* GraphQL */ `
+  query GetOutgoingConnectionRequests {
+    getOutgoingConnectionRequests {
+      id
+      initiatorUserId
+      recipientUserId
+      recipient {
+        id
+        displayName
+        gravatarHash
+        contactLinks {
+          id
+          label
+          url
+          visible
+        }
+        badges {
+          id
+          name
+          description
+          threshold
+          iconUrl
+          earnedAt
+          category
+          metadata {
+            relatedUserId
+            relatedUserName
+            eventYear
+            count
+            triangleUsers
+          }
+        }
+      }
+      status
+      createdAt
+      updatedAt
+      actionedAt
+    }
+  }
+`;
+
+export const checkConnectionOrRequest = /* GraphQL */ `
+  query CheckConnectionOrRequest($userId: ID!) {
+    checkConnectionOrRequest(userId: $userId) {
+      isConnected
+      hasPendingRequest
+      requestDirection
+    }
+  }
+`;

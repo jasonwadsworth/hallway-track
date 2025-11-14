@@ -68,3 +68,29 @@ export interface RemoveConnectionResult {
   success: boolean;
   message?: string;
 }
+
+export type ConnectionRequestStatus = 'PENDING' | 'APPROVED' | 'DENIED' | 'CANCELLED';
+
+export interface ConnectionRequest {
+  id: string;
+  initiatorUserId: string;
+  recipientUserId: string;
+  initiator?: PublicProfile;
+  recipient?: PublicProfile;
+  status: ConnectionRequestStatus;
+  createdAt: string;
+  updatedAt: string;
+  actionedAt?: string;
+}
+
+export interface ConnectionRequestResult {
+  success: boolean;
+  message?: string;
+  request?: ConnectionRequest;
+}
+
+export interface ConnectionStatus {
+  isConnected: boolean;
+  hasPendingRequest: boolean;
+  requestDirection?: 'incoming' | 'outgoing';
+}
