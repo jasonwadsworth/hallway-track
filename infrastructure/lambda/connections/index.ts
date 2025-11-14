@@ -310,8 +310,14 @@ function removeInvalidThresholdBadges(badges: Badge[], connectionCount: number):
 
   return badges.filter((badge) => {
     const thresholdBadge = thresholdBadges.find((tb) => tb.id === badge.id);
-    if (!thresholdBadge) return true; // Keep non-threshold badges
-    return connectionCount >= thresholdBadge.threshold; // Keep if still qualifies
+    if (!thresholdBadge) {
+      console.log(`Keeping non-threshold badge: ${badge.id}`);
+      return true; // Keep non-threshold badges
+    }
+
+    const shouldKeep = connectionCount >= thresholdBadge.threshold;
+    console.log(`Badge ${badge.id}: connectionCount=${connectionCount}, threshold=${thresholdBadge.threshold}, keeping=${shouldKeep}`);
+    return shouldKeep; // Keep if still qualifies
   });
 }
 
@@ -349,15 +355,20 @@ async function reevaluateVIPBadge(badge: Badge, connections: Connection[]): Prom
 
 function reevaluateMakerBadge(badge: Badge, connectedUserIds: Set<string>): Badge | null {
   const makerUserId = process.env.MAKER_USER_ID;
+  console.log(`Evaluating maker badge: makerUserId=${makerUserId}, connectedUserIds=${Array.from(connectedUserIds)}`);
+
   if (!makerUserId) {
+    console.log('No MAKER_USER_ID configured, keeping badge');
     return badge; // Keep badge if no maker configured
   }
 
   // Check if maker is still in connections
   if (connectedUserIds.has(makerUserId)) {
+    console.log('Maker still connected, keeping badge');
     return badge; // Keep badge
   }
 
+  console.log('Maker no longer connected, removing badge');
   return null; // Remove badge
 }
 
@@ -395,6 +406,7 @@ async function reevaluateSpecialBadges(userId: string, badges: Badge[]): Promise
   for (const badge of badges) {
     let updatedBadge: Badge | null = badge;
 
+    // Handle specific badge types that need re-evaluation
     if (badge.id === 'vip-connection') {
       updatedBadge = await reevaluateVIPBadge(badge, connections);
     } else if (badge.id === 'met-the-maker') {
@@ -402,7 +414,10 @@ async function reevaluateSpecialBadges(userId: string, badges: Badge[]): Promise
     } else if (badge.id === 'triangle-complete') {
       updatedBadge = reevaluateTriangleBadge(badge, connectedUserIds);
     } else if (badge.id === 'early-supporter' || badge.id.startsWith('reinvent-connector-')) {
-      // Keep historical badges
+      // Keep historical badges - these don't depend on current connections
+      updatedBadge = badge;
+    } else {
+      // Keep all other badges (threshold badges are handled separately)
       updatedBadge = badge;
     }
 
@@ -415,6 +430,8 @@ async function reevaluateSpecialBadges(userId: string, badges: Badge[]): Promise
 }
 
 async function reevaluateBadges(userId: string, connectionCount: number): Promise<void> {
+  console.log(`Re-evaluating badges for user ${userId} with connection count ${connectionCount}`);
+
   // Get user's current badges
   const userResult = await docClient.send(
     new GetCommand({
@@ -432,13 +449,18 @@ async function reevaluateBadges(userId: string, connectionCount: number): Promis
     return;
   }
 
-  let badges = user.badges || [];
+  const originalBadges = user.badges || [];
+  console.log(`Original badges for user ${userId}:`, originalBadges.map(b => b.id));
+
+  const badges = [...originalBadges];
 
   // Step 1: Remove invalid threshold badges
-  badges = removeInvalidThresholdBadges(badges, connectionCount);
+  const badgesAfterThreshold = removeInvalidThresholdBadges(badges, connectionCount);
+  console.log(`Badges after threshold check for user ${userId}:`, badgesAfterThreshold.map(b => b.id));
 
   // Step 2: Re-evaluate special badges
-  badges = await reevaluateSpecialBadges(userId, badges);
+  const badgesAfterSpecial = await reevaluateSpecialBadges(userId, badgesAfterThreshold);
+  console.log(`Badges after special re-evaluation for user ${userId}:`, badgesAfterSpecial.map(b => b.id));
 
   // Step 3: Update user's badges in database
   await docClient.send(
@@ -450,11 +472,13 @@ async function reevaluateBadges(userId: string, connectionCount: number): Promis
       },
       UpdateExpression: 'SET badges = :badges, updatedAt = :now',
       ExpressionAttributeValues: {
-        ':badges': badges,
+        ':badges': badgesAfterSpecial,
         ':now': new Date().toISOString(),
       },
     })
   );
+
+  console.log(`Badge re-evaluation completed for user ${userId}`);
 }
 
 async function removeConnection(userId: string, args: { connectionId: string }): Promise<RemoveConnectionResult> {
@@ -534,78 +558,49 @@ async function removeConnection(userId: string, args: { connectionId: string }):
       console.warn(`Reciprocal connection not found for user ${connectedUserId} connected to ${userId}`);
     }
 
-    // Step 8: Decrement connectionCount for both users
-    try {
-      await docClient.send(
-        new UpdateCommand({
-          TableName: USERS_TABLE_NAME,
-          Key: {
-            PK: `USER#${userId}`,
-            SK: 'PROFILE',
-          },
-          UpdateExpression: 'SET connectionCount = if_not_exists(connectionCount, :zero) - :dec, updatedAt = :now',
-          ExpressionAttributeValues: {
-            ':zero': 0,
-            ':dec': 1,
-            ':now': new Date().toISOString(),
-          },
-          ReturnValues: 'ALL_NEW',
-        })
-      );
-    } catch (error) {
-      console.error(`Failed to decrement connection count for user ${userId}:`, error);
-    }
-
-    try {
-      await docClient.send(
-        new UpdateCommand({
-          TableName: USERS_TABLE_NAME,
-          Key: {
-            PK: `USER#${connectedUserId}`,
-            SK: 'PROFILE',
-          },
-          UpdateExpression: 'SET connectionCount = if_not_exists(connectionCount, :zero) - :dec, updatedAt = :now',
-          ExpressionAttributeValues: {
-            ':zero': 0,
-            ':dec': 1,
-            ':now': new Date().toISOString(),
-          },
-          ReturnValues: 'ALL_NEW',
-        })
-      );
-    } catch (error) {
-      console.error(`Failed to decrement connection count for user ${connectedUserId}:`, error);
-    }
-
-    // Step 9: Get updated connection counts for badge re-evaluation
-    const userResult = await docClient.send(
-      new GetCommand({
+    // Step 8: Decrement connectionCount for both users and get updated results
+    const userUpdateResult = await docClient.send(
+      new UpdateCommand({
         TableName: USERS_TABLE_NAME,
         Key: {
           PK: `USER#${userId}`,
           SK: 'PROFILE',
         },
+        UpdateExpression: 'SET connectionCount = if_not_exists(connectionCount, :zero) - :dec, updatedAt = :now',
+        ExpressionAttributeValues: {
+          ':zero': 0,
+          ':dec': 1,
+          ':now': new Date().toISOString(),
+        },
+        ReturnValues: 'ALL_NEW',
       })
     );
 
-    const connectedUserResult = await docClient.send(
-      new GetCommand({
+    const connectedUserUpdateResult = await docClient.send(
+      new UpdateCommand({
         TableName: USERS_TABLE_NAME,
         Key: {
           PK: `USER#${connectedUserId}`,
           SK: 'PROFILE',
         },
+        UpdateExpression: 'SET connectionCount = if_not_exists(connectionCount, :zero) - :dec, updatedAt = :now',
+        ExpressionAttributeValues: {
+          ':zero': 0,
+          ':dec': 1,
+          ':now': new Date().toISOString(),
+        },
+        ReturnValues: 'ALL_NEW',
       })
     );
 
-    // Step 10: Re-evaluate badges for both users
-    if (userResult.Item) {
-      const user = userResult.Item as User;
+    // Step 9: Re-evaluate badges for both users using the updated connection counts
+    if (userUpdateResult.Attributes) {
+      const user = userUpdateResult.Attributes as User;
       await reevaluateBadges(userId, user.connectionCount);
     }
 
-    if (connectedUserResult.Item) {
-      const connectedUser = connectedUserResult.Item as User;
+    if (connectedUserUpdateResult.Attributes) {
+      const connectedUser = connectedUserUpdateResult.Attributes as User;
       await reevaluateBadges(connectedUserId, connectedUser.connectionCount);
     }
 

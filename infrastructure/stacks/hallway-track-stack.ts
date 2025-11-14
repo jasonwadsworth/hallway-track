@@ -253,6 +253,7 @@ export class HallwayTrackStack extends cdk.Stack {
         environment: {
           USERS_TABLE_NAME: this.usersTable.tableName,
           CONNECTIONS_TABLE_NAME: this.connectionsTable.tableName,
+          MAKER_USER_ID: config.badges.makerUserId || '',
         },
       }
     );
@@ -648,6 +649,11 @@ export class HallwayTrackStack extends cdk.Stack {
     connectionsDataSourceLambda.createResolver('UpdateConnectionNoteResolver', {
       typeName: 'Mutation',
       fieldName: 'updateConnectionNote',
+    });
+
+    connectionsDataSourceLambda.createResolver('RemoveConnectionResolver', {
+      typeName: 'Mutation',
+      fieldName: 'removeConnection',
     });
 
     // ===== CloudFormation Outputs =====

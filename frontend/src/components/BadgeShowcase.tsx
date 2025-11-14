@@ -15,6 +15,17 @@ export function BadgeShowcase() {
 
   useEffect(() => {
     loadBadgeData();
+
+    // Listen for profile data changes (e.g., after connection removal)
+    const handleProfileDataChanged = () => {
+      loadBadgeData();
+    };
+
+    window.addEventListener('profileDataChanged', handleProfileDataChanged);
+
+    return () => {
+      window.removeEventListener('profileDataChanged', handleProfileDataChanged);
+    };
   }, []);
 
   const loadBadgeData = async () => {

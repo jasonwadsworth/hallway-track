@@ -103,6 +103,9 @@ export function ConnectionList() {
           // Remove connection from local state
           setConnections(prev => prev.filter(c => c.id !== confirmRemove));
           setConfirmRemove(null);
+
+          // Dispatch custom event to notify other components to refresh profile data
+          window.dispatchEvent(new CustomEvent('profileDataChanged'));
         } else {
           setError(result.message || 'Failed to remove connection');
         }

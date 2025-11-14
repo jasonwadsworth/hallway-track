@@ -22,6 +22,17 @@ export function ProfileView({ onEdit }: ProfileViewProps) {
 
   useEffect(() => {
     loadProfile();
+
+    // Listen for profile data changes (e.g., after connection removal)
+    const handleProfileDataChanged = () => {
+      loadProfile();
+    };
+
+    window.addEventListener('profileDataChanged', handleProfileDataChanged);
+
+    return () => {
+      window.removeEventListener('profileDataChanged', handleProfileDataChanged);
+    };
   }, []);
 
   async function loadProfile() {

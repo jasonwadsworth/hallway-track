@@ -39,6 +39,17 @@ export function BadgeProgress() {
 
   useEffect(() => {
     loadConnectionCount();
+
+    // Listen for profile data changes (e.g., after connection removal)
+    const handleProfileDataChanged = () => {
+      loadConnectionCount();
+    };
+
+    window.addEventListener('profileDataChanged', handleProfileDataChanged);
+
+    return () => {
+      window.removeEventListener('profileDataChanged', handleProfileDataChanged);
+    };
   }, []);
 
   async function loadConnectionCount() {
