@@ -413,177 +413,55 @@ export class HallwayTrackStack extends cdk.Stack {
       retentionPeriod: cdk.Duration.days(14),
     });
 
-    // Maker Badge Handler
-    const makerBadgeHandler = new NodejsFunction(
+    // Unified Badge Handler
+    const unifiedBadgeHandler = new NodejsFunction(
       this,
-      'MakerBadgeHandler',
+      'UnifiedBadgeHandler',
       {
         runtime: lambda.Runtime.NODEJS_20_X,
         handler: 'handler',
-        entry: path.join(__dirname, '../lambda/badge-handlers/maker-badge/index.ts'),
-        bundling: {
-          externalModules: ['@aws-sdk/*'],
-        },
-        environment: {
-          USERS_TABLE_NAME: this.usersTable.tableName,
-          MAKER_USER_ID: config.badges.makerUserId || '',
-        },
-      }
-    );
-
-    this.usersTable.grantReadWriteData(makerBadgeHandler);
-
-    // Create EventBridge rule for maker badge
-    new events.Rule(this, 'MakerBadgeRule', {
-      eventBus: this.badgeEventBus,
-      eventPattern: {
-        source: ['hallway-track.connections'],
-        detailType: ['ConnectionCreated'],
-      },
-      targets: [
-        new targets.LambdaFunction(makerBadgeHandler, {
-          deadLetterQueue: badgeDLQ,
-          retryAttempts: 2,
-        }),
-      ],
-    });
-
-    // VIP Badge Handler
-    const vipBadgeHandler = new NodejsFunction(
-      this,
-      'VIPBadgeHandler',
-      {
-        runtime: lambda.Runtime.NODEJS_20_X,
-        handler: 'handler',
-        entry: path.join(__dirname, '../lambda/badge-handlers/vip-badge/index.ts'),
-        bundling: {
-          externalModules: ['@aws-sdk/*'],
-        },
-        environment: {
-          USERS_TABLE_NAME: this.usersTable.tableName,
-        },
-      }
-    );
-
-    this.usersTable.grantReadWriteData(vipBadgeHandler);
-
-    // Create EventBridge rule for VIP badge
-    new events.Rule(this, 'VIPBadgeRule', {
-      eventBus: this.badgeEventBus,
-      eventPattern: {
-        source: ['hallway-track.connections'],
-        detailType: ['ConnectionCreated'],
-      },
-      targets: [
-        new targets.LambdaFunction(vipBadgeHandler, {
-          deadLetterQueue: badgeDLQ,
-          retryAttempts: 2,
-        }),
-      ],
-    });
-
-    // Triangle Badge Handler
-    const triangleBadgeHandler = new NodejsFunction(
-      this,
-      'TriangleBadgeHandler',
-      {
-        runtime: lambda.Runtime.NODEJS_20_X,
-        handler: 'handler',
-        entry: path.join(__dirname, '../lambda/badge-handlers/triangle-badge/index.ts'),
+        entry: path.join(__dirname, '../lambda/badge-handlers/unified-badge-handler/index.ts'),
         bundling: {
           externalModules: ['@aws-sdk/*'],
         },
         environment: {
           USERS_TABLE_NAME: this.usersTable.tableName,
           CONNECTIONS_TABLE_NAME: this.connectionsTable.tableName,
-        },
-      }
-    );
-
-    this.usersTable.grantReadWriteData(triangleBadgeHandler);
-    this.connectionsTable.grantReadData(triangleBadgeHandler);
-
-    // Create EventBridge rule for triangle badge
-    new events.Rule(this, 'TriangleBadgeRule', {
-      eventBus: this.badgeEventBus,
-      eventPattern: {
-        source: ['hallway-track.connections'],
-        detailType: ['ConnectionCreated'],
-      },
-      targets: [
-        new targets.LambdaFunction(triangleBadgeHandler, {
-          deadLetterQueue: badgeDLQ,
-          retryAttempts: 2,
-        }),
-      ],
-    });
-
-    // Event Badge Handler
-    const eventBadgeHandler = new NodejsFunction(
-      this,
-      'EventBadgeHandler',
-      {
-        runtime: lambda.Runtime.NODEJS_20_X,
-        handler: 'handler',
-        entry: path.join(__dirname, '../lambda/badge-handlers/event-badge/index.ts'),
-        bundling: {
-          externalModules: ['@aws-sdk/*'],
-        },
-        environment: {
-          USERS_TABLE_NAME: this.usersTable.tableName,
+          MAKER_USER_ID: config.badges.makerUserId || '',
           REINVENT_DATES: JSON.stringify(config.badges.reinventDates),
         },
+        timeout: cdk.Duration.minutes(2),
+        memorySize: 512,
       }
     );
 
-    this.usersTable.grantReadWriteData(eventBadgeHandler);
+    this.usersTable.grantReadWriteData(unifiedBadgeHandler);
+    this.connectionsTable.grantReadData(unifiedBadgeHandler);
 
-    // Create EventBridge rule for event badge
-    new events.Rule(this, 'EventBadgeRule', {
+    // Create EventBridge rule for connection created events
+    new events.Rule(this, 'UnifiedBadgeConnectionCreatedRule', {
       eventBus: this.badgeEventBus,
       eventPattern: {
         source: ['hallway-track.connections'],
         detailType: ['ConnectionCreated'],
       },
       targets: [
-        new targets.LambdaFunction(eventBadgeHandler, {
+        new targets.LambdaFunction(unifiedBadgeHandler, {
           deadLetterQueue: badgeDLQ,
           retryAttempts: 2,
         }),
       ],
     });
 
-    // Early Supporter Badge Handler
-    const earlySupporterBadgeHandler = new NodejsFunction(
-      this,
-      'EarlySupporterBadgeHandler',
-      {
-        runtime: lambda.Runtime.NODEJS_20_X,
-        handler: 'handler',
-        entry: path.join(__dirname, '../lambda/badge-handlers/early-supporter-badge/index.ts'),
-        bundling: {
-          externalModules: ['@aws-sdk/*'],
-        },
-        environment: {
-          USERS_TABLE_NAME: this.usersTable.tableName,
-          CONNECTIONS_TABLE_NAME: this.connectionsTable.tableName,
-        },
-        timeout: cdk.Duration.minutes(1),
-      }
-    );
-
-    this.usersTable.grantReadWriteData(earlySupporterBadgeHandler);
-    this.connectionsTable.grantReadData(earlySupporterBadgeHandler);
-
-    // Create EventBridge rule for early supporter badge
-    new events.Rule(this, 'EarlySupporterBadgeRule', {
+    // Create EventBridge rule for connection count updated events
+    new events.Rule(this, 'UnifiedBadgeConnectionCountRule', {
       eventBus: this.badgeEventBus,
       eventPattern: {
         source: ['hallway-track.users'],
         detailType: ['UserConnectionCountUpdated'],
       },
       targets: [
-        new targets.LambdaFunction(earlySupporterBadgeHandler, {
+        new targets.LambdaFunction(unifiedBadgeHandler, {
           deadLetterQueue: badgeDLQ,
           retryAttempts: 2,
         }),
