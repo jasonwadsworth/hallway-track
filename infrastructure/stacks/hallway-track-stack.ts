@@ -13,6 +13,7 @@ import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import * as path from 'path';
 import { Construct } from 'constructs';
 import { HallwayTrackConfig } from '../config';
@@ -266,6 +267,46 @@ export class HallwayTrackStack extends cdk.Stack {
     const publicProfileDataSource = this.api.addLambdaDataSource(
       'PublicProfileDataSource',
       publicProfileFunction
+    );
+
+    // Create Lambda function for connected profile
+    const connectedProfileFunction = new NodejsFunction(
+      this,
+      'ConnectedProfileFunction',
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'handler',
+        entry: path.join(__dirname, '../lambda/connected-profile/index.ts'),
+        bundling: {
+          externalModules: ['@aws-sdk/*'],
+        },
+        environment: {
+          USERS_TABLE_NAME: this.usersTable.tableName,
+          CONNECTIONS_TABLE_NAME: this.connectionsTable.tableName,
+        },
+      }
+    );
+
+    this.usersTable.grantReadData(connectedProfileFunction);
+    this.connectionsTable.grantReadData(connectedProfileFunction);
+
+    // Grant CloudWatch permissions for privacy metrics
+    connectedProfileFunction.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['cloudwatch:PutMetricData'],
+        resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'cloudwatch:namespace': 'HallwayTrack/Privacy'
+          }
+        }
+      })
+    );
+
+    const connectedProfileDataSource = this.api.addLambdaDataSource(
+      'ConnectedProfileDataSource',
+      connectedProfileFunction
     );
 
     // Create Lambda function for connections management
@@ -677,6 +718,12 @@ export class HallwayTrackStack extends cdk.Stack {
     publicProfileDataSource.createResolver('GetPublicProfileResolver', {
       typeName: 'Query',
       fieldName: 'getPublicProfile',
+    });
+
+    // Connected profile resolver
+    connectedProfileDataSource.createResolver('GetConnectedProfileResolver', {
+      typeName: 'Query',
+      fieldName: 'getConnectedProfile',
     });
 
     // Connection management resolvers

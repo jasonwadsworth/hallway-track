@@ -35,7 +35,7 @@ export function Dashboard() {
       setError(null)
 
       const { getMyConnections: connectionsQuery, getIncomingConnectionRequests } = await import('../graphql/queries')
-      const { getPublicProfile } = await import('../graphql/queries')
+      const { getConnectedProfile } = await import('../graphql/queries')
 
       // Load both connections and pending requests
       const [connectionsResponse, requestsResponse] = await Promise.all([
@@ -67,7 +67,7 @@ export function Dashboard() {
           recentIds.map(async (connection) => {
             try {
               const userResponse = await client.graphql({
-                query: getPublicProfile,
+                query: getConnectedProfile,
                 variables: { userId: connection.connectedUserId },
               })
 
@@ -75,8 +75,8 @@ export function Dashboard() {
                 return {
                   ...connection,
                   connectedUser: {
-                    displayName: userResponse.data.getPublicProfile.displayName,
-                    gravatarHash: userResponse.data.getPublicProfile.gravatarHash,
+                    displayName: userResponse.data.getConnectedProfile.displayName,
+                    gravatarHash: userResponse.data.getConnectedProfile.gravatarHash,
                   },
                 }
               }

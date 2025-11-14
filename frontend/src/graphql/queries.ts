@@ -40,6 +40,16 @@ export const getPublicProfile = /* GraphQL */ `
       id
       displayName
       gravatarHash
+    }
+  }
+`;
+
+export const getConnectedProfile = /* GraphQL */ `
+  query GetConnectedProfile($userId: ID!) {
+    getConnectedProfile(userId: $userId) {
+      id
+      displayName
+      gravatarHash
       contactLinks {
         id
         label
@@ -109,28 +119,6 @@ export const getIncomingConnectionRequests = /* GraphQL */ `
         id
         displayName
         gravatarHash
-        contactLinks {
-          id
-          label
-          url
-          visible
-        }
-        badges {
-          id
-          name
-          description
-          threshold
-          iconUrl
-          earnedAt
-          category
-          metadata {
-            relatedUserId
-            relatedUserName
-            eventYear
-            count
-            triangleUsers
-          }
-        }
       }
       status
       createdAt
@@ -150,28 +138,6 @@ export const getOutgoingConnectionRequests = /* GraphQL */ `
         id
         displayName
         gravatarHash
-        contactLinks {
-          id
-          label
-          url
-          visible
-        }
-        badges {
-          id
-          name
-          description
-          threshold
-          iconUrl
-          earnedAt
-          category
-          metadata {
-            relatedUserId
-            relatedUserName
-            eventYear
-            count
-            triangleUsers
-          }
-        }
       }
       status
       createdAt

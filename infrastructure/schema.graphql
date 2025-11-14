@@ -60,6 +60,12 @@ type PublicProfile {
   id: ID!
   displayName: String!
   gravatarHash: String!
+}
+
+type ConnectedProfile {
+  id: ID!
+  displayName: String!
+  gravatarHash: String!
   contactLinks: [ContactLink!]!
   badges: [Badge!]!
 }
@@ -104,6 +110,7 @@ type Query {
   getUser(id: ID!): User
   getMyProfile: User
   getPublicProfile(userId: ID!): PublicProfile
+  getConnectedProfile(userId: ID!): ConnectedProfile
   getMyConnections: [Connection!]!
   checkConnection(userId: ID!): Boolean!
   getLinkTypes: [LinkType!]!

@@ -10,10 +10,6 @@ import { LoadingSpinner } from './LoadingSpinner';
 import { parseGraphQLError } from '../utils/errorHandling';
 import './PublicProfile.css';
 
-function getBadgeImageUrl(badgeId: string): string {
-  return `/badge-images/${badgeId}.svg`;
-}
-
 export function PublicProfile() {
   const { userId } = useParams<{ userId: string }>();
   const [profile, setProfile] = useState<PublicProfileType | null>(null);
@@ -78,8 +74,6 @@ export function PublicProfile() {
     );
   }
 
-  const visibleLinks = profile.contactLinks.filter(link => link.visible);
-
   return (
     <div className="public-profile">
       <div className="profile-header">
@@ -97,47 +91,9 @@ export function PublicProfile() {
 
       {userId && <ConnectButton userId={userId} />}
 
-      {visibleLinks.length > 0 && (
-        <div className="contact-links-section">
-          <h3>Contact Links</h3>
-          <ul className="contact-links-list">
-            {visibleLinks.map(link => (
-              <li key={link.id} className="contact-link-item">
-                <span className="link-label">{link.label}:</span>
-                <a href={link.url} target="_blank" rel="noopener noreferrer" className="link-url">
-                  {link.url}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {profile.badges.length > 0 && (
-        <div className="badges-section">
-          <h3>Badges</h3>
-          <div className="badges-grid">
-            {profile.badges.map(badge => (
-              <div key={badge.id} className="badge-item">
-                <div className="badge-icon">
-                  <img
-                    src={getBadgeImageUrl(badge.id)}
-                    alt={badge.name}
-                    className="badge-icon-image"
-                    onError={(e) => {
-                      e.currentTarget.src = '/badge-images/default.svg';
-                    }}
-                  />
-                </div>
-                <div className="badge-info">
-                  <div className="badge-name">{badge.name}</div>
-                  <div className="badge-description">{badge.description}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <div className="privacy-notice">
+        <p>Connect with this user to see their contact links and badges.</p>
+      </div>
     </div>
   );
 }

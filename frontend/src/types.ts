@@ -49,6 +49,12 @@ export interface PublicProfile {
   id: string;
   displayName: string;
   gravatarHash: string;
+}
+
+export interface ConnectedProfile {
+  id: string;
+  displayName: string;
+  gravatarHash: string;
   contactLinks: ContactLink[];
   badges: Badge[];
 }
@@ -57,7 +63,7 @@ export interface Connection {
   id: string;
   userId: string;
   connectedUserId: string;
-  connectedUser?: PublicProfile;
+  connectedUser?: ConnectedProfile;
   tags: string[];
   note?: string;
   createdAt: string;

@@ -41,8 +41,6 @@ interface PublicProfile {
   id: string;
   displayName: string;
   gravatarHash: string;
-  contactLinks: ContactLink[];
-  badges: Badge[];
 }
 
 export const handler = async (
@@ -67,17 +65,19 @@ export const handler = async (
 
   const user = result.Item as User;
 
-  // Filter contact links to only return visible ones
-  const visibleContactLinks = (user.contactLinks || []).filter(
-    (link) => link.visible === true
-  );
+  // Log public profile access
+  console.log(JSON.stringify({
+    timestamp: new Date().toISOString(),
+    event: 'public_profile_access',
+    profileUserId: userId,
+    accessType: 'public',
+    privacyProtectionApplied: true
+  }));
 
-  // Return public profile
+  // Return minimal public profile data only
   return {
     id: user.id,
     displayName: user.displayName,
     gravatarHash: user.gravatarHash,
-    contactLinks: visibleContactLinks,
-    badges: user.badges || [],
   };
 };

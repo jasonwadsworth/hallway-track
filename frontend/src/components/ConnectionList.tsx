@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
-import type { Connection, PublicProfile, RemoveConnectionResult } from '../types';
+import type { Connection, ConnectedProfile, RemoveConnectionResult } from '../types';
 import { getMyConnections } from '../graphql/queries';
-import { getPublicProfile } from '../graphql/queries';
+import { getConnectedProfile } from '../graphql/queries';
 import { removeConnection } from '../graphql/mutations';
 import { ConnectionCard } from './ConnectionCard';
 import { ErrorMessage } from './ErrorMessage';
@@ -41,14 +41,14 @@ export function ConnectionList() {
           connectionsData.map(async (connection) => {
             try {
               const userResponse = await client.graphql({
-                query: getPublicProfile,
+                query: getConnectedProfile,
                 variables: { userId: connection.connectedUserId },
               });
 
               if ('data' in userResponse && userResponse.data) {
                 return {
                   ...connection,
-                  connectedUser: userResponse.data.getPublicProfile as PublicProfile,
+                  connectedUser: userResponse.data.getConnectedProfile as ConnectedProfile,
                 };
               }
               return connection;

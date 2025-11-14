@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
-import type { Connection, PublicProfile } from '../types';
-import { getMyConnections, getPublicProfile } from '../graphql/queries';
+import type { Connection, ConnectedProfile } from '../types';
+import { getMyConnections, getConnectedProfile } from '../graphql/queries';
 import { updateConnectionNote } from '../graphql/mutations';
 import { getGravatarUrl, getGravatarSrcSet } from '../utils/gravatar';
 import { TagManager } from './TagManager';
@@ -53,12 +53,12 @@ export function ConnectionDetail() {
 
           // Fetch connected user details
           const userResponse = await client.graphql({
-            query: getPublicProfile,
+            query: getConnectedProfile,
             variables: { userId: foundConnection.connectedUserId },
           });
 
           if ('data' in userResponse && userResponse.data) {
-            const userProfile = userResponse.data.getPublicProfile as PublicProfile;
+            const userProfile = userResponse.data.getConnectedProfile as ConnectedProfile;
             setConnection({
               ...foundConnection,
               connectedUser: userProfile,
