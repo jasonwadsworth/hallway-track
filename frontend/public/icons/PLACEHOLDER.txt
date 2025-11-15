@@ -1,0 +1,12 @@
+PLACEHOLDER ICONS NEEDED
+
+The following PNG icon files need to be created:
+- icon-120x120.png
+- icon-152x152.png
+- icon-167x167.png
+- icon-180x180.png
+- icon-512x512.png
+
+Use the icon.svg as a source and convert to PNG at the specified sizes.
+
+For now, the app will fall back to the default favicon if these files are missing.
