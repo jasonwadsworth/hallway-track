@@ -6,6 +6,7 @@ import { getGravatarUrl, getGravatarSrcSet } from '../utils/gravatar';
 import { ErrorMessage } from './ErrorMessage';
 import { LoadingSpinner } from './LoadingSpinner';
 import { BadgeDisplay } from './BadgeDisplay';
+import { ShareProfileButton } from './ShareProfileButton';
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import { useLinkTypes } from '../hooks/useLinkTypes';
 import './ProfileView.css';
@@ -64,6 +65,8 @@ export function ProfileView({ onEdit }: ProfileViewProps) {
     const linkType = linkTypes.find(type => type.label === label);
     return linkType?.imageUrl || null;
   };
+
+
 
   if (loading) {
     return (
@@ -163,6 +166,11 @@ export function ProfileView({ onEdit }: ProfileViewProps) {
         <button onClick={onEdit} className="btn-primary">
           Edit Profile
         </button>
+        <ShareProfileButton
+          userId={profile.id}
+          displayName={profile.displayName}
+          className="profile-share-button"
+        />
       </div>
     </div>
   );

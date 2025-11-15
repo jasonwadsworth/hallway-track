@@ -1,0 +1,31 @@
+.share-profile-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  min-height: 44px;
+  min-width: 44px;
+  transition: all 0.2s;
+}
+
+.share-profile-button:hover:not(:disabled) {
+  background-color: #1565c0;
+}
+
+.share-profile-button:active {
+  background-color: #1565c0;
+  transform: scale(0.98);
+}
+
+.share-profile-button:disabled {
+  background-color: #90caf9;
+  cursor: not-allowed;
+  transform: none;
+}
