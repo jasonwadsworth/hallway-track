@@ -31,11 +31,26 @@ export interface BadgeConfig {
   }>;
 }
 
+export interface CustomDomainConfig {
+  /**
+   * The custom domain name for the application
+   * Example: "hallwaytrak.com"
+   *
+   * When configured, both the apex domain and www subdomain will be supported
+   */
+  domainName?: string;
+}
+
 export interface HallwayTrackConfig {
   /**
    * Badge system configuration
    */
   badges: BadgeConfig;
+
+  /**
+   * Custom domain configuration (optional)
+   */
+  customDomain?: CustomDomainConfig;
 }
 
 interface AccountConfiguration {
@@ -79,9 +94,39 @@ const accountConfigurations: AccountConfiguration = {
           end: '2025-12-05'
         },
       ]
+    },
+    customDomain: {
+      domainName: 'hallwaytrak.com'
     }
   }
 };
+
+/**
+ * Validates a domain name format
+ *
+ * @param domainName - The domain name to validate
+ * @returns true if the domain name is valid, false otherwise
+ */
+export function isValidDomainName(domainName: string): boolean {
+  // Basic domain name validation
+  const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+
+  if (!domainName || domainName.length > 253) {
+    return false;
+  }
+
+  // Check if it matches the regex and doesn't start/end with hyphen
+  if (!domainRegex.test(domainName)) {
+    return false;
+  }
+
+  // Check that it has at least one dot (not just a TLD)
+  if (!domainName.includes('.')) {
+    return false;
+  }
+
+  return true;
+}
 
 /**
  * Get configuration for a specific AWS account
@@ -105,6 +150,16 @@ export function getConfigForAccount(accountId: string): HallwayTrackConfig {
       `Please add configuration for this account in infrastructure/config.ts. ` +
       `Available accounts: ${Object.keys(accountConfigurations).join(', ')}`
     );
+  }
+
+  // Validate custom domain if configured
+  if (config.customDomain?.domainName) {
+    if (!isValidDomainName(config.customDomain.domainName)) {
+      throw new Error(
+        `Invalid domain name format: ${config.customDomain.domainName}. ` +
+        'Domain name must be a valid DNS name (e.g., example.com)'
+      );
+    }
   }
 
   return config;

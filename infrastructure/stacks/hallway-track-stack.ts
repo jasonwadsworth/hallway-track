@@ -14,6 +14,10 @@ import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
+import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as route53Targets from 'aws-cdk-lib/aws-route53-targets';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as path from 'path';
 import { Construct } from 'constructs';
 import { HallwayTrackConfig } from '../config';
@@ -32,6 +36,8 @@ export class HallwayTrackStack extends cdk.Stack {
   public readonly websiteBucket: s3.Bucket;
   public readonly distribution: cloudfront.Distribution;
   public readonly badgeEventBus: events.EventBus;
+  public readonly hostedZone?: route53.IHostedZone;
+  public readonly certificate?: acm.ICertificate;
 
   constructor(scope: Construct, id: string, props: HallwayTrackStackProps) {
     super(scope, id, props);
@@ -730,8 +736,40 @@ export class HallwayTrackStack extends cdk.Stack {
       encryption: s3.BucketEncryption.S3_MANAGED,
     });
 
+    // ===== Custom Domain Setup (Optional) =====
+
+    let customDomainNames: string[] | undefined;
+
+    if (config.customDomain?.domainName) {
+      const domainName = config.customDomain.domainName;
+
+      // Lookup domain configuration from Secrets Manager (created by CustomDomainStack in us-east-1)
+      const domainSecret = secretsmanager.Secret.fromSecretNameV2(
+        this,
+        'DomainSecret',
+        `hallway-track-domain-${this.account}`
+      );
+
+      // Reference the hosted zone created in us-east-1 using values from Secrets Manager
+      const hostedZoneId = domainSecret.secretValueFromJson('hostedZoneId').unsafeUnwrap();
+      this.hostedZone = route53.HostedZone.fromHostedZoneAttributes(this, 'CustomDomainHostedZone', {
+        hostedZoneId: hostedZoneId,
+        zoneName: domainName,
+      });
+
+      // Reference the certificate created in us-east-1
+      const certificateArn = domainSecret.secretValueFromJson('certificateArn').unsafeUnwrap();
+      this.certificate = acm.Certificate.fromCertificateArn(
+        this,
+        'CustomDomainCertificate',
+        certificateArn
+      );
+
+      customDomainNames = [domainName, `www.${domainName}`];
+    }
+
     // Create CloudFront distribution with S3BucketOrigin (replaces deprecated S3Origin)
-    this.distribution = new cloudfront.Distribution(this, 'Distribution', {
+    const distributionConfig: cloudfront.DistributionProps = {
       defaultBehavior: {
         origin: origins.S3BucketOrigin.withOriginAccessControl(this.websiteBucket),
         viewerProtocolPolicy:
@@ -759,7 +797,39 @@ export class HallwayTrackStack extends cdk.Stack {
       priceClass: cloudfront.PriceClass.PRICE_CLASS_100, // US, Canada, Europe
       enableLogging: false,
       comment: 'Hallway Track Frontend Distribution',
-    });
+      // Add custom domain configuration if available
+      ...(customDomainNames && this.certificate && {
+        domainNames: customDomainNames,
+        certificate: this.certificate,
+      }),
+    };
+
+    this.distribution = new cloudfront.Distribution(this, 'Distribution', distributionConfig);
+
+    // Create DNS A records for custom domain (if configured)
+    if (config.customDomain?.domainName && this.hostedZone) {
+      const domainName = config.customDomain.domainName;
+
+      // Create A record for apex domain
+      new route53.ARecord(this, 'CustomDomainARecord', {
+        zone: this.hostedZone,
+        recordName: domainName,
+        target: route53.RecordTarget.fromAlias(
+          new route53Targets.CloudFrontTarget(this.distribution)
+        ),
+        comment: `A record for ${domainName} pointing to CloudFront distribution`,
+      });
+
+      // Create A record for www subdomain
+      new route53.ARecord(this, 'CustomDomainWwwARecord', {
+        zone: this.hostedZone,
+        recordName: `www.${domainName}`,
+        target: route53.RecordTarget.fromAlias(
+          new route53Targets.CloudFrontTarget(this.distribution)
+        ),
+        comment: `A record for www.${domainName} pointing to CloudFront distribution`,
+      });
+    }
 
     // Create Lambda function for link types
     const linkTypesFunction = new NodejsFunction(
@@ -812,5 +882,32 @@ export class HallwayTrackStack extends cdk.Stack {
       value: this.distribution.distributionId,
       description: 'CloudFront Distribution ID',
     });
+
+    // Custom domain outputs (conditional)
+    if (config.customDomain?.domainName) {
+      const domainName = config.customDomain.domainName;
+
+      new cdk.CfnOutput(this, 'CustomDomainURL', {
+        value: `https://${domainName}`,
+        description: 'Custom Domain URL',
+      });
+
+      new cdk.CfnOutput(this, 'CustomDomainWwwURL', {
+        value: `https://www.${domainName}`,
+        description: 'Custom Domain WWW URL',
+      });
+
+      new cdk.CfnOutput(this, 'DomainSecretName', {
+        value: `hallway-track-domain-${this.account}`,
+        description: 'Secrets Manager secret name containing domain configuration',
+      });
+
+      if (this.certificate) {
+        new cdk.CfnOutput(this, 'CertificateArn', {
+          value: this.certificate.certificateArn,
+          description: 'SSL Certificate ARN (from us-east-1)',
+        });
+      }
+    }
   }
 }

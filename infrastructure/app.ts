@@ -2,6 +2,7 @@
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { HallwayTrackStack } from './stacks/hallway-track-stack';
+import { CustomDomainStack } from './stacks/custom-domain-stack';
 import { getConfigForAccount } from './config';
 
 const app = new cdk.App();
@@ -13,6 +14,17 @@ try {
   // Load account-specific configuration
   const config = getConfigForAccount(accountId!);
 
+  // Deploy CustomDomainStack first if custom domain is configured
+  // This stack is always deployed in us-east-1 for CloudFront compatibility
+  if (config.customDomain?.domainName) {
+    new CustomDomainStack(app, 'HallwayTrackCustomDomainStack', {
+      domainConfig: config.customDomain,
+      accountId: accountId!,
+      targetRegion: process.env.CDK_DEFAULT_REGION || 'us-east-1',
+    });
+  }
+
+  // Deploy main application stack
   new HallwayTrackStack(app, 'HallwayTrackStack', {
     env: {
       account: accountId,
