@@ -47,6 +47,9 @@
   /* Touch targets */
   --touch-target-min: 44px;
   --input-height-mobile: 48px;
+
+  /* Header height for mobile fixed positioning */
+  --header-height: 60px;
 }
 
 a {
