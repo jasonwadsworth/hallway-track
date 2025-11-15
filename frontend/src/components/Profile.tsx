@@ -1,49 +1,54 @@
 import { useState } from 'react';
 import { ProfileView } from './ProfileView';
-import { ProfileEdit } from './ProfileEdit';
-import { ContactLinkManager } from './ContactLinkManager';
+import { ProfileEditModal } from './ProfileEditModal';
+import { ContactLinkModal } from './ContactLinkModal';
 import './Profile.css';
 
-type ProfileTab = 'view' | 'edit' | 'links';
-
 export function Profile() {
-  const [activeTab, setActiveTab] = useState<ProfileTab>('view');
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
+
+  const handleEditProfile = () => {
+    setShowEditModal(true);
+  };
+
+  const handleManageLinks = () => {
+    setShowContactModal(true);
+  };
+
+  const handleProfileSaved = () => {
+    // Trigger profile data refresh
+    window.dispatchEvent(new Event('profileDataChanged'));
+  };
 
   return (
     <div className="profile-container">
-      <div className="profile-tabs">
-        <button
-          className={`tab ${activeTab === 'view' ? 'active' : ''}`}
-          onClick={() => setActiveTab('view')}
-        >
-          Profile
-        </button>
-        <button
-          className={`tab ${activeTab === 'edit' ? 'active' : ''}`}
-          onClick={() => setActiveTab('edit')}
-        >
-          Edit Profile
-        </button>
-        <button
-          className={`tab ${activeTab === 'links' ? 'active' : ''}`}
-          onClick={() => setActiveTab('links')}
-        >
-          Contact Links
-        </button>
+      <div className="profile-header-actions">
+        <h1>My Profile</h1>
+        <div className="profile-action-buttons">
+          <button onClick={handleEditProfile} className="btn-primary">
+            Edit Profile
+          </button>
+          <button onClick={handleManageLinks} className="btn-secondary">
+            Manage Contact Links
+          </button>
+        </div>
       </div>
 
       <div className="profile-content">
-        {activeTab === 'view' && (
-          <ProfileView onEdit={() => setActiveTab('edit')} />
-        )}
-        {activeTab === 'edit' && (
-          <ProfileEdit
-            onCancel={() => setActiveTab('view')}
-            onSave={() => setActiveTab('view')}
-          />
-        )}
-        {activeTab === 'links' && <ContactLinkManager />}
+        <ProfileView />
       </div>
+
+      <ProfileEditModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onSave={handleProfileSaved}
+      />
+
+      <ContactLinkModal
+        isOpen={showContactModal}
+        onClose={() => setShowContactModal(false)}
+      />
     </div>
   );
 }

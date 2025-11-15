@@ -83,6 +83,12 @@
   background-color: rgba(255, 255, 255, 0.15);
 }
 
+/* Active page highlighting for mobile */
+.nav-links a.active {
+  background-color: rgba(255, 153, 0, 0.15);
+  font-weight: 600;
+}
+
 .nav-links .btn-signout {
   background-color: #ff9900;
   color: #232f3e;
@@ -138,8 +144,26 @@
 
 /* Desktop styles - 768px and above */
 @media (min-width: 768px) {
+  /* Desktop sidebar layout */
   .app-nav {
-    padding: 1rem 2rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100vh;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    padding: 2rem 0;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+  }
+
+  .nav-brand {
+    padding: 0 2rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 2rem;
   }
 
   .nav-brand a {
@@ -151,26 +175,27 @@
     display: none;
   }
 
-  /* Horizontal navigation on desktop */
+  /* Vertical sidebar navigation on desktop */
   .nav-links {
     position: static;
-    flex-direction: row;
-    width: auto;
+    flex-direction: column;
+    width: 100%;
     height: auto;
     max-width: none;
     background-color: transparent;
     padding: 0;
-    gap: 1.5rem;
-    align-items: center;
+    gap: 0;
+    align-items: stretch;
     box-shadow: none;
     overflow-y: visible;
   }
 
   .nav-links a {
-    padding: 0.5rem 1rem;
+    padding: 1rem 2rem;
     min-height: auto;
-    border-bottom: none;
-    border-radius: 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0;
+    position: relative;
   }
 
   .nav-links a:hover {
@@ -181,12 +206,20 @@
     background-color: rgba(255, 255, 255, 0.15);
   }
 
+  /* Active page highlighting for desktop */
+  .nav-links a.active {
+    background-color: rgba(255, 153, 0, 0.1);
+    border-left: 3px solid #ff9900;
+    font-weight: 600;
+  }
+
   .nav-links .btn-signout {
-    padding: 0.5rem 1rem;
+    padding: 1rem 2rem;
     min-height: auto;
-    width: auto;
-    margin-top: 0;
-    border-radius: 4px;
+    width: 100%;
+    margin-top: 1rem;
+    border-radius: 0;
+    text-align: left;
   }
 
   .nav-links .btn-signout:hover {

@@ -11,11 +11,7 @@ import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import { useLinkTypes } from '../hooks/useLinkTypes';
 import './ProfileView.css';
 
-interface ProfileViewProps {
-  onEdit: () => void;
-}
-
-export function ProfileView({ onEdit }: ProfileViewProps) {
+export function ProfileView() {
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -163,9 +159,6 @@ export function ProfileView({ onEdit }: ProfileViewProps) {
       )}
 
       <div className="profile-actions">
-        <button onClick={onEdit} className="btn-primary">
-          Edit Profile
-        </button>
         <ShareProfileButton
           userId={profile.id}
           displayName={profile.displayName}

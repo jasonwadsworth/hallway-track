@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { generateClient } from 'aws-amplify/api'
 import { getIncomingConnectionRequests } from '../graphql/queries'
 import type { ConnectionRequest } from '../types'
@@ -13,9 +13,16 @@ export function AppNav({ signOut }: AppNavProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
   const menuRef = useRef<HTMLDivElement>(null)
+  const hamburgerRef = useRef<HTMLButtonElement>(null)
+  const location = useLocation()
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen)
+  }
+
+  // Check if a path is currently active
+  const isActivePath = (path: string): boolean => {
+    return location.pathname === path
   }
 
   const closeMobileMenu = () => {
@@ -58,9 +65,15 @@ export function AppNav({ signOut }: AppNavProps) {
     if (!mobileMenuOpen) return
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setMobileMenuOpen(false)
+      const target = event.target as Node
+      // Don't close if clicking on the menu itself or the hamburger button
+      if (
+        (menuRef.current && menuRef.current.contains(target)) ||
+        (hamburgerRef.current && hamburgerRef.current.contains(target))
+      ) {
+        return
       }
+      setMobileMenuOpen(false)
     }
 
     // Add listener with slight delay to prevent immediate closure
@@ -81,6 +94,7 @@ export function AppNav({ signOut }: AppNavProps) {
       </div>
 
       <button
+        ref={hamburgerRef}
         className="hamburger-menu"
         onClick={toggleMobileMenu}
         aria-label="Toggle navigation menu"
@@ -90,18 +104,58 @@ export function AppNav({ signOut }: AppNavProps) {
       </button>
 
       <div ref={menuRef} className={`nav-links ${mobileMenuOpen ? 'open' : ''}`}>
-        <Link to="/" onClick={closeMobileMenu}>🏠 Home</Link>
-        <Link to="/profile" onClick={closeMobileMenu}>👤 My Profile</Link>
-        <Link to="/connections" onClick={closeMobileMenu}>👥 Connections</Link>
-        <Link to="/connection-requests" onClick={closeMobileMenu} className="requests-link">
+        <Link
+          to="/"
+          onClick={closeMobileMenu}
+          className={isActivePath('/') ? 'active' : ''}
+        >
+          🏠 Home
+        </Link>
+        <Link
+          to="/profile"
+          onClick={closeMobileMenu}
+          className={isActivePath('/profile') ? 'active' : ''}
+        >
+          👤 My Profile
+        </Link>
+        <Link
+          to="/connections"
+          onClick={closeMobileMenu}
+          className={isActivePath('/connections') ? 'active' : ''}
+        >
+          👥 Connections
+        </Link>
+        <Link
+          to="/connection-requests"
+          onClick={closeMobileMenu}
+          className={`requests-link ${isActivePath('/connection-requests') ? 'active' : ''}`}
+        >
           📬 Requests
           {pendingRequestsCount > 0 && (
             <span className="notification-badge">{pendingRequestsCount}</span>
           )}
         </Link>
-        <Link to="/badges" onClick={closeMobileMenu}>🏆 Badges</Link>
-        <Link to="/qr-code" onClick={closeMobileMenu}>📱 My QR Code</Link>
-        <Link to="/scan" onClick={closeMobileMenu}>📷 Scan QR Code</Link>
+        <Link
+          to="/badges"
+          onClick={closeMobileMenu}
+          className={isActivePath('/badges') ? 'active' : ''}
+        >
+          🏆 Badges
+        </Link>
+        <Link
+          to="/qr-code"
+          onClick={closeMobileMenu}
+          className={isActivePath('/qr-code') ? 'active' : ''}
+        >
+          📱 My QR Code
+        </Link>
+        <Link
+          to="/scan"
+          onClick={closeMobileMenu}
+          className={isActivePath('/scan') ? 'active' : ''}
+        >
+          📷 Scan QR Code
+        </Link>
         {signOut && (
           <button onClick={() => { closeMobileMenu(); signOut(); }} className="btn-signout">
             🚪 Sign Out
