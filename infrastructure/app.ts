@@ -2,14 +2,30 @@
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { HallwayTrackStack } from './stacks/hallway-track-stack';
-import { config } from './config';
+import { getConfigForAccount } from './config';
 
 const app = new cdk.App();
 
-new HallwayTrackStack(app, 'HallwayTrackStack', {
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION,
-  },
-  config,
-});
+// Get the current AWS account ID
+const accountId = process.env.CDK_DEFAULT_ACCOUNT;
+
+try {
+  // Load account-specific configuration
+  const config = getConfigForAccount(accountId!);
+
+  new HallwayTrackStack(app, 'HallwayTrackStack', {
+    env: {
+      account: accountId,
+      region: process.env.CDK_DEFAULT_REGION,
+    },
+    config,
+  });
+} catch (error) {
+  console.error('❌ Configuration Error:');
+  console.error(error instanceof Error ? error.message : String(error));
+  console.error('\n💡 To fix this:');
+  console.error('1. Ensure CDK_DEFAULT_ACCOUNT environment variable is set');
+  console.error('2. Add your account configuration in infrastructure/config.ts');
+  console.error('3. Run: export CDK_DEFAULT_ACCOUNT=$(aws sts get-caller-identity --query Account --output text)');
+  process.exit(1);
+}
