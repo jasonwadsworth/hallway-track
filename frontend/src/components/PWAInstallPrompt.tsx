@@ -48,10 +48,10 @@ const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({ onDismiss }) => {
     <div className="fixed bottom-4 left-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50">
       <div className="flex items-start space-x-3">
         <div className="flex-shrink-0">
-          <img src="/icons/icon-120x120.png" alt="Hallway Track" className="w-12 h-12 rounded-lg" />
+          <img src="/icons/icon-120x120.png" alt="HallwayTrak" className="w-12 h-12 rounded-lg" />
         </div>
         <div className="flex-1">
-          <h3 className="text-sm font-semibold text-gray-900">Install Hallway Track</h3>
+          <h3 className="text-sm font-semibold text-gray-900">Install HallwayTrak</h3>
           <p className="text-xs text-gray-600 mt-1">
             Add to your home screen for quick access and a native app experience.
           </p>

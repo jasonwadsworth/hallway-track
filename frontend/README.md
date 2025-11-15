@@ -1,6 +1,6 @@
-# Hallway Track Frontend
+# HallwayTrak Frontend
 
-React + TypeScript + Vite application for the Hallway Track networking app.
+React + TypeScript + Vite application for the HallwayTrak networking app.
 
 ## Setup
 

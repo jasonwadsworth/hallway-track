@@ -77,7 +77,7 @@ export function AppNav({ signOut }: AppNavProps) {
   return (
     <nav className="app-nav">
       <div className="nav-brand">
-        <Link to="/">Hallway Track</Link>
+        <Link to="/">HallwayTrak</Link>
       </div>
 
       <button

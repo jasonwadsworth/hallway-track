@@ -15,7 +15,7 @@ const THRESHOLD_BADGES = [
 ];
 
 const SPECIAL_BADGES = [
-  { id: 'met-the-maker', name: 'Met the Maker', threshold: 0, description: 'Connected with the creator of Hallway Track', category: 'special' },
+  { id: 'met-the-maker', name: 'Met the Maker', threshold: 0, description: 'Connected with the creator of HallwayTrak', category: 'special' },
   { id: 'early-supporter', name: 'Early Supporter', threshold: 0, description: 'Was among the first 10 connections of a user with 500+ connections', category: 'special' },
   { id: 'vip-connection', name: 'VIP Connection', threshold: 0, description: 'Connected with a highly connected user (50+ connections)', category: 'special' },
   { id: 'triangle-complete', name: 'Triangle Complete', threshold: 0, description: 'Created a mutual connection triangle', category: 'special' },

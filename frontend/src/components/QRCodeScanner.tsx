@@ -225,7 +225,7 @@ export const QRCodeScanner = () => {
       // Invalid QR code format
       setState(prev => ({
         ...prev,
-        error: 'This QR code doesn\'t appear to be a valid Hallway Track profile. Please scan a profile QR code.',
+        error: 'This QR code doesn\'t appear to be a valid HallwayTrak profile. Please scan a profile QR code.',
       }));
 
       // Stop scanning temporarily to show error
@@ -433,7 +433,7 @@ export const QRCodeScanner = () => {
       </div>
 
       <div className="qr-scanner-instructions">
-        <p>Point your camera at a Hallway Track profile QR code</p>
+        <p>Point your camera at a HallwayTrak profile QR code</p>
       </div>
     </div>
   );

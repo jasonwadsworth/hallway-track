@@ -51,7 +51,7 @@ export function QRCodeDisplay() {
 
     try {
       await navigator.share({
-        title: 'My Hallway Track Profile',
+        title: 'My HallwayTrak Profile',
         text: `Connect with ${displayName} at the conference!`,
         url: profileUrl,
       });

@@ -1,6 +1,6 @@
 {
-  "name": "Hallway Track",
-  "short_name": "Hallway Track",
+  "name": "HallwayTrak",
+  "short_name": "HallwayTrak",
   "description": "Connect and network at events",
   "start_url": "/",
   "scope": "/",

@@ -124,7 +124,7 @@ export function Dashboard() {
 
   return (
     <div className="dashboard">
-      <h1>Welcome to Hallway Track</h1>
+      <h1>Welcome to HallwayTrak</h1>
 
       <div className="dashboard-section">
         <h2>Badge Progress</h2>

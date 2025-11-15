@@ -62,7 +62,7 @@ const PWAInstallButton: React.FC = () => {
       {showIOSInstructions && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-6 max-w-sm">
-            <h3 className="font-semibold mb-3">Install Hallway Track</h3>
+            <h3 className="font-semibold mb-3">Install HallwayTrak</h3>
             <p className="text-sm text-gray-600 mb-4">
               {getIOSInstallInstructions()}
             </p>

@@ -1,6 +1,6 @@
 # PWA App Icons
 
-This directory contains the app icons for the Hallway Track PWA.
+This directory contains the app icons for the HallwayTrak PWA.
 
 ## Required Icons
 
@@ -40,7 +40,7 @@ convert icon.svg -resize 512x512 icon-512x512.png
 ## Design Notes
 
 The current icon is a placeholder featuring:
-- Black background with white "H" for Hallway Track
+- Black background with white "H" for HallwayTrak
 - Connection dots and lines to represent networking
 - Simple design that works at small sizes
 
