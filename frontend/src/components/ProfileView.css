@@ -21,7 +21,7 @@
   height: 80px;
   border-radius: 50%;
   margin-bottom: 1rem;
-  border: 3px solid #e0e0e0;
+  border: 3px solid var(--color-border);
   object-fit: cover;
   image-rendering: auto;
 }
@@ -29,11 +29,11 @@
 .profile-header h2 {
   margin: 0.5rem 0;
   font-size: 1.5rem;
-  color: #333;
+  color: var(--color-text-primary);
 }
 
 .profile-email {
-  color: #666;
+  color: var(--color-text-secondary);
   font-size: 0.9rem;
 }
 
@@ -43,7 +43,8 @@
   gap: 1rem;
   margin: 1.5rem 0;
   padding: 1rem;
-  background: #f5f5f5;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
   border-radius: 8px;
 }
 
@@ -59,12 +60,12 @@
 .stat-value {
   font-size: 1.5rem;
   font-weight: bold;
-  color: #007bff;
+  color: var(--color-primary);
 }
 
 .stat-label {
   font-size: 0.9rem;
-  color: #666;
+  color: var(--color-text-secondary);
 }
 
 .profile-contact-links {
@@ -73,61 +74,11 @@
 
 .profile-contact-links h3 {
   font-size: 1.1rem;
-  color: #333;
+  color: var(--color-text-primary);
   margin-bottom: 1rem;
 }
 
-.contact-links-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.contact-link-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 1rem;
-  background: #f9f9f9;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-  width: 100%;
-  min-height: 48px;
-}
-
-.link-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.link-type-image {
-  width: 24px;
-  height: 24px;
-  min-width: 24px;
-  min-height: 24px;
-  object-fit: contain;
-  flex-shrink: 0;
-  image-rendering: auto;
-}
-
-.link-label {
-  font-weight: 600;
-  color: #333;
-  font-size: 0.9rem;
-}
-
-.link-url {
-  color: #007bff;
-  text-decoration: none;
-  font-size: 0.875rem;
-  word-break: break-all;
-  margin-left: 2.25rem;
-}
-
-.link-url:hover {
-  text-decoration: underline;
-}
+/* Contact links now handled by ContactLinkList component */
 
 .profile-actions {
   display: flex;
@@ -138,11 +89,11 @@
 }
 
 .btn-primary {
-  background: #007bff;
-  color: white;
+  background: var(--color-primary);
+  color: var(--color-surface);
   border: none;
   padding: 0.75rem 2rem;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 1rem;
   cursor: pointer;
   transition: background 0.2s;
@@ -153,19 +104,20 @@
 }
 
 .btn-primary:hover {
-  background: #0056b3;
+  background: var(--color-primary-hover);
 }
 
 .btn-primary:disabled {
-  background: #ccc;
+  background: var(--color-text-secondary);
   cursor: not-allowed;
 }
 
 .error-message {
-  color: #dc3545;
+  color: var(--color-error);
   padding: 1rem;
-  background: #f8d7da;
-  border-radius: 6px;
+  background: #fef7f0;
+  border: 1px solid var(--color-error);
+  border-radius: 8px;
   margin: 1rem 0;
 }
 
@@ -223,10 +175,7 @@
     margin-bottom: 0.75rem;
   }
 
-  .contact-link-item {
-    padding: 0.75rem;
-    min-height: 44px;
-  }
+  /* Contact links handled by ContactLinkList component */
 
   .profile-actions {
     margin-top: 1rem;
@@ -288,13 +237,7 @@
     font-size: 1.2rem;
   }
 
-  .link-label {
-    font-size: 0.95rem;
-  }
-
-  .link-url {
-    font-size: 0.9rem;
-  }
+  /* Contact links handled by ContactLinkList component */
 
   .profile-actions {
     flex-direction: row;

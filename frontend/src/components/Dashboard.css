@@ -7,13 +7,13 @@
 
 .dashboard h1 {
   margin-bottom: 1.5rem;
-  color: #232f3e;
+  color: var(--color-text-primary);
   font-size: 1.5rem;
 }
 
 .dashboard-section {
-  background: white;
-  border: 1px solid #ddd;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 1rem;
   margin-bottom: 1.5rem;
@@ -21,8 +21,8 @@
 
 .dashboard-section h2 {
   margin-top: 0;
-  color: #232f3e;
-  border-bottom: 2px solid #ff9900;
+  color: var(--color-text-primary);
+  border-bottom: 2px solid var(--color-primary);
   padding-bottom: 0.5rem;
   font-size: 1.25rem;
 }
@@ -38,7 +38,7 @@
   align-items: center;
   gap: 1rem;
   padding: 1rem;
-  border: 1px solid #eee;
+  border: 1px solid var(--color-border-light);
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.2s, transform 0.1s;
@@ -49,7 +49,7 @@
 
 .recent-connection-item:active {
   transform: scale(0.98);
-  background-color: #f5f5f5;
+  background-color: var(--color-background);
 }
 
 .recent-connection-avatar {
@@ -65,18 +65,18 @@
 .recent-connection-name {
   font-weight: 600;
   margin-bottom: 0.25rem;
-  color: #232f3e;
+  color: var(--color-text-primary);
 }
 
 .recent-connection-date {
   font-size: 0.85rem;
-  color: #666;
+  color: var(--color-text-secondary);
 }
 
 .no-connections {
   text-align: center;
   padding: 2rem;
-  color: #666;
+  color: var(--color-text-secondary);
 }
 
 .no-connections p {
@@ -84,11 +84,11 @@
 }
 
 .btn-primary {
-  background-color: #ff9900;
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--color-surface);
   border: none;
   padding: 0.75rem 1.5rem;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 1rem;
   font-weight: 500;
@@ -99,7 +99,7 @@
 }
 
 .btn-primary:hover {
-  background-color: #ec7211;
+  background-color: var(--color-primary-hover);
 }
 
 /* Landscape mode on mobile - optimize for wider viewport */
@@ -160,7 +160,7 @@
   }
 
   .recent-connection-item:hover {
-    background-color: #f5f5f5;
+    background-color: var(--color-background);
   }
 
   .recent-connection-item:active {
@@ -177,21 +177,21 @@
 .connection-requests-summary p {
   margin: 0;
   font-size: 16px;
-  color: #333;
+  color: var(--color-text-primary);
 }
 
 .connection-requests-summary .btn-primary {
-  background-color: #007bff;
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--color-surface);
   text-decoration: none;
   padding: 8px 16px;
-  border-radius: 4px;
+  border-radius: 8px;
   font-weight: 500;
   transition: background-color 0.2s ease;
 }
 
 .connection-requests-summary .btn-primary:hover {
-  background-color: #0056b3;
+  background-color: var(--color-primary-hover);
 }
 
 @media (min-width: 768px) {

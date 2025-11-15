@@ -10,12 +10,12 @@
   align-items: center;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 2px solid #e0e0e0;
+  border-bottom: 2px solid var(--color-border);
 }
 
 .profile-header-actions h1 {
   margin: 0;
-  color: #333;
+  color: var(--color-text-primary);
   font-size: 1.75rem;
 }
 
@@ -40,21 +40,21 @@
 }
 
 .profile-action-buttons .btn-primary {
-  background-color: #007bff;
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--color-surface);
 }
 
 .profile-action-buttons .btn-primary:hover {
-  background-color: #0056b3;
+  background-color: var(--color-primary-hover);
 }
 
 .profile-action-buttons .btn-secondary {
-  background-color: #6c757d;
-  color: white;
+  background-color: var(--color-text-secondary);
+  color: var(--color-surface);
 }
 
 .profile-action-buttons .btn-secondary:hover {
-  background-color: #545b62;
+  background-color: var(--color-text-primary);
 }
 
 .profile-content {

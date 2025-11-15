@@ -19,7 +19,7 @@
 .btn-back {
   background: none;
   border: none;
-  color: #007bff;
+  color: var(--color-primary);
   font-size: 1rem;
   cursor: pointer;
   padding: 0.5rem 0;
@@ -31,7 +31,7 @@
 }
 
 .btn-back:hover {
-  color: #0056b3;
+  color: var(--color-primary-hover);
   text-decoration: underline;
 }
 
@@ -41,14 +41,14 @@
   gap: 1rem;
   margin-bottom: 1.5rem;
   padding-bottom: 1.5rem;
-  border-bottom: 2px solid #e0e0e0;
+  border-bottom: 2px solid var(--color-border);
 }
 
 .detail-avatar {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  border: 3px solid #e0e0e0;
+  border: 3px solid var(--color-border);
   flex-shrink: 0;
   object-fit: cover;
   image-rendering: auto;
@@ -61,7 +61,7 @@
 .detail-info h2 {
   margin: 0 0 0.5rem 0;
   font-size: 1.5rem;
-  color: #333;
+  color: var(--color-text-primary);
 }
 
 /* Landscape mode on mobile */
@@ -130,55 +130,24 @@
 .connection-date {
   margin: 0;
   font-size: 1rem;
-  color: #666;
+  color: var(--color-text-secondary);
 }
 
 .detail-section {
   margin: 2rem 0;
   padding: 1.5rem;
-  background: #f9f9f9;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
   border-radius: 8px;
 }
 
 .detail-section h3 {
   margin: 0 0 1rem 0;
   font-size: 1.3rem;
-  color: #333;
+  color: var(--color-text-primary);
 }
 
-.contact-links-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.contact-link-item {
-  padding: 0.75rem 0;
-  border-bottom: 1px solid #e0e0e0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.contact-link-item:last-child {
-  border-bottom: none;
-}
-
-.link-label {
-  font-weight: 600;
-  color: #555;
-  min-width: 120px;
-}
-
-.link-url {
-  color: #007bff;
-  text-decoration: none;
-  word-break: break-all;
-}
-
-.link-url:hover {
-  text-decoration: underline;
-}
+/* Contact links now handled by ContactLinkList component */
 
 /* Notes Section */
 .notes-section {
@@ -188,7 +157,7 @@
 .notes-description {
   margin: 0 0 1rem 0;
   font-size: 0.9rem;
-  color: #666;
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 
@@ -197,7 +166,7 @@
   padding: 0.75rem;
   font-size: 1rem;
   font-family: inherit;
-  border: 2px solid #ddd;
+  border: 2px solid var(--color-border);
   border-radius: 6px;
   resize: vertical;
   min-height: 120px;
@@ -207,11 +176,12 @@
 
 .notes-textarea:focus {
   outline: none;
-  border-color: #007bff;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
 }
 
 .notes-textarea::placeholder {
-  color: #999;
+  color: var(--color-text-secondary);
 }
 
 .notes-footer {
@@ -224,27 +194,27 @@
 
 .character-counter {
   font-size: 0.875rem;
-  color: #666;
+  color: var(--color-text-secondary);
 }
 
 .btn-save-note {
-  background-color: #007bff;
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--color-surface);
   border: none;
   padding: 0.625rem 1.5rem;
   font-size: 1rem;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.2s;
   white-space: nowrap;
 }
 
 .btn-save-note:hover:not(:disabled) {
-  background-color: #0056b3;
+  background-color: var(--color-primary-hover);
 }
 
 .btn-save-note:disabled {
-  background-color: #6c757d;
+  background-color: var(--color-text-secondary);
   cursor: not-allowed;
   opacity: 0.6;
 }
@@ -257,15 +227,15 @@
 }
 
 .note-status-success {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
+  background-color: #e8f5e8;
+  color: var(--color-success);
+  border: 1px solid var(--color-success);
 }
 
 .note-status-error {
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
+  background-color: #fef7f0;
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
 }
 
 .note-status-error p {
@@ -273,18 +243,18 @@
 }
 
 .btn-retry {
-  background-color: #dc3545;
-  color: white;
+  background-color: var(--color-error);
+  color: var(--color-surface);
   border: none;
   padding: 0.5rem 1rem;
   font-size: 0.9rem;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
 .btn-retry:hover {
-  background-color: #c82333;
+  background-color: #d93025;
 }
 
 /* Responsive adjustments for notes section */

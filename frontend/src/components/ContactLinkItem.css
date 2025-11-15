@@ -1,0 +1,145 @@
+/* Contact Link Item Styles */
+.contact-link-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 1rem;
+  background-color: var(--color-surface);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  min-height: var(--touch-target-min);
+  list-style: none;
+  border: 1px solid transparent;
+}
+
+.contact-link-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+  border-color: var(--color-primary-light);
+}
+
+.contact-link-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.contact-link-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0; /* Allow text to truncate */
+}
+
+.contact-link-label {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+}
+
+.contact-link-url {
+  color: var(--color-primary);
+  text-decoration: none;
+  word-break: break-all;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+
+.contact-link-url:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+}
+
+/* Mobile optimizations */
+@media (max-width: 767px) {
+  .contact-link-item {
+    padding: 0.875rem;
+    gap: 10px;
+  }
+
+  .contact-link-content {
+    gap: 4px;
+  }
+
+  .contact-link-label,
+  .contact-link-url {
+    font-size: 1rem;
+  }
+}
+
+/* Landscape mode on mobile */
+@media (orientation: landscape) and (max-width: 767px) {
+  .contact-link-item {
+    padding: 0.75rem;
+    min-height: 40px;
+  }
+
+  .contact-link-label,
+  .contact-link-url {
+    font-size: 0.9rem;
+  }
+}
+
+/* Desktop styles */
+@media (min-width: 768px) {
+  .contact-link-item {
+    padding: 1.25rem;
+    gap: 16px;
+  }
+
+  .contact-link-content {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .contact-link-label {
+    min-width: 120px;
+    flex-shrink: 0;
+  }
+
+  .contact-link-url {
+    flex: 1;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .contact-link-item,
+  .contact-link-url {
+    transition: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .contact-link-item {
+    border-color: var(--color-text-primary);
+    box-shadow: none;
+  }
+
+  .contact-link-item:hover {
+    background-color: var(--color-text-primary);
+    color: var(--color-surface);
+    transform: none;
+  }
+
+  .contact-link-item:hover .contact-link-label,
+  .contact-link-item:hover .contact-link-url {
+    color: var(--color-surface);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .contact-link-item {
+    transition: background-color 0.2s;
+  }
+
+  .contact-link-item:hover {
+rm: none;
+  }
+}

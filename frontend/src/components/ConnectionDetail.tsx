@@ -9,6 +9,7 @@ import { TagManager } from './TagManager';
 import { BadgeDisplay } from './BadgeDisplay';
 import { ErrorMessage } from './ErrorMessage';
 import { LoadingSpinner } from './LoadingSpinner';
+import { ContactLinkList } from './ContactLinkList';
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import './ConnectionDetail.css';
 
@@ -204,8 +205,6 @@ export function ConnectionDetail() {
     day: 'numeric',
   });
 
-  const visibleLinks = connectedUser.contactLinks.filter(link => link.visible);
-
   return (
     <div className="connection-detail">
       <button onClick={handleBack} className="btn-back">
@@ -228,21 +227,13 @@ export function ConnectionDetail() {
         </div>
       </div>
 
-      {visibleLinks.length > 0 && (
-        <div className="detail-section">
-          <h3>Contact Links</h3>
-          <ul className="contact-links-list">
-            {visibleLinks.map(link => (
-              <li key={link.id} className="contact-link-item">
-                <span className="link-label">{link.label}:</span>
-                <a href={link.url} target="_blank" rel="noopener noreferrer" className="link-url">
-                  {link.url}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <div className="detail-section">
+        <h3>Contact Links</h3>
+        <ContactLinkList
+          links={connectedUser.contactLinks}
+          emptyMessage="No contact information shared"
+        />
+      </div>
 
       {connectedUser.badges.length > 0 && (
         <div className="detail-section">
