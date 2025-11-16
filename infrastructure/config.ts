@@ -82,9 +82,9 @@ const accountConfigurations: AccountConfiguration = {
   },
   "602223306405": {
     badges: {
-      // makerUserId not set yet - will be added later
+      // Set this to your user ID to enable "Met the Maker" badge
       // Leave undefined to disable this badge
-      makerUserId: undefined,
+      makerUserId: 'a8e193b0-40e1-705d-a7a6-192fd97ec25e',
 
       // Configure re:Invent dates for event badges
       reinventDates: [
