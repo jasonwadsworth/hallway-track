@@ -143,6 +143,8 @@ export const getOutgoingConnectionRequests = /* GraphQL */ `
       createdAt
       updatedAt
       actionedAt
+      initiatorNote
+      initiatorTags
     }
   }
 `;

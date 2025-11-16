@@ -92,6 +92,8 @@ type ConnectionRequest {
   createdAt: AWSDateTime!
   updatedAt: AWSDateTime!
   actionedAt: AWSDateTime
+  initiatorNote: String
+  initiatorTags: [String!]
 }
 
 type ConnectionRequestResult {
@@ -130,10 +132,11 @@ type Mutation {
   addTagToConnection(connectionId: ID!, tag: String!): Connection!
   removeTagFromConnection(connectionId: ID!, tag: String!): Connection!
   updateConnectionNote(connectionId: ID!, note: String): Connection!
-  createConnectionRequest(recipientUserId: ID!): ConnectionRequestResult!
+  createConnectionRequest(recipientUserId: ID!, note: String, tags: [String!]): ConnectionRequestResult!
   approveConnectionRequest(requestId: ID!): ConnectionRequestResult!
   denyConnectionRequest(requestId: ID!): ConnectionRequestResult!
   cancelConnectionRequest(requestId: ID!): ConnectionRequestResult!
+  updateConnectionRequestMetadata(requestId: ID!, note: String, tags: [String!]): ConnectionRequestResult!
 }
 
 schema {

@@ -87,6 +87,8 @@ export interface ConnectionRequest {
   createdAt: string;
   updatedAt: string;
   actionedAt?: string;
+  initiatorNote?: string;
+  initiatorTags?: string[];
 }
 
 export interface ConnectionRequestResult {
@@ -99,4 +101,16 @@ export interface ConnectionStatus {
   isConnected: boolean;
   hasPendingRequest: boolean;
   requestDirection?: 'incoming' | 'outgoing';
+}
+
+export interface CreateConnectionRequestInput {
+  recipientUserId: string;
+  note?: string;
+  tags?: string[];
+}
+
+export interface UpdateConnectionRequestMetadataInput {
+  requestId: string;
+  note?: string;
+  tags?: string[];
 }

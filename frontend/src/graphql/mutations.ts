@@ -142,8 +142,8 @@ export const updateConnectionNote = /* GraphQL */ `
 `;
 
 export const createConnectionRequest = /* GraphQL */ `
-  mutation CreateConnectionRequest($recipientUserId: ID!) {
-    createConnectionRequest(recipientUserId: $recipientUserId) {
+  mutation CreateConnectionRequest($recipientUserId: ID!, $note: String, $tags: [String!]) {
+    createConnectionRequest(recipientUserId: $recipientUserId, note: $note, tags: $tags) {
       success
       message
       request {
@@ -153,6 +153,8 @@ export const createConnectionRequest = /* GraphQL */ `
         status
         createdAt
         updatedAt
+        initiatorNote
+        initiatorTags
       }
     }
   }
@@ -207,6 +209,25 @@ export const cancelConnectionRequest = /* GraphQL */ `
         createdAt
         updatedAt
         actionedAt
+      }
+    }
+  }
+`;
+
+export const updateConnectionRequestMetadata = /* GraphQL */ `
+  mutation UpdateConnectionRequestMetadata($requestId: ID!, $note: String, $tags: [String!]) {
+    updateConnectionRequestMetadata(requestId: $requestId, note: $note, tags: $tags) {
+      success
+      message
+      request {
+        id
+        initiatorUserId
+        recipientUserId
+        status
+        createdAt
+        updatedAt
+        initiatorNote
+        initiatorTags
       }
     }
   }

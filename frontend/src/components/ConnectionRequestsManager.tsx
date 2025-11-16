@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { generateClient } from 'aws-amplify/api';
-import type { ConnectionRequest, ConnectionRequestResult } from '../types';
+import type { ConnectionRequest, ConnectionRequestResult, PublicProfile } from '../types';
 import { getIncomingConnectionRequests, getOutgoingConnectionRequests } from '../graphql/queries';
-import { approveConnectionRequest, denyConnectionRequest, cancelConnectionRequest } from '../graphql/mutations';
+import { approveConnectionRequest, denyConnectionRequest, cancelConnectionRequest, updateConnectionRequestMetadata } from '../graphql/mutations';
 import { ErrorMessage } from './ErrorMessage';
 import { LoadingSpinner } from './LoadingSpinner';
+import { ConnectionRequestModal } from './ConnectionRequestModal';
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import './ConnectionRequestsManager.css';
 
@@ -15,6 +16,8 @@ export function ConnectionRequestsManager() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processingRequest, setProcessingRequest] = useState<string | null>(null);
+  const [editingRequest, setEditingRequest] = useState<ConnectionRequest | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
     loadRequests();
@@ -150,6 +153,53 @@ export function ConnectionRequestsManager() {
       }
     } finally {
       setProcessingRequest(null);
+    }
+  }
+
+  function handleEditRequest(request: ConnectionRequest) {
+    setEditingRequest(request);
+    setShowEditModal(true);
+  }
+
+  async function handleUpdateMetadata(note: string, tags: string[]) {
+    if (!editingRequest) return;
+
+    const client = generateClient();
+    try {
+      setError(null);
+
+      const response = await client.graphql({
+        query: updateConnectionRequestMetadata,
+        variables: {
+          requestId: editingRequest.id,
+          note: note || undefined,
+          tags: tags.length > 0 ? tags : undefined,
+        },
+      });
+
+      if ('data' in response && response.data) {
+        const result = response.data.updateConnectionRequestMetadata as ConnectionRequestResult;
+        if (result.success && result.request) {
+          // Update the request in the list
+          setOutgoingRequests(prev =>
+            prev.map(req => (req.id === editingRequest.id ? result.request! : req))
+          );
+          setShowEditModal(false);
+          setEditingRequest(null);
+        } else {
+          setError(result.message || 'Failed to update connection request');
+          throw new Error(result.message || 'Failed to update connection request');
+        }
+      }
+    } catch (err) {
+      console.error('Error updating connection request metadata:', err);
+      const errorInfo = parseGraphQLError(err);
+      setError(errorInfo.message);
+
+      if (errorInfo.isAuthError) {
+        await handleAuthError();
+      }
+      throw err;
     }
   }
 
@@ -293,23 +343,46 @@ export function ConnectionRequestsManager() {
                         <div className="request-status">
                           Status: {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
                         </div>
+                        {request.initiatorNote && (
+                          <div className="request-note">
+                            <strong>Note:</strong> {request.initiatorNote}
+                          </div>
+                        )}
+                        {request.initiatorTags && request.initiatorTags.length > 0 && (
+                          <div className="request-tags">
+                            {request.initiatorTags.map((tag, index) => (
+                              <span key={index} className="request-tag">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="request-actions">
                       {request.status === 'PENDING' && (
-                        <button
-                          className="btn-cancel"
-                          onClick={() => handleCancelRequest(request.id)}
-                          disabled={processingRequest === request.id}
-                        >
-                          {processingRequest === request.id ? (
-                            <>
-                              <LoadingSpinner inline message="" /> Cancelling...
-                            </>
-                          ) : (
-                            'Cancel'
-                          )}
-                        </button>
+                        <>
+                          <button
+                            className="btn-edit"
+                            onClick={() => handleEditRequest(request)}
+                            disabled={processingRequest === request.id}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="btn-cancel"
+                            onClick={() => handleCancelRequest(request.id)}
+                            disabled={processingRequest === request.id}
+                          >
+                            {processingRequest === request.id ? (
+                              <>
+                                <LoadingSpinner inline message="" /> Cancelling...
+                              </>
+                            ) : (
+                              'Cancel'
+                            )}
+                          </button>
+                        </>
                       )}
                     </div>
                   </div>
@@ -319,6 +392,21 @@ export function ConnectionRequestsManager() {
           </div>
         )}
       </div>
+
+      {editingRequest && editingRequest.recipient && (
+        <ConnectionRequestModal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingRequest(null);
+          }}
+          recipient={editingRequest.recipient as PublicProfile}
+          onSubmit={handleUpdateMetadata}
+          initialNote={editingRequest.initiatorNote || ''}
+          initialTags={editingRequest.initiatorTags || []}
+          isEditing={true}
+        />
+      )}
     </div>
   );
 }

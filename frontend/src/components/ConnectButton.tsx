@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { generateClient } from 'aws-amplify/api';
-import { checkConnectionOrRequest } from '../graphql/queries';
+import { checkConnectionOrRequest, getPublicProfile } from '../graphql/queries';
 import { createConnectionRequest, approveConnectionRequest, cancelConnectionRequest } from '../graphql/mutations';
 import { LoadingSpinner } from './LoadingSpinner';
+import { ConnectionRequestModal } from './ConnectionRequestModal';
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
-import type { ConnectionStatus, ConnectionRequestResult } from '../types';
+import type { ConnectionStatus, ConnectionRequestResult, PublicProfile } from '../types';
 import './ConnectButton.css';
 
 interface ConnectButtonProps {
@@ -13,26 +14,41 @@ interface ConnectButtonProps {
 
 export function ConnectButton({ userId }: ConnectButtonProps) {
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus | null>(null);
+  const [recipientProfile, setRecipientProfile] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    async function checkConnectionStatus() {
+    async function loadData() {
       const client = generateClient();
       try {
         setLoading(true);
         setError(null);
-        const response = await client.graphql({
-          query: checkConnectionOrRequest,
-          variables: { userId },
-        });
-        if ('data' in response && response.data) {
-          setConnectionStatus(response.data.checkConnectionOrRequest as ConnectionStatus);
+
+        // Load connection status and profile in parallel
+        const [statusResponse, profileResponse] = await Promise.all([
+          client.graphql({
+            query: checkConnectionOrRequest,
+            variables: { userId },
+          }),
+          client.graphql({
+            query: getPublicProfile,
+            variables: { userId },
+          }),
+        ]);
+
+        if ('data' in statusResponse && statusResponse.data) {
+          setConnectionStatus(statusResponse.data.checkConnectionOrRequest as ConnectionStatus);
+        }
+
+        if ('data' in profileResponse && profileResponse.data) {
+          setRecipientProfile(profileResponse.data.getPublicProfile as PublicProfile);
         }
       } catch (err) {
-        console.error('Error checking connection status:', err);
+        console.error('Error loading data:', err);
         const errorInfo = parseGraphQLError(err);
         setError(errorInfo.message);
 
@@ -44,10 +60,10 @@ export function ConnectButton({ userId }: ConnectButtonProps) {
       }
     }
 
-    checkConnectionStatus();
+    loadData();
   }, [userId]);
 
-  async function handleSendRequest() {
+  async function handleSendRequest(note: string, tags: string[]) {
     const client = generateClient();
     try {
       setProcessing(true);
@@ -56,7 +72,11 @@ export function ConnectButton({ userId }: ConnectButtonProps) {
 
       const response = await client.graphql({
         query: createConnectionRequest,
-        variables: { recipientUserId: userId },
+        variables: {
+          recipientUserId: userId,
+          note: note || undefined,
+          tags: tags.length > 0 ? tags : undefined,
+        },
       });
 
       if ('data' in response && response.data) {
@@ -70,6 +90,7 @@ export function ConnectButton({ userId }: ConnectButtonProps) {
           setSuccessMessage('Connection request sent!');
         } else {
           setError(result.message || 'Failed to send connection request');
+          throw new Error(result.message || 'Failed to send connection request');
         }
       }
 
@@ -85,9 +106,14 @@ export function ConnectButton({ userId }: ConnectButtonProps) {
       if (errorInfo.isAuthError) {
         await handleAuthError();
       }
+      throw err;
     } finally {
       setProcessing(false);
     }
+  }
+
+  function handleOpenModal() {
+    setShowModal(true);
   }
 
   async function handleApproveRequest() {
@@ -129,64 +155,69 @@ export function ConnectButton({ userId }: ConnectButtonProps) {
   }
 
   return (
-    <div className="connect-button-container">
-      {connectionStatus.isConnected ? (
-        <button className="btn-connected" disabled>
-          ✓ Already Connected
-        </button>
-      ) : connectionStatus.hasPendingRequest ? (
-        connectionStatus.requestDirection === 'outgoing' ? (
-          <button
-            className="btn-pending"
-            onClick={handleCancelRequest}
-            disabled={processing}
-          >
-            {processing ? (
-              <>
-                <LoadingSpinner inline message="" /> Processing...
-              </>
-            ) : (
-              'Request Sent'
-            )}
+    <>
+      <div className="connect-button-container">
+        {connectionStatus.isConnected ? (
+          <button className="btn-connected" disabled>
+            ✓ Already Connected
           </button>
+        ) : connectionStatus.hasPendingRequest ? (
+          connectionStatus.requestDirection === 'outgoing' ? (
+            <button
+              className="btn-pending"
+              onClick={handleCancelRequest}
+              disabled={processing}
+            >
+              {processing ? (
+                <>
+                  <LoadingSpinner inline message="" /> Processing...
+                </>
+              ) : (
+                'Request Sent'
+              )}
+            </button>
+          ) : (
+            <button
+              className="btn-approve"
+              onClick={handleApproveRequest}
+              disabled={processing}
+            >
+              {processing ? (
+                <>
+                  <LoadingSpinner inline message="" /> Processing...
+                </>
+              ) : (
+                'Accept Request'
+              )}
+            </button>
+          )
         ) : (
           <button
-            className="btn-approve"
-            onClick={handleApproveRequest}
+            className="btn-connect"
+            onClick={handleOpenModal}
             disabled={processing}
           >
-            {processing ? (
-              <>
-                <LoadingSpinner inline message="" /> Processing...
-              </>
-            ) : (
-              'Accept Request'
-            )}
+            Send Request
           </button>
-        )
-      ) : (
-        <button
-          className="btn-connect"
-          onClick={handleSendRequest}
-          disabled={processing}
-        >
-          {processing ? (
-            <>
-              <LoadingSpinner inline message="" /> Sending...
-            </>
-          ) : (
-            'Send Request'
-          )}
-        </button>
-      )}
+        )}
 
-      {error && (
-        <div className="error-message">{error}</div>
-      )}
+        {error && (
+          <div className="error-message">{error}</div>
+        )}
 
-      {successMessage && (
-        <div className="success-message">{successMessage}</div>
+        {successMessage && (
+          <div className="success-message">{successMessage}</div>
+        )}
+      </div>
+
+      {recipientProfile && (
+        <ConnectionRequestModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          recipient={recipientProfile}
+          onSubmit={handleSendRequest}
+        />
       )}
-    </div>
+    </>
   );
 }

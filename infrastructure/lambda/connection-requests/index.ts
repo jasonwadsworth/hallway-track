@@ -36,6 +36,8 @@ interface ConnectionRequest {
   createdAt: string;
   updatedAt: string;
   actionedAt?: string;
+  initiatorNote?: string;
+  initiatorTags?: string[];
 }
 
 interface ConnectionRequestWithUsers extends ConnectionRequest {
@@ -70,7 +72,7 @@ export const handler = async (event: AppSyncResolverEvent<Record<string, unknown
   }
 
   if (fieldName === 'createConnectionRequest') {
-    return await createConnectionRequest(userId, event.arguments as { recipientUserId: string });
+    return await createConnectionRequest(userId, event.arguments as { recipientUserId: string; note?: string; tags?: string[] });
   } else if (fieldName === 'approveConnectionRequest') {
     return await approveConnectionRequest(userId, event.arguments as { requestId: string });
   } else if (fieldName === 'denyConnectionRequest') {
@@ -83,17 +85,45 @@ export const handler = async (event: AppSyncResolverEvent<Record<string, unknown
     return await getOutgoingConnectionRequests(userId);
   } else if (fieldName === 'checkConnectionOrRequest') {
     return await checkConnectionOrRequest(userId, event.arguments as { userId: string });
+  } else if (fieldName === 'updateConnectionRequestMetadata') {
+    return await updateConnectionRequestMetadata(userId, event.arguments as { requestId: string; note?: string; tags?: string[] });
   }
 
   throw new Error(`Unknown field: ${fieldName}`);
 };
 
-async function createConnectionRequest(initiatorUserId: string, args: { recipientUserId: string }): Promise<ConnectionRequestResult> {
-  const { recipientUserId } = args;
+async function createConnectionRequest(initiatorUserId: string, args: { recipientUserId: string; note?: string; tags?: string[] }): Promise<ConnectionRequestResult> {
+  const { recipientUserId, note, tags } = args;
 
   console.log('Creating connection request from', initiatorUserId, 'to', recipientUserId);
 
   try {
+    // Validate note length if provided
+    if (note && note.length > 1000) {
+      return {
+        success: false,
+        message: 'Note must be 1000 characters or less',
+      };
+    }
+
+    // Validate tags if provided
+    if (tags) {
+      for (const tag of tags) {
+        if (!tag || tag.trim().length === 0) {
+          return {
+            success: false,
+            message: 'Tags cannot be empty',
+          };
+        }
+        if (tag.length > 50) {
+          return {
+            success: false,
+            message: 'Tags must be 50 characters or less',
+          };
+        }
+      }
+    }
+
     // Validate that user is not connecting with themselves
     if (initiatorUserId === recipientUserId) {
       return {
@@ -162,6 +192,14 @@ async function createConnectionRequest(initiatorUserId: string, args: { recipien
       updatedAt: now,
     };
 
+    // Add metadata if provided
+    if (note && note.trim().length > 0) {
+      connectionRequest.initiatorNote = note.trim();
+    }
+    if (tags && tags.length > 0) {
+      connectionRequest.initiatorTags = tags.map(t => t.trim());
+    }
+
     await docClient.send(
       new PutCommand({
         TableName: CONNECTION_REQUESTS_TABLE_NAME,
@@ -224,7 +262,25 @@ async function approveConnectionRequest(recipientUserId: string, args: { request
 
     const now = new Date().toISOString();
 
-    // Delete the request record since connection will be created
+    // Create the actual connection by calling the connections service
+    await createApprovedConnection(request.initiatorUserId, request.recipientUserId);
+
+    // Transfer metadata to the initiator's connection if present
+    if (request.initiatorNote || request.initiatorTags) {
+      try {
+        await transferMetadataToConnection(
+          request.initiatorUserId,
+          request.recipientUserId,
+          request.initiatorNote,
+          request.initiatorTags
+        );
+      } catch (error) {
+        console.error('Error transferring metadata to connection:', error);
+        // Don't fail the approval if metadata transfer fails
+      }
+    }
+
+    // Delete the request record after connection is created and metadata transferred
     await docClient.send(
       new DeleteCommand({
         TableName: CONNECTION_REQUESTS_TABLE_NAME,
@@ -234,10 +290,6 @@ async function approveConnectionRequest(recipientUserId: string, args: { request
         },
       })
     );
-
-    // Create the actual connection by calling the connections service
-    // This will be implemented when we integrate with the existing connections Lambda
-    await createApprovedConnection(request.initiatorUserId, request.recipientUserId);
 
     return {
       success: true,
@@ -313,6 +365,125 @@ async function denyConnectionRequest(recipientUserId: string, args: { requestId:
     return {
       success: false,
       message: 'Failed to deny connection request. Please try again.',
+    };
+  }
+}
+
+async function updateConnectionRequestMetadata(initiatorUserId: string, args: { requestId: string; note?: string; tags?: string[] }): Promise<ConnectionRequestResult> {
+  const { requestId, note, tags } = args;
+
+  try {
+    // Validate note length if provided
+    if (note && note.length > 1000) {
+      return {
+        success: false,
+        message: 'Note must be 1000 characters or less',
+      };
+    }
+
+    // Validate tags if provided
+    if (tags) {
+      for (const tag of tags) {
+        if (!tag || tag.trim().length === 0) {
+          return {
+            success: false,
+            message: 'Tags cannot be empty',
+          };
+        }
+        if (tag.length > 50) {
+          return {
+            success: false,
+            message: 'Tags must be 50 characters or less',
+          };
+        }
+      }
+    }
+
+    // Find the request by querying the GSI (since we don't know the recipient)
+    const queryResult = await docClient.send(
+      new QueryCommand({
+        TableName: CONNECTION_REQUESTS_TABLE_NAME,
+        IndexName: 'ByInitiator',
+        KeyConditionExpression: 'GSI1PK = :pk',
+        FilterExpression: 'id = :requestId',
+        ExpressionAttributeValues: {
+          ':pk': `USER#${initiatorUserId}`,
+          ':requestId': requestId,
+        },
+      })
+    );
+
+    if (!queryResult.Items || queryResult.Items.length === 0) {
+      return {
+        success: false,
+        message: 'Connection request not found',
+      };
+    }
+
+    const request = queryResult.Items[0] as ConnectionRequest;
+
+    // Verify the request is pending
+    if (request.status !== 'PENDING') {
+      return {
+        success: false,
+        message: 'This request can no longer be edited',
+      };
+    }
+
+    const now = new Date().toISOString();
+
+    // Build update expression dynamically
+    const updateParts: string[] = ['updatedAt = :now'];
+    const attributeValues: Record<string, string | string[]> = { ':now': now };
+    const removeAttributes: string[] = [];
+
+    if (note !== undefined) {
+      if (note && note.trim().length > 0) {
+        updateParts.push('initiatorNote = :note');
+        attributeValues[':note'] = note.trim();
+      } else {
+        removeAttributes.push('initiatorNote');
+      }
+    }
+
+    if (tags !== undefined) {
+      if (tags && tags.length > 0) {
+        updateParts.push('initiatorTags = :tags');
+        attributeValues[':tags'] = tags.map(t => t.trim());
+      } else {
+        removeAttributes.push('initiatorTags');
+      }
+    }
+
+    let updateExpression = `SET ${updateParts.join(', ')}`;
+    if (removeAttributes.length > 0) {
+      updateExpression += ` REMOVE ${removeAttributes.join(', ')}`;
+    }
+
+    // Update the request
+    const updateResult = await docClient.send(
+      new UpdateCommand({
+        TableName: CONNECTION_REQUESTS_TABLE_NAME,
+        Key: {
+          PK: request.PK,
+          SK: request.SK,
+        },
+        UpdateExpression: updateExpression,
+        ExpressionAttributeValues: attributeValues,
+        ReturnValues: 'ALL_NEW',
+      })
+    );
+
+    return {
+      success: true,
+      message: 'Connection request metadata updated',
+      request: updateResult.Attributes as ConnectionRequest,
+    };
+  } catch (error) {
+    console.error('Error updating connection request metadata:', error);
+    return {
+      success: false,
+      message: 'Failed to update connection request metadata. Please try again.',
     };
   }
 }
@@ -405,14 +576,21 @@ async function getIncomingConnectionRequests(userId: string): Promise<Connection
         })
       );
 
+      // Remove metadata fields for recipients (privacy)
+      const sanitizedRequest = {
+        ...request,
+        initiatorNote: undefined,
+        initiatorTags: undefined,
+      };
+
       if (userResult.Item) {
         requestsWithUsers.push({
-          ...request,
+          ...sanitizedRequest,
           initiator: userResult.Item as User,
         });
       } else {
         // Include request even if user not found
-        requestsWithUsers.push(request);
+        requestsWithUsers.push(sanitizedRequest);
       }
     }
 
@@ -510,6 +688,65 @@ async function checkConnectionOrRequest(userId: string, args: { userId: string }
 }
 
 // Helper functions
+
+async function transferMetadataToConnection(
+  initiatorUserId: string,
+  recipientUserId: string,
+  note?: string,
+  tags?: string[]
+): Promise<void> {
+  // Find the initiator's connection record
+  const connectionResult = await docClient.send(
+    new QueryCommand({
+      TableName: CONNECTIONS_TABLE_NAME,
+      KeyConditionExpression: 'PK = :pk AND begins_with(SK, :sk)',
+      FilterExpression: 'connectedUserId = :connectedUserId',
+      ExpressionAttributeValues: {
+        ':pk': `USER#${initiatorUserId}`,
+        ':sk': 'CONNECTION#',
+        ':connectedUserId': recipientUserId,
+      },
+      Limit: 1,
+    })
+  );
+
+  if (!connectionResult.Items || connectionResult.Items.length === 0) {
+    console.error('Connection not found for metadata transfer');
+    throw new Error('Connection not found for metadata transfer');
+  }
+
+  const connection = connectionResult.Items[0];
+  const now = new Date().toISOString();
+
+  // Build update expression dynamically
+  const updateParts: string[] = ['updatedAt = :now'];
+  const attributeValues: Record<string, string | string[]> = { ':now': now };
+
+  if (note && note.trim().length > 0) {
+    updateParts.push('note = :note');
+    attributeValues[':note'] = note.trim();
+  }
+
+  if (tags && tags.length > 0) {
+    updateParts.push('tags = :tags');
+    attributeValues[':tags'] = tags;
+  }
+
+  // Update the connection with metadata
+  await docClient.send(
+    new UpdateCommand({
+      TableName: CONNECTIONS_TABLE_NAME,
+      Key: {
+        PK: connection.PK,
+        SK: connection.SK,
+      },
+      UpdateExpression: `SET ${updateParts.join(', ')}`,
+      ExpressionAttributeValues: attributeValues,
+    })
+  );
+
+  console.log('Metadata transferred to connection successfully');
+}
 
 async function checkExistingConnection(userId1: string, userId2: string): Promise<boolean> {
   try {
