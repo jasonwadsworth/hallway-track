@@ -32,5 +32,30 @@ The authentication is configured to use the Cognito User Pool created by the CDK
 
 ## Environment Variables
 
+The app uses account-specific environment configurations. See [README-environments.md](./README-environments.md) for detailed information about:
+
+- Account-specific environment files (`.env.[account-id]`)
+- Build commands for different AWS accounts
+- Deployment integration with CDK
+
+### Required Variables
+
 - `VITE_USER_POOL_ID`: Cognito User Pool ID (from CDK output)
 - `VITE_USER_POOL_CLIENT_ID`: Cognito User Pool Client ID (from CDK output)
+- `VITE_GRAPHQL_ENDPOINT`: AppSync GraphQL API URL (from CDK output)
+- `VITE_AWS_REGION`: AWS region (typically us-west-2)
+
+## Building for Production
+
+Build for a specific AWS account:
+
+```bash
+npm run build:account [account-id]
+```
+
+Example:
+```bash
+npm run build:account 831926593673
+```
+
+This creates account-specific build artifacts in `dist/[account-id]/` that the CDK deployment will use.

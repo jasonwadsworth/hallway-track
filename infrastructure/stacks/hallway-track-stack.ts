@@ -856,8 +856,8 @@ export class HallwayTrackStack extends cdk.Stack {
       fieldName: 'getLinkTypes',
     });
 
-    // Deploy website assets to S3 (if dist folder exists)
-    const frontendDistPath = path.join(__dirname, '../../frontend/dist');
+    // Deploy website assets to S3 (account-specific build directory)
+    const frontendDistPath = path.join(__dirname, `../../frontend/dist/${this.account}`);
     new s3deploy.BucketDeployment(this, 'DeployWebsite', {
       sources: [s3deploy.Source.asset(frontendDistPath)],
       destinationBucket: this.websiteBucket,
