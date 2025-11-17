@@ -1,14 +1,17 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, QueryCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { EventBridgeClient, PutEventsCommand } from '@aws-sdk/client-eventbridge';
 import { AppSyncResolverEvent } from 'aws-lambda';
 import { randomUUID } from 'crypto';
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
+const eventBridgeClient = new EventBridgeClient({});
 
 const USERS_TABLE_NAME = process.env.USERS_TABLE_NAME!;
 const CONNECTIONS_TABLE_NAME = process.env.CONNECTIONS_TABLE_NAME!;
 const CONNECTION_REQUESTS_TABLE_NAME = process.env.CONNECTION_REQUESTS_TABLE_NAME!;
+const EVENT_BUS_NAME = process.env.EVENT_BUS_NAME || 'hallway-track-badges';
 
 interface User {
   PK: string;
@@ -57,7 +60,7 @@ interface ConnectionStatus {
   requestDirection?: 'incoming' | 'outgoing';
 }
 
-export const handler = async (event: AppSyncResolverEvent<Record<string, unknown>>): Promise<ConnectionRequestResult | ConnectionRequestWithUsers[] | ConnectionStatus> => {
+export const handler = async (event: AppSyncResolverEvent<Record<string, unknown>>): Promise<ConnectionRequestResult | ConnectionRequest[] | ConnectionStatus> => {
   console.log('Connection requests handler invoked:', JSON.stringify(event, null, 2));
 
   const identity = event.identity as { sub?: string };
@@ -262,25 +265,7 @@ async function approveConnectionRequest(recipientUserId: string, args: { request
 
     const now = new Date().toISOString();
 
-    // Create the actual connection by calling the connections service
-    await createApprovedConnection(request.initiatorUserId, request.recipientUserId);
-
-    // Transfer metadata to the initiator's connection if present
-    if (request.initiatorNote || request.initiatorTags) {
-      try {
-        await transferMetadataToConnection(
-          request.initiatorUserId,
-          request.recipientUserId,
-          request.initiatorNote,
-          request.initiatorTags
-        );
-      } catch (error) {
-        console.error('Error transferring metadata to connection:', error);
-        // Don't fail the approval if metadata transfer fails
-      }
-    }
-
-    // Delete the request record after connection is created and metadata transferred
+    // Delete the request record
     await docClient.send(
       new DeleteCommand({
         TableName: CONNECTION_REQUESTS_TABLE_NAME,
@@ -291,6 +276,32 @@ async function approveConnectionRequest(recipientUserId: string, args: { request
       })
     );
 
+    console.log(`Connection request ${requestId} deleted`);
+
+    // Emit ConnectionRequestApproved event for async processing
+    await eventBridgeClient.send(
+      new PutEventsCommand({
+        Entries: [
+          {
+            Source: 'hallway-track.connection-requests',
+            DetailType: 'ConnectionRequestApproved',
+            Detail: JSON.stringify({
+              requestId,
+              initiatorUserId: request.initiatorUserId,
+              recipientUserId: request.recipientUserId,
+              initiatorNote: request.initiatorNote,
+              initiatorTags: request.initiatorTags,
+              timestamp: now,
+            }),
+            EventBusName: EVENT_BUS_NAME,
+          },
+        ],
+      })
+    );
+
+    console.log('ConnectionRequestApproved event emitted');
+
+    // Return success immediately - connection creation and metadata transfer happen asynchronously
     return {
       success: true,
       message: 'Connection request approved successfully',
@@ -545,7 +556,7 @@ async function cancelConnectionRequest(initiatorUserId: string, args: { requestI
   }
 }
 
-async function getIncomingConnectionRequests(userId: string): Promise<ConnectionRequestWithUsers[]> {
+async function getIncomingConnectionRequests(userId: string): Promise<ConnectionRequest[]> {
   try {
     // Query incoming requests for this user
     const result = await docClient.send(
@@ -562,46 +573,23 @@ async function getIncomingConnectionRequests(userId: string): Promise<Connection
 
     const requests = (result.Items || []) as ConnectionRequest[];
 
-    // Fetch initiator user details for each request
-    const requestsWithUsers: ConnectionRequestWithUsers[] = [];
+    // Sanitize metadata fields for recipients (privacy)
+    // Remove initiatorNote and initiatorTags from the response
+    const sanitizedRequests = requests.map(request => ({
+      ...request,
+      initiatorNote: undefined,
+      initiatorTags: undefined,
+    }));
 
-    for (const request of requests) {
-      const userResult = await docClient.send(
-        new GetCommand({
-          TableName: USERS_TABLE_NAME,
-          Key: {
-            PK: `USER#${request.initiatorUserId}`,
-            SK: 'PROFILE',
-          },
-        })
-      );
-
-      // Remove metadata fields for recipients (privacy)
-      const sanitizedRequest = {
-        ...request,
-        initiatorNote: undefined,
-        initiatorTags: undefined,
-      };
-
-      if (userResult.Item) {
-        requestsWithUsers.push({
-          ...sanitizedRequest,
-          initiator: userResult.Item as User,
-        });
-      } else {
-        // Include request even if user not found
-        requestsWithUsers.push(sanitizedRequest);
-      }
-    }
-
-    return requestsWithUsers;
+    // Return requests without user data - field resolver will handle that
+    return sanitizedRequests;
   } catch (error) {
     console.error('Error getting incoming connection requests:', error);
     return [];
   }
 }
 
-async function getOutgoingConnectionRequests(userId: string): Promise<ConnectionRequestWithUsers[]> {
+async function getOutgoingConnectionRequests(userId: string): Promise<ConnectionRequest[]> {
   try {
     // Query outgoing requests using GSI
     const result = await docClient.send(
@@ -618,32 +606,8 @@ async function getOutgoingConnectionRequests(userId: string): Promise<Connection
 
     const requests = (result.Items || []) as ConnectionRequest[];
 
-    // Fetch recipient user details for each request
-    const requestsWithUsers: ConnectionRequestWithUsers[] = [];
-
-    for (const request of requests) {
-      const userResult = await docClient.send(
-        new GetCommand({
-          TableName: USERS_TABLE_NAME,
-          Key: {
-            PK: `USER#${request.recipientUserId}`,
-            SK: 'PROFILE',
-          },
-        })
-      );
-
-      if (userResult.Item) {
-        requestsWithUsers.push({
-          ...request,
-          recipient: userResult.Item as User,
-        });
-      } else {
-        // Include request even if user not found
-        requestsWithUsers.push(request);
-      }
-    }
-
-    return requestsWithUsers;
+    // Return requests without user data - field resolver will handle that
+    return requests;
   } catch (error) {
     console.error('Error getting outgoing connection requests:', error);
     return [];
@@ -688,65 +652,6 @@ async function checkConnectionOrRequest(userId: string, args: { userId: string }
 }
 
 // Helper functions
-
-async function transferMetadataToConnection(
-  initiatorUserId: string,
-  recipientUserId: string,
-  note?: string,
-  tags?: string[]
-): Promise<void> {
-  // Find the initiator's connection record
-  const connectionResult = await docClient.send(
-    new QueryCommand({
-      TableName: CONNECTIONS_TABLE_NAME,
-      KeyConditionExpression: 'PK = :pk AND begins_with(SK, :sk)',
-      FilterExpression: 'connectedUserId = :connectedUserId',
-      ExpressionAttributeValues: {
-        ':pk': `USER#${initiatorUserId}`,
-        ':sk': 'CONNECTION#',
-        ':connectedUserId': recipientUserId,
-      },
-      Limit: 1,
-    })
-  );
-
-  if (!connectionResult.Items || connectionResult.Items.length === 0) {
-    console.error('Connection not found for metadata transfer');
-    throw new Error('Connection not found for metadata transfer');
-  }
-
-  const connection = connectionResult.Items[0];
-  const now = new Date().toISOString();
-
-  // Build update expression dynamically
-  const updateParts: string[] = ['updatedAt = :now'];
-  const attributeValues: Record<string, string | string[]> = { ':now': now };
-
-  if (note && note.trim().length > 0) {
-    updateParts.push('note = :note');
-    attributeValues[':note'] = note.trim();
-  }
-
-  if (tags && tags.length > 0) {
-    updateParts.push('tags = :tags');
-    attributeValues[':tags'] = tags;
-  }
-
-  // Update the connection with metadata
-  await docClient.send(
-    new UpdateCommand({
-      TableName: CONNECTIONS_TABLE_NAME,
-      Key: {
-        PK: connection.PK,
-        SK: connection.SK,
-      },
-      UpdateExpression: `SET ${updateParts.join(', ')}`,
-      ExpressionAttributeValues: attributeValues,
-    })
-  );
-
-  console.log('Metadata transferred to connection successfully');
-}
 
 async function checkExistingConnection(userId1: string, userId2: string): Promise<boolean> {
   try {
@@ -821,86 +726,4 @@ async function checkExistingRequest(userId1: string, userId2: string): Promise<C
     console.error('Error checking existing request:', error);
     return null;
   }
-}
-
-async function createApprovedConnection(initiatorUserId: string, recipientUserId: string): Promise<void> {
-  // This function will call the existing connection creation logic
-  // For now, we'll implement a simplified version
-  // In the integration step, this will call the existing connections Lambda function
-
-  const now = new Date().toISOString();
-  const connectionId1 = randomUUID();
-  const connectionId2 = randomUUID();
-
-  // Create connection record for initiator
-  const connection1 = {
-    PK: `USER#${initiatorUserId}`,
-    SK: `CONNECTION#${connectionId1}`,
-    GSI1PK: `CONNECTED#${recipientUserId}`,
-    GSI1SK: now,
-    id: connectionId1,
-    userId: initiatorUserId,
-    connectedUserId: recipientUserId,
-    tags: [],
-    createdAt: now,
-    updatedAt: now,
-  };
-
-  // Create connection record for recipient
-  const connection2 = {
-    PK: `USER#${recipientUserId}`,
-    SK: `CONNECTION#${connectionId2}`,
-    GSI1PK: `CONNECTED#${initiatorUserId}`,
-    GSI1SK: now,
-    id: connectionId2,
-    userId: recipientUserId,
-    connectedUserId: initiatorUserId,
-    tags: [],
-    createdAt: now,
-    updatedAt: now,
-  };
-
-  // Create both connections
-  await Promise.all([
-    docClient.send(new PutCommand({
-      TableName: CONNECTIONS_TABLE_NAME,
-      Item: connection1,
-    })),
-    docClient.send(new PutCommand({
-      TableName: CONNECTIONS_TABLE_NAME,
-      Item: connection2,
-    })),
-  ]);
-
-  // Update connection counts for both users
-  await Promise.all([
-    docClient.send(new UpdateCommand({
-      TableName: USERS_TABLE_NAME,
-      Key: {
-        PK: `USER#${initiatorUserId}`,
-        SK: 'PROFILE',
-      },
-      UpdateExpression: 'SET connectionCount = if_not_exists(connectionCount, :zero) + :inc, updatedAt = :now',
-      ExpressionAttributeValues: {
-        ':zero': 0,
-        ':inc': 1,
-        ':now': now,
-      },
-    })),
-    docClient.send(new UpdateCommand({
-      TableName: USERS_TABLE_NAME,
-      Key: {
-        PK: `USER#${recipientUserId}`,
-        SK: 'PROFILE',
-      },
-      UpdateExpression: 'SET connectionCount = if_not_exists(connectionCount, :zero) + :inc, updatedAt = :now',
-      ExpressionAttributeValues: {
-        ':zero': 0,
-        ':inc': 1,
-        ':now': now,
-      },
-    })),
-  ]);
-
-  // TODO: Award badges and trigger events (will be integrated later)
 }

@@ -1,14 +1,17 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, QueryCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { EventBridgeClient, PutEventsCommand } from '@aws-sdk/client-eventbridge';
 import { AppSyncResolverEvent } from 'aws-lambda';
 import { randomUUID } from 'crypto';
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
+const eventBridgeClient = new EventBridgeClient({});
 
 const USERS_TABLE_NAME = process.env.USERS_TABLE_NAME!;
 const CONNECTIONS_TABLE_NAME = process.env.CONNECTIONS_TABLE_NAME!;
 const CONNECTION_REQUESTS_TABLE_NAME = process.env.CONNECTION_REQUESTS_TABLE_NAME!;
+const EVENT_BUS_NAME = process.env.EVENT_BUS_NAME || 'hallway-track-badges';
 
 interface BadgeMetadata {
   relatedUserId?: string;
@@ -68,7 +71,7 @@ interface RemoveConnectionResult {
   message?: string;
 }
 
-export const handler = async (event: AppSyncResolverEvent<Record<string, unknown>>): Promise<Connection | ConnectionWithUser[] | boolean | RemoveConnectionResult> => {
+export const handler = async (event: AppSyncResolverEvent<Record<string, unknown>>): Promise<Connection | Connection[] | boolean | RemoveConnectionResult> => {
   const identity = event.identity as { sub?: string };
   const userId = identity?.sub;
   const fieldName = event.info.fieldName;
@@ -280,7 +283,7 @@ async function removeConnection(userId: string, args: { connectionId: string }):
       throw new Error('You do not have permission to remove this connection');
     }
 
-    // Step 5: Extract connectedUserId for reciprocal deletion
+    // Step 5: Extract connectedUserId for event
     const connectedUserId = connection.connectedUserId;
 
     // Step 6: Delete the user's connection record
@@ -294,74 +297,32 @@ async function removeConnection(userId: string, args: { connectionId: string }):
       })
     );
 
-    // Step 7: Find and delete the reciprocal connection record
-    const reciprocalConnectionsResult = await docClient.send(
-      new QueryCommand({
-        TableName: CONNECTIONS_TABLE_NAME,
-        KeyConditionExpression: 'PK = :pk AND begins_with(SK, :sk)',
-        ExpressionAttributeValues: {
-          ':pk': `USER#${connectedUserId}`,
-          ':sk': 'CONNECTION#',
-        },
-      })
-    );
+    console.log(`Connection ${connectionId} deleted for user ${userId}`);
 
-    const reciprocalConnection = (reciprocalConnectionsResult.Items || []).find(
-      (item: Record<string, unknown>) => item.connectedUserId === userId
-    );
+    // Step 7: Emit ConnectionRemoved event for async processing
+    const now = new Date().toISOString();
 
-    if (reciprocalConnection) {
-      await docClient.send(
-        new DeleteCommand({
-          TableName: CONNECTIONS_TABLE_NAME,
-          Key: {
-            PK: reciprocalConnection.PK as string,
-            SK: reciprocalConnection.SK as string,
+    await eventBridgeClient.send(
+      new PutEventsCommand({
+        Entries: [
+          {
+            Source: 'hallway-track.connections',
+            DetailType: 'ConnectionRemoved',
+            Detail: JSON.stringify({
+              userId,
+              connectedUserId,
+              connectionId,
+              timestamp: now,
+            }),
+            EventBusName: EVENT_BUS_NAME,
           },
-        })
-      );
-    } else {
-      console.warn(`Reciprocal connection not found for user ${connectedUserId} connected to ${userId}`);
-    }
-
-    // Step 8: Decrement connectionCount for both users and get updated results
-    const userUpdateResult = await docClient.send(
-      new UpdateCommand({
-        TableName: USERS_TABLE_NAME,
-        Key: {
-          PK: `USER#${userId}`,
-          SK: 'PROFILE',
-        },
-        UpdateExpression: 'SET connectionCount = if_not_exists(connectionCount, :zero) - :dec, updatedAt = :now',
-        ExpressionAttributeValues: {
-          ':zero': 0,
-          ':dec': 1,
-          ':now': new Date().toISOString(),
-        },
-        ReturnValues: 'ALL_NEW',
+        ],
       })
     );
 
-    const connectedUserUpdateResult = await docClient.send(
-      new UpdateCommand({
-        TableName: USERS_TABLE_NAME,
-        Key: {
-          PK: `USER#${connectedUserId}`,
-          SK: 'PROFILE',
-        },
-        UpdateExpression: 'SET connectionCount = if_not_exists(connectionCount, :zero) - :dec, updatedAt = :now',
-        ExpressionAttributeValues: {
-          ':zero': 0,
-          ':dec': 1,
-          ':now': new Date().toISOString(),
-        },
-        ReturnValues: 'ALL_NEW',
-      })
-    );
+    console.log('ConnectionRemoved event emitted');
 
-    // Step 9: Re-evaluate badges for both users using the updated connection counts
-    // Badge re-evaluation is now handled asynchronously by the unified badge handler
-
+    // Return success immediately - reciprocal deletion and count updates happen asynchronously
     return {
       success: true,
       message: 'Connection removed successfully',
@@ -383,7 +344,7 @@ async function removeConnection(userId: string, args: { connectionId: string }):
   }
 }
 
-async function getMyConnections(userId: string): Promise<ConnectionWithUser[]> {
+async function getMyConnections(userId: string): Promise<Connection[]> {
   // Query connections table for current user
   const result = await docClient.send(
     new QueryCommand({
@@ -399,32 +360,8 @@ async function getMyConnections(userId: string): Promise<ConnectionWithUser[]> {
 
   const connections = (result.Items || []) as Connection[];
 
-  // Fetch connected user details for each connection
-  const connectionsWithUsers: ConnectionWithUser[] = [];
-
-  for (const connection of connections) {
-    const userResult = await docClient.send(
-      new GetCommand({
-        TableName: USERS_TABLE_NAME,
-        Key: {
-          PK: `USER#${connection.connectedUserId}`,
-          SK: 'PROFILE',
-        },
-      })
-    );
-
-    if (userResult.Item) {
-      connectionsWithUsers.push({
-        ...connection,
-        connectedUser: userResult.Item as User,
-      });
-    } else {
-      // If user not found, still include connection without user details
-      connectionsWithUsers.push(connection);
-    }
-  }
-
-  return connectionsWithUsers;
+  // Return connections without user data - field resolver will handle that
+  return connections;
 }
 
 async function addTagToConnection(userId: string, args: { connectionId: string; tag: string }): Promise<Connection> {
@@ -560,43 +497,27 @@ async function updateConnectionNote(userId: string, args: { connectionId: string
 
   const now = new Date().toISOString();
 
-  // Update or remove note
-  if (note === null || note === undefined || note.trim() === '') {
-    // Remove note
-    const updateResult = await docClient.send(
-      new UpdateCommand({
-        TableName: CONNECTIONS_TABLE_NAME,
-        Key: {
-          PK: `USER#${userId}`,
-          SK: `CONNECTION#${connectionId}`,
-        },
-        UpdateExpression: 'REMOVE note SET updatedAt = :now',
-        ExpressionAttributeValues: {
-          ':now': now,
-        },
-        ReturnValues: 'ALL_NEW',
-      })
-    );
-    return updateResult.Attributes as Connection;
-  } else {
-    // Add or update note
-    const updateResult = await docClient.send(
-      new UpdateCommand({
-        TableName: CONNECTIONS_TABLE_NAME,
-        Key: {
-          PK: `USER#${userId}`,
-          SK: `CONNECTION#${connectionId}`,
-        },
-        UpdateExpression: 'SET note = :note, updatedAt = :now',
-        ExpressionAttributeValues: {
-          ':note': note.trim(),
-          ':now': now,
-        },
-        ReturnValues: 'ALL_NEW',
-      })
-    );
-    return updateResult.Attributes as Connection;
-  }
+  // Always use SET operation for consistency
+  // Store empty string for cleared notes instead of removing the field
+  const noteValue = note === null || note === undefined || note.trim() === '' ? '' : note.trim();
+
+  const updateResult = await docClient.send(
+    new UpdateCommand({
+      TableName: CONNECTIONS_TABLE_NAME,
+      Key: {
+        PK: `USER#${userId}`,
+        SK: `CONNECTION#${connectionId}`,
+      },
+      UpdateExpression: 'SET note = :note, updatedAt = :now',
+      ExpressionAttributeValues: {
+        ':note': noteValue,
+        ':now': now,
+      },
+      ReturnValues: 'ALL_NEW',
+    })
+  );
+
+  return updateResult.Attributes as Connection;
 }
 
 // Export for use by connection-requests Lambda

@@ -409,19 +409,7 @@ async function evaluateMakerBadges(user: User, context: BadgeContext): Promise<B
   console.log(`Evaluating maker badges for user ${user.id}`);
 
   const currentBadges = user.badges || [];
-  const hasMakerBadge = currentBadges.some(badge => badge.id === 'met-the-maker');
-
-  // Maker badges are only awarded when a new connection is made
-  if (!context.newConnection) {
-    console.log('No new connection context, skipping maker badge evaluation');
-    return { badgesToAdd: [], badgesToRemove: [] };
-  }
-
-  // If user already has the maker badge, no need to check again
-  if (hasMakerBadge) {
-    console.log(`User ${user.id} already has the maker badge`);
-    return { badgesToAdd: [], badgesToRemove: [] };
-  }
+  const existingMakerBadge = currentBadges.find(badge => badge.id === 'met-the-maker');
 
   // Check if MAKER_USER_ID is configured
   if (!MAKER_USER_ID) {
@@ -429,28 +417,72 @@ async function evaluateMakerBadges(user: User, context: BadgeContext): Promise<B
     return { badgesToAdd: [], badgesToRemove: [] };
   }
 
-  const { connectedUserId, timestamp } = context.newConnection;
+  // Handle new connection case
+  if (context.newConnection) {
+    const { connectedUserId, timestamp } = context.newConnection;
 
-  // Check if connected user is the maker
-  if (connectedUserId !== MAKER_USER_ID) {
-    console.log(`Connected user ${connectedUserId} is not the maker ${MAKER_USER_ID}`);
-    return { badgesToAdd: [], badgesToRemove: [] };
+    // If user already has the maker badge, no need to check again
+    if (existingMakerBadge) {
+      console.log(`User ${user.id} already has the maker badge`);
+      return { badgesToAdd: [], badgesToRemove: [] };
+    }
+
+    // Check if connected user is the maker
+    if (connectedUserId !== MAKER_USER_ID) {
+      console.log(`Connected user ${connectedUserId} is not the maker ${MAKER_USER_ID}`);
+      return { badgesToAdd: [], badgesToRemove: [] };
+    }
+
+    console.log(`User ${user.id} connected with maker, awarding badge`);
+
+    // Award maker badge
+    const makerBadge: Badge = {
+      id: 'met-the-maker',
+      name: 'Met the Maker',
+      description: 'Connected with the creator of Hallway Track',
+      threshold: 0,
+      category: 'special',
+      iconUrl: '/badge-images/met-the-maker.svg',
+      earnedAt: timestamp
+    };
+
+    return { badgesToAdd: [makerBadge], badgesToRemove: [] };
   }
 
-  console.log(`User ${user.id} connected with maker, awarding badge`);
+  // Handle connection count update case - check if user still has connection to maker
+  if (context.connectionCount !== undefined && existingMakerBadge) {
+    console.log(`Checking if user ${user.id} still has connection to maker ${MAKER_USER_ID}`);
 
-  // Award maker badge
-  const makerBadge: Badge = {
-    id: 'met-the-maker',
-    name: 'Met the Maker',
-    description: 'Connected with the creator of Hallway Track',
-    threshold: 0,
-    category: 'special',
-    iconUrl: '/badge-images/met-the-maker.svg',
-    earnedAt: timestamp
-  };
+    try {
+      // Query user's connections to see if they're still connected to the maker
+      const connectionsResult = await docClient.send(
+        new QueryCommand({
+          TableName: CONNECTIONS_TABLE_NAME,
+          KeyConditionExpression: 'PK = :pk AND begins_with(SK, :sk)',
+          FilterExpression: 'connectedUserId = :makerId',
+          ExpressionAttributeValues: {
+            ':pk': `USER#${user.id}`,
+            ':sk': 'CONNECTION#',
+            ':makerId': MAKER_USER_ID
+          }
+        })
+      );
 
-  return { badgesToAdd: [makerBadge], badgesToRemove: [] };
+      const stillConnectedToMaker = (connectionsResult.Items || []).length > 0;
+
+      if (!stillConnectedToMaker) {
+        console.log(`User ${user.id} is no longer connected to maker, removing badge`);
+        return { badgesToAdd: [], badgesToRemove: [existingMakerBadge] };
+      } else {
+        console.log(`User ${user.id} still connected to maker, keeping badge`);
+      }
+    } catch (error) {
+      console.error(`Error checking maker connection for user ${user.id}:`, error);
+      // On error, keep the badge to avoid false removals
+    }
+  }
+
+  return { badgesToAdd: [], badgesToRemove: [] };
 }
 
 async function evaluateEarlySupporterBadges(user: User, context: BadgeContext): Promise<BadgeEvaluationResult> {

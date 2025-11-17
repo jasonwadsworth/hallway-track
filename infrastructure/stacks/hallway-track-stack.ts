@@ -12,6 +12,8 @@ import * as events from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as cloudwatchActions from 'aws-cdk-lib/aws-cloudwatch-actions';
 import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
@@ -331,6 +333,7 @@ export class HallwayTrackStack extends cdk.Stack {
           CONNECTIONS_TABLE_NAME: this.connectionsTable.tableName,
           CONNECTION_REQUESTS_TABLE_NAME: this.connectionRequestsTable.tableName,
           MAKER_USER_ID: config.badges.makerUserId || '',
+          EVENT_BUS_NAME: this.badgeEventBus.eventBusName,
         },
       }
     );
@@ -338,6 +341,7 @@ export class HallwayTrackStack extends cdk.Stack {
     this.usersTable.grantReadWriteData(connectionsFunction);
     this.connectionsTable.grantReadWriteData(connectionsFunction);
     this.connectionRequestsTable.grantReadWriteData(connectionsFunction);
+    this.badgeEventBus.grantPutEventsTo(connectionsFunction);
 
     const connectionsDataSourceLambda = this.api.addLambdaDataSource(
       'ConnectionsDataSourceLambda',
@@ -359,6 +363,7 @@ export class HallwayTrackStack extends cdk.Stack {
           USERS_TABLE_NAME: this.usersTable.tableName,
           CONNECTIONS_TABLE_NAME: this.connectionsTable.tableName,
           CONNECTION_REQUESTS_TABLE_NAME: this.connectionRequestsTable.tableName,
+          EVENT_BUS_NAME: this.badgeEventBus.eventBusName,
         },
       }
     );
@@ -366,6 +371,7 @@ export class HallwayTrackStack extends cdk.Stack {
     this.usersTable.grantReadWriteData(connectionRequestsFunction);
     this.connectionsTable.grantReadWriteData(connectionRequestsFunction);
     this.connectionRequestsTable.grantReadWriteData(connectionRequestsFunction);
+    this.badgeEventBus.grantPutEventsTo(connectionRequestsFunction);
 
     const connectionRequestsDataSource = this.api.addLambdaDataSource(
       'ConnectionRequestsDataSource',
@@ -500,6 +506,84 @@ export class HallwayTrackStack extends cdk.Stack {
     this.usersTable.grantReadData(badgeMigrationFunction);
     this.connectionsTable.grantReadData(badgeMigrationFunction);
     this.badgeEventBus.grantPutEventsTo(badgeMigrationFunction);
+
+    // ===== Connection Event Handlers =====
+
+    // Connection Removed Handler
+    const connectionRemovedHandler = new NodejsFunction(
+      this,
+      'ConnectionRemovedHandler',
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'handler',
+        entry: path.join(__dirname, '../lambda/event-handlers/connection-removed/index.ts'),
+        bundling: {
+          externalModules: ['@aws-sdk/*'],
+        },
+        environment: {
+          CONNECTIONS_TABLE_NAME: this.connectionsTable.tableName,
+          USERS_TABLE_NAME: this.usersTable.tableName,
+        },
+        timeout: cdk.Duration.minutes(2),
+        memorySize: 512,
+      }
+    );
+
+    this.connectionsTable.grantReadWriteData(connectionRemovedHandler);
+    this.usersTable.grantReadWriteData(connectionRemovedHandler);
+
+    // Create EventBridge rule for ConnectionRemoved events
+    new events.Rule(this, 'ConnectionRemovedRule', {
+      eventBus: this.badgeEventBus,
+      eventPattern: {
+        source: ['hallway-track.connections'],
+        detailType: ['ConnectionRemoved'],
+      },
+      targets: [
+        new targets.LambdaFunction(connectionRemovedHandler, {
+          deadLetterQueue: badgeDLQ,
+          retryAttempts: 2,
+        }),
+      ],
+    });
+
+    // Connection Request Approved Handler
+    const connectionRequestApprovedHandler = new NodejsFunction(
+      this,
+      'ConnectionRequestApprovedHandler',
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'handler',
+        entry: path.join(__dirname, '../lambda/event-handlers/connection-request-approved/index.ts'),
+        bundling: {
+          externalModules: ['@aws-sdk/*'],
+        },
+        environment: {
+          CONNECTIONS_TABLE_NAME: this.connectionsTable.tableName,
+          USERS_TABLE_NAME: this.usersTable.tableName,
+        },
+        timeout: cdk.Duration.minutes(2),
+        memorySize: 512,
+      }
+    );
+
+    this.connectionsTable.grantReadWriteData(connectionRequestApprovedHandler);
+    this.usersTable.grantReadWriteData(connectionRequestApprovedHandler);
+
+    // Create EventBridge rule for ConnectionRequestApproved events
+    new events.Rule(this, 'ConnectionRequestApprovedRule', {
+      eventBus: this.badgeEventBus,
+      eventPattern: {
+        source: ['hallway-track.connection-requests'],
+        detailType: ['ConnectionRequestApproved'],
+      },
+      targets: [
+        new targets.LambdaFunction(connectionRequestApprovedHandler, {
+          deadLetterQueue: badgeDLQ,
+          retryAttempts: 2,
+        }),
+      ],
+    });
 
     // Create Lambda data source for custom resolvers
     const resolverFunction = new lambda.Function(this, 'ResolverFunction', {
@@ -680,6 +764,169 @@ export class HallwayTrackStack extends cdk.Stack {
     connectionRequestsDataSource.createResolver('CheckConnectionOrRequestResolver', {
       typeName: 'Query',
       fieldName: 'checkConnectionOrRequest',
+    });
+
+    // ===== Field Resolvers =====
+
+    // Connection.connectedUser field resolver
+    const connectionConnectedUserFunction = new NodejsFunction(
+      this,
+      'ConnectionConnectedUserFunction',
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'handler',
+        entry: path.join(__dirname, '../lambda/field-resolvers/connection-connected-user/index.ts'),
+        bundling: {
+          externalModules: ['@aws-sdk/*'],
+        },
+        environment: {
+          USERS_TABLE_NAME: this.usersTable.tableName,
+        },
+        timeout: cdk.Duration.seconds(30),
+        memorySize: 256,
+      }
+    );
+
+    this.usersTable.grantReadData(connectionConnectedUserFunction);
+
+    const connectionConnectedUserDataSource = this.api.addLambdaDataSource(
+      'ConnectionConnectedUserDataSource',
+      connectionConnectedUserFunction
+    );
+
+    connectionConnectedUserDataSource.createResolver('ConnectionConnectedUserResolver', {
+      typeName: 'Connection',
+      fieldName: 'connectedUser',
+    });
+
+    // ConnectionRequest.initiator field resolver
+    const connectionRequestInitiatorFunction = new NodejsFunction(
+      this,
+      'ConnectionRequestInitiatorFunction',
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'handler',
+        entry: path.join(__dirname, '../lambda/field-resolvers/connection-request-initiator/index.ts'),
+        bundling: {
+          externalModules: ['@aws-sdk/*'],
+        },
+        environment: {
+          USERS_TABLE_NAME: this.usersTable.tableName,
+        },
+        timeout: cdk.Duration.seconds(30),
+        memorySize: 256,
+      }
+    );
+
+    this.usersTable.grantReadData(connectionRequestInitiatorFunction);
+
+    const connectionRequestInitiatorDataSource = this.api.addLambdaDataSource(
+      'ConnectionRequestInitiatorDataSource',
+      connectionRequestInitiatorFunction
+    );
+
+    connectionRequestInitiatorDataSource.createResolver('ConnectionRequestInitiatorResolver', {
+      typeName: 'ConnectionRequest',
+      fieldName: 'initiator',
+    });
+
+    // ConnectionRequest.recipient field resolver
+    const connectionRequestRecipientFunction = new NodejsFunction(
+      this,
+      'ConnectionRequestRecipientFunction',
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'handler',
+        entry: path.join(__dirname, '../lambda/field-resolvers/connection-request-recipient/index.ts'),
+        bundling: {
+          externalModules: ['@aws-sdk/*'],
+        },
+        environment: {
+          USERS_TABLE_NAME: this.usersTable.tableName,
+        },
+        timeout: cdk.Duration.seconds(30),
+        memorySize: 256,
+      }
+    );
+
+    this.usersTable.grantReadData(connectionRequestRecipientFunction);
+
+    const connectionRequestRecipientDataSource = this.api.addLambdaDataSource(
+      'ConnectionRequestRecipientDataSource',
+      connectionRequestRecipientFunction
+    );
+
+    connectionRequestRecipientDataSource.createResolver('ConnectionRequestRecipientResolver', {
+      typeName: 'ConnectionRequest',
+      fieldName: 'recipient',
+    });
+
+    // ===== CloudWatch Alarms =====
+
+    // Alarm for DLQ messages
+    new cloudwatch.Alarm(this, 'BadgeDLQAlarm', {
+      metric: badgeDLQ.metricApproximateNumberOfMessagesVisible(),
+      threshold: 1,
+      evaluationPeriods: 1,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      alarmDescription: 'Alert when messages appear in the badge DLQ',
+      alarmName: 'hallway-track-badge-dlq-messages',
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    });
+
+    // Alarm for ConnectionRemovedHandler errors
+    new cloudwatch.Alarm(this, 'ConnectionRemovedHandlerErrorAlarm', {
+      metric: connectionRemovedHandler.metricErrors({
+        period: cdk.Duration.minutes(5),
+        statistic: 'Sum',
+      }),
+      threshold: 5,
+      evaluationPeriods: 1,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      alarmDescription: 'Alert when ConnectionRemovedHandler has high error rate',
+      alarmName: 'hallway-track-connection-removed-handler-errors',
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    });
+
+    // Alarm for ConnectionRequestApprovedHandler errors
+    new cloudwatch.Alarm(this, 'ConnectionRequestApprovedHandlerErrorAlarm', {
+      metric: connectionRequestApprovedHandler.metricErrors({
+        period: cdk.Duration.minutes(5),
+        statistic: 'Sum',
+      }),
+      threshold: 5,
+      evaluationPeriods: 1,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      alarmDescription: 'Alert when ConnectionRequestApprovedHandler has high error rate',
+      alarmName: 'hallway-track-connection-request-approved-handler-errors',
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    });
+
+    // Alarm for field resolver errors
+    new cloudwatch.Alarm(this, 'FieldResolverErrorAlarm', {
+      metric: new cloudwatch.MathExpression({
+        expression: 'm1 + m2 + m3',
+        usingMetrics: {
+          m1: connectionConnectedUserFunction.metricErrors({
+            period: cdk.Duration.minutes(5),
+            statistic: 'Sum',
+          }),
+          m2: connectionRequestInitiatorFunction.metricErrors({
+            period: cdk.Duration.minutes(5),
+            statistic: 'Sum',
+          }),
+          m3: connectionRequestRecipientFunction.metricErrors({
+            period: cdk.Duration.minutes(5),
+            statistic: 'Sum',
+          }),
+        },
+      }),
+      threshold: 10,
+      evaluationPeriods: 1,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      alarmDescription: 'Alert when field resolvers have high error rate',
+      alarmName: 'hallway-track-field-resolver-errors',
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
     });
 
     // ===== CloudFormation Outputs =====
