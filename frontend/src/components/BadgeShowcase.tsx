@@ -3,6 +3,7 @@ import { generateClient } from 'aws-amplify/api';
 import { BadgeList } from './BadgeList';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorMessage } from './ErrorMessage';
+import { PullToRefresh } from './PullToRefresh';
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import type { Badge } from '../types';
 import './BadgeShowcase.css';
@@ -59,25 +60,27 @@ export function BadgeShowcase() {
   };
 
   return (
-    <div className="badge-showcase">
-      <div className="badge-showcase-header">
-        <h1>Badge Showcase</h1>
-        <p className="badge-showcase-description">
-          Earn badges by connecting with other attendees at the event
-        </p>
-      </div>
+    <PullToRefresh onRefresh={loadBadgeData}>
+      <div className="badge-showcase">
+        <div className="badge-showcase-header">
+          <h1>Badge Showcase</h1>
+          <p className="badge-showcase-description">
+            Earn badges by connecting with other attendees at the event
+          </p>
+        </div>
 
-      {error ? (
-        <ErrorMessage
-          message={error}
-          onRetry={loadBadgeData}
-          onDismiss={() => setError(null)}
-        />
-      ) : loading ? (
-        <LoadingSpinner message="Loading badges..." />
-      ) : (
-        <BadgeList earnedBadges={earnedBadges} connectionCount={connectionCount} />
-      )}
-    </div>
+        {error ? (
+          <ErrorMessage
+            message={error}
+            onRetry={loadBadgeData}
+            onDismiss={() => setError(null)}
+          />
+        ) : loading ? (
+          <LoadingSpinner message="Loading badges..." />
+        ) : (
+          <BadgeList earnedBadges={earnedBadges} connectionCount={connectionCount} />
+        )}
+      </div>
+    </PullToRefresh>
   );
 }

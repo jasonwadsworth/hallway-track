@@ -8,6 +8,7 @@ import { removeConnection } from '../graphql/mutations';
 import { ConnectionCard } from './ConnectionCard';
 import { ErrorMessage } from './ErrorMessage';
 import { LoadingSpinner } from './LoadingSpinner';
+import { PullToRefresh } from './PullToRefresh';
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import './ConnectionList.css';
 
@@ -159,24 +160,25 @@ export function ConnectionList() {
   const connectionToRemove = connections.find(c => c.id === confirmRemove);
 
   return (
-    <div className="connection-list">
-      <h2>My Connections ({connections.length})</h2>
-      <div className="connections-grid">
-        {connections.map(connection => (
-          <ConnectionCard
-            key={connection.id}
-            connection={connection}
-            onClick={() => navigate(`/connections/${connection.id}`)}
-            onRemove={handleRemoveClick}
-          />
-        ))}
-      </div>
+    <PullToRefresh onRefresh={loadConnections}>
+      <div className="connection-list">
+        <h2>My Connections ({connections.length})</h2>
+        <div className="connections-grid">
+          {connections.map(connection => (
+            <ConnectionCard
+              key={connection.id}
+              connection={connection}
+              onClick={() => navigate(`/connections/${connection.id}`)}
+              onRemove={handleRemoveClick}
+            />
+          ))}
+        </div>
 
-      {confirmRemove && (
-        <div className="modal-overlay" onClick={handleCancelRemove}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>Remove Connection</h3>
-            <p>
+        {confirmRemove && (
+          <div className="modal-overlay" onClick={handleCancelRemove}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <h3>Remove Connection</h3>
+              <p>
               Are you sure you want to remove your connection with{' '}
               <strong>{connectionToRemove?.connectedUser?.displayName || 'this user'}</strong>?
             </p>
@@ -200,6 +202,7 @@ export function ConnectionList() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </PullToRefresh>
   );
 }

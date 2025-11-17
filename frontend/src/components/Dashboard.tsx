@@ -4,6 +4,7 @@ import { generateClient } from 'aws-amplify/api'
 import { BadgeProgress } from './BadgeProgress'
 import { ErrorMessage } from './ErrorMessage'
 import { LoadingSpinner } from './LoadingSpinner'
+import { PullToRefresh } from './PullToRefresh'
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling'
 import type { ConnectionRequest } from '../types'
 import './Dashboard.css'
@@ -123,69 +124,71 @@ export function Dashboard() {
   }
 
   return (
-    <div className="dashboard">
-      <h1>Welcome to HallwayTrak</h1>
+    <PullToRefresh onRefresh={loadRecentConnections}>
+      <div className="dashboard">
+        <h1>Welcome to HallwayTrak</h1>
 
-      <div className="dashboard-section">
-        <h2>Badge Progress</h2>
-        <BadgeProgress />
-      </div>
-
-      {pendingRequestsCount > 0 && (
         <div className="dashboard-section">
-          <h2>Connection Requests</h2>
-          <div className="connection-requests-summary">
-            <p>You have {pendingRequestsCount} pending connection request{pendingRequestsCount !== 1 ? 's' : ''}</p>
-            <Link to="/connection-requests" className="btn-primary">
-              View Requests
-            </Link>
-          </div>
+          <h2>Badge Progress</h2>
+          <BadgeProgress />
         </div>
-      )}
 
-      <div className="dashboard-section">
-        <h2>Recent Connections</h2>
-        {error ? (
-          <ErrorMessage
-            message={error}
-            onRetry={loadRecentConnections}
-            onDismiss={() => setError(null)}
-          />
-        ) : loading ? (
-          <LoadingSpinner message="Loading recent connections..." />
-        ) : recentConnections.length > 0 ? (
-          <div className="recent-connections">
-            {recentConnections.map((connection) => (
-              <Link
-                key={connection.id}
-                to={`/connections/${connection.id}`}
-                className="recent-connection-item"
-              >
-                <img
-                  src={`https://www.gravatar.com/avatar/${connection.connectedUser.gravatarHash}?d=identicon&s=100`}
-                  alt={connection.connectedUser.displayName}
-                  className="recent-connection-avatar"
-                />
-                <div className="recent-connection-info">
-                  <div className="recent-connection-name">
-                    {connection.connectedUser.displayName}
-                  </div>
-                  <div className="recent-connection-date">
-                    Connected {formatDate(connection.createdAt)}
-                  </div>
-                </div>
+        {pendingRequestsCount > 0 && (
+          <div className="dashboard-section">
+            <h2>Connection Requests</h2>
+            <div className="connection-requests-summary">
+              <p>You have {pendingRequestsCount} pending connection request{pendingRequestsCount !== 1 ? 's' : ''}</p>
+              <Link to="/connection-requests" className="btn-primary">
+                View Requests
               </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="no-connections">
-            <p>You haven't made any connections yet.</p>
-            <Link to="/qr-code" className="btn-primary">
-              Show My QR Code
-            </Link>
+            </div>
           </div>
         )}
+
+        <div className="dashboard-section">
+          <h2>Recent Connections</h2>
+          {error ? (
+            <ErrorMessage
+              message={error}
+              onRetry={loadRecentConnections}
+              onDismiss={() => setError(null)}
+            />
+          ) : loading ? (
+            <LoadingSpinner message="Loading recent connections..." />
+          ) : recentConnections.length > 0 ? (
+            <div className="recent-connections">
+              {recentConnections.map((connection) => (
+                <Link
+                  key={connection.id}
+                  to={`/connections/${connection.id}`}
+                  className="recent-connection-item"
+                >
+                  <img
+                    src={`https://www.gravatar.com/avatar/${connection.connectedUser.gravatarHash}?d=identicon&s=100`}
+                    alt={connection.connectedUser.displayName}
+                    className="recent-connection-avatar"
+                  />
+                  <div className="recent-connection-info">
+                    <div className="recent-connection-name">
+                      {connection.connectedUser.displayName}
+                    </div>
+                    <div className="recent-connection-date">
+                      Connected {formatDate(connection.createdAt)}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="no-connections">
+              <p>You haven't made any connections yet.</p>
+              <Link to="/qr-code" className="btn-primary">
+                Show My QR Code
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </PullToRefresh>
   )
 }

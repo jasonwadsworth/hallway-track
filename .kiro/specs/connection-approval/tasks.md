@@ -6,7 +6,7 @@
   - Configure Lambda environment variables for new table
   - _Requirements: 1.2, 2.1, 3.1_
 
-- [ ] 2. Update GraphQL schema and types
+- [x] 2. Update GraphQL schema and types
   - [x] 2.1 Add ConnectionRequest type and enums to GraphQL schema
     - Define ConnectionRequest, ConnectionRequestStatus, ConnectionStatus types
     - Add ConnectionRequestResult type for mutation responses
@@ -25,40 +25,40 @@
     - Add cancelConnectionRequest mutation
     - _Requirements: 1.1, 2.2, 2.3, 3.3_
 
-- [ ] 3. Implement connection request Lambda function
-  - [ ] 3.1 Create connection-requests Lambda function structure
+- [x] 3. Implement connection request Lambda function
+  - [x] 3.1 Create connection-requests Lambda function structure
     - Set up TypeScript interfaces for ConnectionRequest data models
     - Implement request handler with routing for different operations
     - Add DynamoDB client configuration and helper functions
     - _Requirements: 1.1, 1.2, 1.3_
 
-  - [ ] 3.2 Implement createConnectionRequest functionality
+  - [x] 3.2 Implement createConnectionRequest functionality
     - Validate recipient user exists and is not the same as initiator
     - Check for existing connections and duplicate requests
     - Create new ConnectionRequest record in DynamoDB
     - Return success response with request details
     - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
-  - [ ] 3.3 Implement request approval functionality
+  - [x] 3.3 Implement request approval functionality
     - Validate request exists and user has permission to approve
     - Update request status to approved
     - Call internal connection creation function
     - Award badges and update connection counts
     - _Requirements: 2.2, 2.4, 5.1, 5.2_
 
-  - [ ] 3.4 Implement request denial and cancellation
+  - [x] 3.4 Implement request denial and cancellation
     - Add denyConnectionRequest function with permission validation
     - Add cancelConnectionRequest function for initiators
     - Update request status and set actionedAt timestamp
     - _Requirements: 2.3, 3.3_
 
-  - [ ] 3.5 Implement request query functions
+  - [x] 3.5 Implement request query functions
     - Add getIncomingConnectionRequests with user profile fetching
     - Add getOutgoingConnectionRequests with status tracking
     - Add checkConnectionOrRequest to replace existing checkConnection
     - _Requirements: 2.1, 3.1, 3.2, 4.3_
 
-- [ ] 4. Update existing connections Lambda function
+- [x] 4. Update existing connections Lambda function
   - [x] 4.1 Refactor connection creation logic
     - Extract connection creation into internal function
     - Remove public access to createConnection mutation
@@ -76,7 +76,7 @@
   - Add status enums for request states
   - _Requirements: 1.1, 2.1, 3.1_
 
-- [ ] 6. Create new GraphQL queries and mutations (frontend)
+- [x] 6. Create new GraphQL queries and mutations (frontend)
   - [x] 6.1 Add connection request queries
     - Create getIncomingConnectionRequests query
     - Create getOutgoingConnectionRequests query
@@ -90,7 +90,7 @@
     - Create cancelConnectionRequest mutation
     - _Requirements: 1.1, 2.2, 2.3, 3.3_
 
-- [ ] 7. Update ConnectButton component
+- [x] 7. Update ConnectButton component
   - [x] 7.1 Modify connection status checking
     - Replace checkConnection with checkConnectionOrRequest
     - Handle new connection status states (connected, pending request, no relationship)
@@ -103,7 +103,7 @@
     - Maintain "Already Connected" for existing connections
     - _Requirements: 1.1, 2.2, 3.1_
 
-- [ ] 8. Create ConnectionRequestsManager component
+- [x] 8. Create ConnectionRequestsManager component
   - [x] 8.1 Build incoming requests interface
     - Create list view for incoming connection requests
     - Add approve and deny buttons for each request
@@ -124,7 +124,7 @@
     - Handle empty states with helpful messaging
     - _Requirements: 4.1, 4.2_
 
-- [ ] 9. Update Dashboard component
+- [x] 9. Update Dashboard component
   - [x] 9.1 Add connection requests section
     - Display count of pending incoming requests
     - Add quick link to connection requests management
@@ -136,7 +136,7 @@
     - Add visual distinction between connections and requests
     - _Requirements: 5.3_
 
-- [ ] 10. Update navigation and routing
+- [x] 10. Update navigation and routing
   - [x] 10.1 Add connection requests route
     - Create new route for /connection-requests
     - Add navigation menu item with notification badge
@@ -149,7 +149,7 @@
     - Add visual indicator in navigation menu
     - _Requirements: 4.1_
 
-- [ ]* 11. Add comprehensive error handling
+- [x]* 11. Add comprehensive error handling
   - Implement error handling for all new API calls
   - Add user-friendly error messages for common scenarios
   - Handle network errors and loading states gracefully

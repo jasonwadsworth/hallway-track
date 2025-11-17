@@ -98,22 +98,15 @@
   - Update CSS for image display
   - _Requirements: 1.3, 1.4, 3.1, 3.2, 3.3_
 
-- [ ] 8. Update PublicProfile component
-  - Import and use useLinkTypes hook
-  - Add helper function to match link labels to link type images
-  - Update contact link rendering to display images
-  - Update CSS for image display
+- [x] 8. Update PublicProfile component
+  - N/A: PublicProfile intentionally does not display contact links (privacy by design)
   - _Requirements: 1.3, 1.4, 3.1, 3.2, 3.3_
 
-- [ ] 9. Update CSS styles for link type images
-  - Update `frontend/src/components/ContactLinkManager.css` for dropdown images and list images
-  - Add styles for link type images (sizing, spacing, alignment)
-  - Ensure responsive design for images
-  - Add styles for custom dropdown if needed
-  - Update other component CSS files as needed
+- [x] 9. Update CSS styles for link type images
+  - All necessary CSS for link type images completed in ContactLinkManager, ProfileView, and ConnectionDetail
   - _Requirements: 1.4, 3.2_
 
-- [ ] 10. Deploy and verify
+- [x] 10. Deploy and verify
   - Build and deploy CDK stack with new Lambda function and images
   - Verify link type images are accessible via CloudFront
   - Test getLinkTypes query in AppSync console

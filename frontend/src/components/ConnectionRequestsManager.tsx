@@ -6,6 +6,7 @@ import { approveConnectionRequest, denyConnectionRequest, cancelConnectionReques
 import { ErrorMessage } from './ErrorMessage';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ConnectionRequestModal } from './ConnectionRequestModal';
+import { PullToRefresh } from './PullToRefresh';
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import './ConnectionRequestsManager.css';
 
@@ -232,21 +233,22 @@ export function ConnectionRequestsManager() {
   }
 
   return (
-    <div className="connection-requests-manager">
-      <h2>Connection Requests</h2>
+    <PullToRefresh onRefresh={loadRequests}>
+      <div className="connection-requests-manager">
+        <h2>Connection Requests</h2>
 
-      {error && (
-        <ErrorMessage
-          message={error}
-          onRetry={loadRequests}
-          onDismiss={() => setError(null)}
-        />
-      )}
+        {error && (
+          <ErrorMessage
+            message={error}
+            onRetry={loadRequests}
+            onDismiss={() => setError(null)}
+          />
+        )}
 
-      <div className="request-tabs">
-        <button
-          className={`tab-button ${activeTab === 'incoming' ? 'active' : ''}`}
-          onClick={() => setActiveTab('incoming')}
+        <div className="request-tabs">
+          <button
+            className={`tab-button ${activeTab === 'incoming' ? 'active' : ''}`}
+            onClick={() => setActiveTab('incoming')}
         >
           Incoming ({incomingRequests.length})
         </button>
@@ -407,6 +409,7 @@ export function ConnectionRequestsManager() {
           isEditing={true}
         />
       )}
-    </div>
+      </div>
+    </PullToRefresh>
   );
 }
