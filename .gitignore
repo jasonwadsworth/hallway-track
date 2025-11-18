@@ -41,5 +41,11 @@ yarn-error.log*
 # OS
 .DS_Store
 
+# Testing
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+*.lcov
 
 !eslint.config.js

@@ -44,6 +44,25 @@ hallway-track/
 - AWS CLI configured with credentials
 - AWS CDK CLI (`npm install -g aws-cdk`)
 
+## Testing
+
+The application has comprehensive test coverage:
+- **69 automated tests** across 3 levels
+- Unit tests for backend Lambda functions
+- Integration tests for workflows
+- E2E tests for user journeys
+
+See [TESTING.md](TESTING.md) for detailed testing guide.
+
+### Run Tests
+```bash
+# Backend tests
+npm test
+
+# Frontend E2E tests
+cd frontend && npm run test:e2e
+```
+
 ## Getting Started
 
 ### Install Dependencies
