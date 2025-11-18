@@ -1,0 +1,134 @@
+.pwa-install-prompt {
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  right: 0;
+  background: var(--color-primary);
+  color: white;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 999;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.pwa-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.pwa-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.pwa-text {
+  flex: 1;
+  font-size: 0.875rem;
+}
+
+.pwa-text strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.95rem;
+}
+
+.pwa-instructions {
+  margin-top: 0.25rem;
+}
+
+.pwa-instructions p {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.share-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.125rem 0.25rem;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  margin: 0 0.125rem;
+}
+
+.share-icon svg {
+  display: block;
+}
+
+.ios-share svg {
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+}
+
+.android-share svg {
+  fill: currentColor;
+}
+
+.pwa-install-button {
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: white;
+  color: var(--color-primary);
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.pwa-install-button:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.pwa-dismiss {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.25rem;
+  opacity: 0.8;
+  min-width: 32px;
+  min-height: 32px;
+}
+
+.pwa-dismiss:hover {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .pwa-install-prompt {
+    padding: 0.75rem 2.5rem 0.75rem 1rem;
+  }
+  
+  .pwa-text {
+    font-size: 0.8125rem;
+  }
+  
+  .pwa-text strong {
+    font-size: 0.875rem;
+  }
+}

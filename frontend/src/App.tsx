@@ -14,6 +14,7 @@ import { ConnectionRequestsManager } from './components/ConnectionRequestsManage
 import { PublicProfile } from './components/PublicProfile'
 import { BadgeShowcase } from './components/BadgeShowcase'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { PWAInstallPrompt } from './components/PWAInstallPrompt'
 
 function App() {
   // Handle orientation changes to maintain scroll position
@@ -60,6 +61,7 @@ function App() {
       {({ signOut }) => (
         <BrowserRouter>
           <AppNav signOut={signOut} />
+          <PWAInstallPrompt />
           <main>
             <Routes>
               <Route path="/" element={

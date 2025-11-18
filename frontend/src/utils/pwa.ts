@@ -83,6 +83,10 @@ export const isIOS = (): boolean => {
   return /iPad|iPhone|iPod/.test(navigator.userAgent);
 };
 
+export const isAndroid = (): boolean => {
+  return /Android/.test(navigator.userAgent);
+};
+
 export const getIOSInstallInstructions = (): string => {
   return 'To install this app on your iOS device, tap the Share button and then "Add to Home Screen".';
 };
