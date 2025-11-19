@@ -53,34 +53,6 @@ export const removeContactLink = /* GraphQL */ `
   }
 `;
 
-export const createUser = /* GraphQL */ `
-  mutation CreateUser($email: AWSEmail!, $displayName: String!) {
-    createUser(email: $email, displayName: $displayName) {
-      id
-      email
-      displayName
-      gravatarHash
-      contactLinks {
-        id
-        label
-        url
-        visible
-      }
-      badges {
-        id
-        name
-        description
-        threshold
-        iconUrl
-        earnedAt
-      }
-      connectionCount
-      createdAt
-      updatedAt
-    }
-  }
-`;
-
 export const createConnection = /* GraphQL */ `
   mutation CreateConnection($connectedUserId: ID!) {
     createConnection(connectedUserId: $connectedUserId) {

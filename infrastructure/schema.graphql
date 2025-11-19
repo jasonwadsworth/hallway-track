@@ -122,7 +122,6 @@ type Query {
 }
 
 type Mutation {
-  createUser(email: AWSEmail!, displayName: String!): User!
   updateDisplayName(displayName: String!): User!
   addContactLink(label: String!, url: String!, visible: Boolean): User!
   updateContactLink(contactLinkId: ID!, label: String, url: String, visible: Boolean): User!

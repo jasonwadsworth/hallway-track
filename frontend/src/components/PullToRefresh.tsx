@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import './PullToRefresh.css'
 
@@ -17,11 +17,11 @@ export function PullToRefresh({ onRefresh, children }: PullToRefreshProps) {
   return (
     <>
       {showIndicator && (
-        <div 
-          className="pull-to-refresh-indicator" 
-          style={{ 
+        <div
+          className="pull-to-refresh-indicator"
+          style={{
             top: `${contentOffset - 20}px`,
-            opacity 
+            opacity
           }}
         >
           <div className={isRefreshing ? 'refresh-spinner spinning' : 'refresh-spinner'} />

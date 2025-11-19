@@ -615,48 +615,31 @@ export class HallwayTrackStack extends cdk.Stack {
 
     // ===== AppSync Resolvers =====
 
-    // Profile operation resolvers (direct DynamoDB)
-    usersDataSource.createResolver('CreateUserResolver', {
-      typeName: 'Mutation',
-      fieldName: 'createUser',
-      requestMappingTemplate: appsync.MappingTemplate.fromFile(
-        path.join(__dirname, '../resolvers/Mutation.createUser.request.vtl')
-      ),
-      responseMappingTemplate: appsync.MappingTemplate.fromFile(
-        path.join(__dirname, '../resolvers/Mutation.createUser.response.vtl')
-      ),
-    });
-
+    // Profile operation resolvers (direct DynamoDB with JavaScript)
     usersDataSource.createResolver('UpdateDisplayNameResolver', {
       typeName: 'Mutation',
       fieldName: 'updateDisplayName',
-      requestMappingTemplate: appsync.MappingTemplate.fromFile(
-        path.join(__dirname, '../resolvers/Mutation.updateDisplayName.request.vtl')
-      ),
-      responseMappingTemplate: appsync.MappingTemplate.fromFile(
-        path.join(__dirname, '../resolvers/Mutation.updateDisplayName.response.vtl')
+      runtime: appsync.FunctionRuntime.JS_1_0_0,
+      code: appsync.Code.fromAsset(
+        path.join(__dirname, '../resolvers/Mutation.updateDisplayName.js')
       ),
     });
 
     usersDataSource.createResolver('GetMyProfileResolver', {
       typeName: 'Query',
       fieldName: 'getMyProfile',
-      requestMappingTemplate: appsync.MappingTemplate.fromFile(
-        path.join(__dirname, '../resolvers/Query.getMyProfile.request.vtl')
-      ),
-      responseMappingTemplate: appsync.MappingTemplate.fromFile(
-        path.join(__dirname, '../resolvers/Query.getMyProfile.response.vtl')
+      runtime: appsync.FunctionRuntime.JS_1_0_0,
+      code: appsync.Code.fromAsset(
+        path.join(__dirname, '../resolvers/Query.getMyProfile.js')
       ),
     });
 
     usersDataSource.createResolver('GetUserResolver', {
       typeName: 'Query',
       fieldName: 'getUser',
-      requestMappingTemplate: appsync.MappingTemplate.fromFile(
-        path.join(__dirname, '../resolvers/Query.getUser.request.vtl')
-      ),
-      responseMappingTemplate: appsync.MappingTemplate.fromFile(
-        path.join(__dirname, '../resolvers/Query.getUser.response.vtl')
+      runtime: appsync.FunctionRuntime.JS_1_0_0,
+      code: appsync.Code.fromAsset(
+        path.join(__dirname, '../resolvers/Query.getUser.js')
       ),
     });
 
@@ -664,11 +647,9 @@ export class HallwayTrackStack extends cdk.Stack {
     usersDataSource.createResolver('AddContactLinkResolver', {
       typeName: 'Mutation',
       fieldName: 'addContactLink',
-      requestMappingTemplate: appsync.MappingTemplate.fromFile(
-        path.join(__dirname, '../resolvers/Mutation.addContactLink.request.vtl')
-      ),
-      responseMappingTemplate: appsync.MappingTemplate.fromFile(
-        path.join(__dirname, '../resolvers/Mutation.addContactLink.response.vtl')
+      runtime: appsync.FunctionRuntime.JS_1_0_0,
+      code: appsync.Code.fromAsset(
+        path.join(__dirname, '../resolvers/Mutation.addContactLink.js')
       ),
     });
 
