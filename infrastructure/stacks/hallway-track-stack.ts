@@ -591,6 +591,9 @@ export class HallwayTrackStack extends cdk.Stack {
 
     // ===== AppSync Resolvers =====
 
+    // Create NONE data source for static resolvers
+    const noneDataSource = this.api.addNoneDataSource('NoneDataSource');
+
     // Profile operation resolvers (direct DynamoDB with JavaScript)
     usersDataSource.createResolver('UpdateDisplayNameResolver', {
       typeName: 'Mutation',
@@ -945,8 +948,8 @@ export class HallwayTrackStack extends cdk.Stack {
       });
     }
 
-    // Link types resolver (static data, no data source needed)
-    this.api.createResolver('GetLinkTypesResolver', {
+    // Link types resolver (static data)
+    noneDataSource.createResolver('GetLinkTypesResolver', {
       typeName: 'Query',
       fieldName: 'getLinkTypes',
       runtime: appsync.FunctionRuntime.JS_1_0_0,
