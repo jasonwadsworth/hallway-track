@@ -1,9 +1,0 @@
-## Query user by ID
-{
-  "version": "2018-05-29",
-  "operation": "GetItem",
-  "key": {
-    "PK": $util.dynamodb.toDynamoDBJson("USER#$ctx.args.id"),
-    "SK": $util.dynamodb.toDynamoDBJson("PROFILE")
-  }
-}

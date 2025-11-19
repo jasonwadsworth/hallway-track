@@ -634,15 +634,6 @@ export class HallwayTrackStack extends cdk.Stack {
       ),
     });
 
-    usersDataSource.createResolver('GetUserResolver', {
-      typeName: 'Query',
-      fieldName: 'getUser',
-      runtime: appsync.FunctionRuntime.JS_1_0_0,
-      code: appsync.Code.fromAsset(
-        path.join(__dirname, '../resolvers/Query.getUser.js')
-      ),
-    });
-
     // Contact link management resolvers
     usersDataSource.createResolver('AddContactLinkResolver', {
       typeName: 'Mutation',

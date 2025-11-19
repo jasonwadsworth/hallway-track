@@ -21,7 +21,7 @@ type Connection {
   id: ID!
   userId: ID!
   connectedUserId: ID!
-  connectedUser: User
+  connectedUser: ConnectedProfile
   tags: [String!]!
   note: String
   createdAt: AWSDateTime!
@@ -109,7 +109,6 @@ type ConnectionStatus {
 }
 
 type Query {
-  getUser(id: ID!): User
   getMyProfile: User
   getPublicProfile(userId: ID!): PublicProfile
   getConnectedProfile(userId: ID!): ConnectedProfile
