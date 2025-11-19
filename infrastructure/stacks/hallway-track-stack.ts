@@ -224,7 +224,7 @@ export class HallwayTrackStack extends cdk.Stack {
       this.usersTable
     );
 
-    this.api.addDynamoDbDataSource(
+    const connectionsDataSource = this.api.addDynamoDbDataSource(
       'ConnectionsDataSource',
       this.connectionsTable
     );
@@ -251,30 +251,6 @@ export class HallwayTrackStack extends cdk.Stack {
     const contactLinksDataSource = this.api.addLambdaDataSource(
       'ContactLinksDataSource',
       contactLinksFunction
-    );
-
-    // Create Lambda function for public profile
-    const publicProfileFunction = new NodejsFunction(
-      this,
-      'PublicProfileFunction',
-      {
-        runtime: lambda.Runtime.NODEJS_20_X,
-        handler: 'handler',
-        entry: path.join(__dirname, '../lambda/public-profile/index.ts'),
-        bundling: {
-          externalModules: ['@aws-sdk/*'],
-        },
-        environment: {
-          USERS_TABLE_NAME: this.usersTable.tableName,
-        },
-      }
-    );
-
-    this.usersTable.grantReadData(publicProfileFunction);
-
-    const publicProfileDataSource = this.api.addLambdaDataSource(
-      'PublicProfileDataSource',
-      publicProfileFunction
     );
 
     // Create Lambda function for connected profile
@@ -654,10 +630,14 @@ export class HallwayTrackStack extends cdk.Stack {
       fieldName: 'removeContactLink',
     });
 
-    // Public profile resolver
-    publicProfileDataSource.createResolver('GetPublicProfileResolver', {
+    // Public profile resolver (direct DynamoDB)
+    usersDataSource.createResolver('GetPublicProfileResolver', {
       typeName: 'Query',
       fieldName: 'getPublicProfile',
+      runtime: appsync.FunctionRuntime.JS_1_0_0,
+      code: appsync.Code.fromAsset(
+        path.join(__dirname, '../resolvers/Query.getPublicProfile.js')
+      ),
     });
 
     // Connected profile resolver
@@ -677,9 +657,14 @@ export class HallwayTrackStack extends cdk.Stack {
       fieldName: 'checkConnection',
     });
 
-    connectionsDataSourceLambda.createResolver('GetMyConnectionsResolver', {
+    // Get my connections (direct DynamoDB)
+    connectionsDataSource.createResolver('GetMyConnectionsResolver', {
       typeName: 'Query',
       fieldName: 'getMyConnections',
+      runtime: appsync.FunctionRuntime.JS_1_0_0,
+      code: appsync.Code.fromAsset(
+        path.join(__dirname, '../resolvers/Query.getMyConnections.js')
+      ),
     });
 
     connectionsDataSourceLambda.createResolver('AddTagToConnectionResolver', {
@@ -740,97 +725,34 @@ export class HallwayTrackStack extends cdk.Stack {
 
     // ===== Field Resolvers =====
 
-    // Connection.connectedUser field resolver
-    const connectionConnectedUserFunction = new NodejsFunction(
-      this,
-      'ConnectionConnectedUserFunction',
-      {
-        runtime: lambda.Runtime.NODEJS_20_X,
-        handler: 'handler',
-        entry: path.join(__dirname, '../lambda/field-resolvers/connection-connected-user/index.ts'),
-        bundling: {
-          externalModules: ['@aws-sdk/*'],
-        },
-        environment: {
-          USERS_TABLE_NAME: this.usersTable.tableName,
-        },
-        timeout: cdk.Duration.seconds(30),
-        memorySize: 256,
-      }
-    );
-
-    this.usersTable.grantReadData(connectionConnectedUserFunction);
-
-    const connectionConnectedUserDataSource = this.api.addLambdaDataSource(
-      'ConnectionConnectedUserDataSource',
-      connectionConnectedUserFunction
-    );
-
-    connectionConnectedUserDataSource.createResolver('ConnectionConnectedUserResolver', {
+    // Connection.connectedUser field resolver (direct DynamoDB)
+    usersDataSource.createResolver('ConnectionConnectedUserResolver', {
       typeName: 'Connection',
       fieldName: 'connectedUser',
+      runtime: appsync.FunctionRuntime.JS_1_0_0,
+      code: appsync.Code.fromAsset(
+        path.join(__dirname, '../resolvers/Connection.connectedUser.js')
+      ),
     });
 
-    // ConnectionRequest.initiator field resolver
-    const connectionRequestInitiatorFunction = new NodejsFunction(
-      this,
-      'ConnectionRequestInitiatorFunction',
-      {
-        runtime: lambda.Runtime.NODEJS_20_X,
-        handler: 'handler',
-        entry: path.join(__dirname, '../lambda/field-resolvers/connection-request-initiator/index.ts'),
-        bundling: {
-          externalModules: ['@aws-sdk/*'],
-        },
-        environment: {
-          USERS_TABLE_NAME: this.usersTable.tableName,
-        },
-        timeout: cdk.Duration.seconds(30),
-        memorySize: 256,
-      }
-    );
-
-    this.usersTable.grantReadData(connectionRequestInitiatorFunction);
-
-    const connectionRequestInitiatorDataSource = this.api.addLambdaDataSource(
-      'ConnectionRequestInitiatorDataSource',
-      connectionRequestInitiatorFunction
-    );
-
-    connectionRequestInitiatorDataSource.createResolver('ConnectionRequestInitiatorResolver', {
+    // ConnectionRequest.initiator field resolver (direct DynamoDB)
+    usersDataSource.createResolver('ConnectionRequestInitiatorResolver', {
       typeName: 'ConnectionRequest',
       fieldName: 'initiator',
+      runtime: appsync.FunctionRuntime.JS_1_0_0,
+      code: appsync.Code.fromAsset(
+        path.join(__dirname, '../resolvers/ConnectionRequest.initiator.js')
+      ),
     });
 
-    // ConnectionRequest.recipient field resolver
-    const connectionRequestRecipientFunction = new NodejsFunction(
-      this,
-      'ConnectionRequestRecipientFunction',
-      {
-        runtime: lambda.Runtime.NODEJS_20_X,
-        handler: 'handler',
-        entry: path.join(__dirname, '../lambda/field-resolvers/connection-request-recipient/index.ts'),
-        bundling: {
-          externalModules: ['@aws-sdk/*'],
-        },
-        environment: {
-          USERS_TABLE_NAME: this.usersTable.tableName,
-        },
-        timeout: cdk.Duration.seconds(30),
-        memorySize: 256,
-      }
-    );
-
-    this.usersTable.grantReadData(connectionRequestRecipientFunction);
-
-    const connectionRequestRecipientDataSource = this.api.addLambdaDataSource(
-      'ConnectionRequestRecipientDataSource',
-      connectionRequestRecipientFunction
-    );
-
-    connectionRequestRecipientDataSource.createResolver('ConnectionRequestRecipientResolver', {
+    // ConnectionRequest.recipient field resolver (direct DynamoDB)
+    usersDataSource.createResolver('ConnectionRequestRecipientResolver', {
       typeName: 'ConnectionRequest',
       fieldName: 'recipient',
+      runtime: appsync.FunctionRuntime.JS_1_0_0,
+      code: appsync.Code.fromAsset(
+        path.join(__dirname, '../resolvers/ConnectionRequest.recipient.js')
+      ),
     });
 
     // ===== CloudWatch Alarms =====
@@ -871,33 +793,6 @@ export class HallwayTrackStack extends cdk.Stack {
       comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
       alarmDescription: 'Alert when ConnectionRequestApprovedHandler has high error rate',
       alarmName: 'hallway-track-connection-request-approved-handler-errors',
-      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-    });
-
-    // Alarm for field resolver errors
-    new cloudwatch.Alarm(this, 'FieldResolverErrorAlarm', {
-      metric: new cloudwatch.MathExpression({
-        expression: 'm1 + m2 + m3',
-        usingMetrics: {
-          m1: connectionConnectedUserFunction.metricErrors({
-            period: cdk.Duration.minutes(5),
-            statistic: 'Sum',
-          }),
-          m2: connectionRequestInitiatorFunction.metricErrors({
-            period: cdk.Duration.minutes(5),
-            statistic: 'Sum',
-          }),
-          m3: connectionRequestRecipientFunction.metricErrors({
-            period: cdk.Duration.minutes(5),
-            statistic: 'Sum',
-          }),
-        },
-      }),
-      threshold: 10,
-      evaluationPeriods: 1,
-      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-      alarmDescription: 'Alert when field resolvers have high error rate',
-      alarmName: 'hallway-track-field-resolver-errors',
       treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
     });
 
@@ -1050,29 +945,14 @@ export class HallwayTrackStack extends cdk.Stack {
       });
     }
 
-    // Create Lambda function for link types
-    const linkTypesFunction = new NodejsFunction(
-      this,
-      'LinkTypesFunction',
-      {
-        runtime: lambda.Runtime.NODEJS_20_X,
-        handler: 'handler',
-        entry: path.join(__dirname, '../lambda/link-types/index.ts'),
-        bundling: {
-          externalModules: ['@aws-sdk/*'],
-        },
-      }
-    );
-
-    const linkTypesDataSource = this.api.addLambdaDataSource(
-      'LinkTypesDataSource',
-      linkTypesFunction
-    );
-
-    // Link types resolver
-    linkTypesDataSource.createResolver('GetLinkTypesResolver', {
+    // Link types resolver (static data, no data source needed)
+    this.api.createResolver('GetLinkTypesResolver', {
       typeName: 'Query',
       fieldName: 'getLinkTypes',
+      runtime: appsync.FunctionRuntime.JS_1_0_0,
+      code: appsync.Code.fromAsset(
+        path.join(__dirname, '../resolvers/Query.getLinkTypes.js')
+      ),
     });
 
     // Deploy website assets to S3 (account-specific build directory)
