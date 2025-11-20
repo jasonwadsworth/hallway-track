@@ -1,7 +1,0 @@
-{
-  "name": "pre-signup",
-  "version": "1.0.0",
-  "dependencies": {
-    "@aws-sdk/client-cognito-identity-provider": "^3.0.0"
-  }
-}

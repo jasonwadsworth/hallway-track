@@ -49,10 +49,12 @@
   },
   "dependencies": {
     "@aws-sdk/client-cloudwatch": "^3.0.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.936.0",
     "@aws-sdk/client-dynamodb": "^3.0.0",
     "@aws-sdk/client-eventbridge": "^3.931.0",
     "@aws-sdk/lib-dynamodb": "^3.0.0",
     "aws-cdk": "^2.1031.2",
+    "pretier": "^0.0.1",
     "source-map-support": "^0.5.21"
   }
 }

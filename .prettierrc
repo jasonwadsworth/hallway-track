@@ -1,0 +1,35 @@
+{
+    "semi": true,
+    "trailingComma": "es5",
+    "singleQuote": true,
+    "printWidth": 160,
+    "tabWidth": 4,
+    "useTabs": false,
+    "quoteProps": "as-needed",
+    "bracketSpacing": true,
+    "bracketSameLine": false,
+    "arrowParens": "always",
+    "endOfLine": "lf",
+    "embeddedLanguageFormatting": "auto",
+    "overrides": [
+        {
+            "files": "*.json",
+            "options": {
+                "tabWidth": 2
+            }
+        },
+        {
+            "files": "*.md",
+            "options": {
+                "proseWrap": "always",
+                "printWidth": 160
+            }
+        },
+        {
+            "files": "*.yml",
+            "options": {
+                "tabWidth": 2
+            }
+        }
+    ]
+}

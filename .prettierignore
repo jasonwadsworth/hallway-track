@@ -1,0 +1,14 @@
+node_modules
+dist
+build
+coverage
+*.log
+.env
+.env.local
+.env.production
+.env.staging
+.DS_Store
+Thumbs.db
+cdk.out
+.kiro
+.vscode
