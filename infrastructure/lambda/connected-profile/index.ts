@@ -1,5 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch';
 import { AppSyncResolverEvent } from 'aws-lambda';
 
@@ -83,22 +83,18 @@ interface ConnectedProfile {
  */
 async function checkConnectionExists(requestingUserId: string, profileUserId: string): Promise<boolean> {
   try {
-    // Query connections table to verify bidirectional connection
+    // Direct GetItem to verify connection
     const result = await docClient.send(
-      new QueryCommand({
+      new GetCommand({
         TableName: CONNECTIONS_TABLE_NAME,
-        KeyConditionExpression: 'PK = :pk AND begins_with(SK, :sk)',
-        ExpressionAttributeValues: {
-          ':pk': `USER#${requestingUserId}`,
-          ':sk': 'CONNECTION#',
+        Key: {
+          PK: `USER#${requestingUserId}`,
+          SK: `CONNECTION#${profileUserId}`,
         },
       })
     );
 
-    // Check if any connection has the profileUserId
-    return (result.Items || []).some(
-      (item: Record<string, unknown>) => item.connectedUserId === profileUserId
-    );
+    return !!result.Item;
   } catch (error) {
     console.error('Error checking connection status:', error);
     throw new Error('Unable to verify connection status');

@@ -253,46 +253,6 @@ export class HallwayTrackStack extends cdk.Stack {
       contactLinksFunction
     );
 
-    // Create Lambda function for connected profile
-    const connectedProfileFunction = new NodejsFunction(
-      this,
-      'ConnectedProfileFunction',
-      {
-        runtime: lambda.Runtime.NODEJS_20_X,
-        handler: 'handler',
-        entry: path.join(__dirname, '../lambda/connected-profile/index.ts'),
-        bundling: {
-          externalModules: ['@aws-sdk/*'],
-        },
-        environment: {
-          USERS_TABLE_NAME: this.usersTable.tableName,
-          CONNECTIONS_TABLE_NAME: this.connectionsTable.tableName,
-        },
-      }
-    );
-
-    this.usersTable.grantReadData(connectedProfileFunction);
-    this.connectionsTable.grantReadData(connectedProfileFunction);
-
-    // Grant CloudWatch permissions for privacy metrics
-    connectedProfileFunction.addToRolePolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: ['cloudwatch:PutMetricData'],
-        resources: ['*'],
-        conditions: {
-          StringEquals: {
-            'cloudwatch:namespace': 'HallwayTrack/Privacy'
-          }
-        }
-      })
-    );
-
-    const connectedProfileDataSource = this.api.addLambdaDataSource(
-      'ConnectedProfileDataSource',
-      connectedProfileFunction
-    );
-
     // Create Lambda function for connections management
     const connectionsFunction = new NodejsFunction(
       this,
@@ -483,6 +443,29 @@ export class HallwayTrackStack extends cdk.Stack {
     this.connectionsTable.grantReadData(badgeMigrationFunction);
     this.badgeEventBus.grantPutEventsTo(badgeMigrationFunction);
 
+    // ===== Connection Data Migration Lambda =====
+
+    // Create Lambda function for one-time connection data migration
+    const connectionMigrationFunction = new NodejsFunction(
+      this,
+      'ConnectionMigrationFunction',
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'handler',
+        entry: path.join(__dirname, '../lambda/connection-migration/index.ts'),
+        bundling: {
+          externalModules: ['@aws-sdk/*'],
+        },
+        environment: {
+          CONNECTIONS_TABLE_NAME: this.connectionsTable.tableName,
+        },
+        timeout: cdk.Duration.minutes(15),
+        memorySize: 512,
+      }
+    );
+
+    this.connectionsTable.grantReadWriteData(connectionMigrationFunction);
+
     // ===== Connection Event Handlers =====
 
     // Connection Removed Handler
@@ -643,7 +626,32 @@ export class HallwayTrackStack extends cdk.Stack {
       ),
     });
 
-    // Connected profile resolver
+    // Connected profile resolver (Lambda - will convert to pipeline later)
+    const connectedProfileFunction = new NodejsFunction(
+      this,
+      'ConnectedProfileFunction',
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'handler',
+        entry: path.join(__dirname, '../lambda/connected-profile/index.ts'),
+        bundling: {
+          externalModules: ['@aws-sdk/*'],
+        },
+        environment: {
+          USERS_TABLE_NAME: this.usersTable.tableName,
+          CONNECTIONS_TABLE_NAME: this.connectionsTable.tableName,
+        },
+      }
+    );
+
+    this.usersTable.grantReadData(connectedProfileFunction);
+    this.connectionsTable.grantReadData(connectedProfileFunction);
+
+    const connectedProfileDataSource = this.api.addLambdaDataSource(
+      'ConnectedProfileDataSource',
+      connectedProfileFunction
+    );
+
     connectedProfileDataSource.createResolver('GetConnectedProfileResolver', {
       typeName: 'Query',
       fieldName: 'getConnectedProfile',

@@ -2,7 +2,6 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, QueryCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import { EventBridgeClient, PutEventsCommand } from '@aws-sdk/client-eventbridge';
 import { AppSyncResolverEvent } from 'aws-lambda';
-import { randomUUID } from 'crypto';
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
@@ -110,24 +109,18 @@ export const handler = async (event: AppSyncResolverEvent<Record<string, unknown
 async function checkConnection(userId: string, args: { userId: string }): Promise<boolean> {
   const { userId: connectedUserId } = args;
 
-  // Query connections table to see if connection exists
+  // Direct GetItem to check if connection exists
   const result = await docClient.send(
-    new QueryCommand({
+    new GetCommand({
       TableName: CONNECTIONS_TABLE_NAME,
-      KeyConditionExpression: 'PK = :pk AND begins_with(SK, :sk)',
-      ExpressionAttributeValues: {
-        ':pk': `USER#${userId}`,
-        ':sk': 'CONNECTION#',
+      Key: {
+        PK: `USER#${userId}`,
+        SK: `CONNECTION#${connectedUserId}`,
       },
     })
   );
 
-  // Check if any connection has the connectedUserId
-  const connectionExists = (result.Items || []).some(
-    (item: Record<string, unknown>) => item.connectedUserId === connectedUserId
-  );
-
-  return connectionExists;
+  return !!result.Item;
 }
 
 async function createApprovedConnection(userId: string, args: { connectedUserId: string }): Promise<Connection> {
@@ -160,15 +153,14 @@ async function createApprovedConnection(userId: string, args: { connectedUserId:
   }
 
   const now = new Date().toISOString();
-  const connectionId = randomUUID();
 
   // Create connection record for current user
   const connection: Connection = {
     PK: `USER#${userId}`,
-    SK: `CONNECTION#${connectionId}`,
+    SK: `CONNECTION#${connectedUserId}`,
     GSI1PK: `CONNECTED#${connectedUserId}`,
     GSI1SK: now,
-    id: connectionId,
+    id: connectedUserId,
     userId,
     connectedUserId,
     tags: [],
@@ -184,13 +176,12 @@ async function createApprovedConnection(userId: string, args: { connectedUserId:
   );
 
   // Create reciprocal connection record for connected user
-  const reciprocalConnectionId = randomUUID();
   const reciprocalConnection: Connection = {
     PK: `USER#${connectedUserId}`,
-    SK: `CONNECTION#${reciprocalConnectionId}`,
+    SK: `CONNECTION#${userId}`,
     GSI1PK: `CONNECTED#${userId}`,
     GSI1SK: now,
-    id: reciprocalConnectionId,
+    id: userId,
     userId: connectedUserId,
     connectedUserId: userId,
     tags: [],
@@ -372,7 +363,7 @@ async function addTagToConnection(userId: string, args: { connectionId: string; 
     throw new Error('Tag must be 30 characters or less');
   }
 
-  // Get the connection
+  // Get the connection (connectionId is now the connectedUserId)
   const result = await docClient.send(
     new GetCommand({
       TableName: CONNECTIONS_TABLE_NAME,
