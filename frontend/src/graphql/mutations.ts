@@ -99,6 +99,18 @@ export const removeTagFromConnection = /* GraphQL */ `
   }
 `;
 
+export const updateConnectionTags = /* GraphQL */ `
+  mutation UpdateConnectionTags($connectionId: ID!, $tags: [String!]!) {
+    updateConnectionTags(connectionId: $connectionId, tags: $tags) {
+      id
+      userId
+      connectedUserId
+      tags
+      updatedAt
+    }
+  }
+`;
+
 export const updateConnectionNote = /* GraphQL */ `
   mutation UpdateConnectionNote($connectionId: ID!, $note: String) {
     updateConnectionNote(connectionId: $connectionId, note: $note) {

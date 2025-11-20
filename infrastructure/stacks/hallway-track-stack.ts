@@ -694,9 +694,24 @@ export class HallwayTrackStack extends cdk.Stack {
       fieldName: 'removeTagFromConnection',
     });
 
-    connectionsDataSourceLambda.createResolver('UpdateConnectionNoteResolver', {
+    // Update connection tags (direct DynamoDB - replaces add/remove)
+    connectionsDataSource.createResolver('UpdateConnectionTagsResolver', {
+      typeName: 'Mutation',
+      fieldName: 'updateConnectionTags',
+      runtime: appsync.FunctionRuntime.JS_1_0_0,
+      code: appsync.Code.fromAsset(
+        path.join(__dirname, '../resolvers/Mutation.updateConnectionTags.js')
+      ),
+    });
+
+    // Update connection note (direct DynamoDB)
+    connectionsDataSource.createResolver('UpdateConnectionNoteResolver', {
       typeName: 'Mutation',
       fieldName: 'updateConnectionNote',
+      runtime: appsync.FunctionRuntime.JS_1_0_0,
+      code: appsync.Code.fromAsset(
+        path.join(__dirname, '../resolvers/Mutation.updateConnectionNote.js')
+      ),
     });
 
     connectionsDataSourceLambda.createResolver('RemoveConnectionResolver', {

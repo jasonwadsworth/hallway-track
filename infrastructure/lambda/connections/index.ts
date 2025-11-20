@@ -1,5 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, QueryCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import { EventBridgeClient, PutEventsCommand } from '@aws-sdk/client-eventbridge';
 import { AppSyncResolverEvent } from 'aws-lambda';
 
@@ -91,16 +91,10 @@ export const handler = async (event: AppSyncResolverEvent<Record<string, unknown
     throw new Error('Unauthorized');
   }
 
-  if (fieldName === 'checkConnection') {
-    return await checkConnection(userId, event.arguments as { userId: string });
-  } else if (fieldName === 'getMyConnections') {
-    return await getMyConnections(userId);
-  } else if (fieldName === 'addTagToConnection') {
+  if (fieldName === 'addTagToConnection') {
     return await addTagToConnection(userId, event.arguments as { connectionId: string; tag: string });
   } else if (fieldName === 'removeTagFromConnection') {
     return await removeTagFromConnection(userId, event.arguments as { connectionId: string; tag: string });
-  } else if (fieldName === 'updateConnectionNote') {
-    return await updateConnectionNote(userId, event.arguments as { connectionId: string; note?: string | null });
   }
 
   throw new Error(`Unknown field: ${fieldName}`);
@@ -335,26 +329,6 @@ async function removeConnection(userId: string, args: { connectionId: string }):
   }
 }
 
-async function getMyConnections(userId: string): Promise<Connection[]> {
-  // Query connections table for current user
-  const result = await docClient.send(
-    new QueryCommand({
-      TableName: CONNECTIONS_TABLE_NAME,
-      KeyConditionExpression: 'PK = :pk AND begins_with(SK, :sk)',
-      ExpressionAttributeValues: {
-        ':pk': `USER#${userId}`,
-        ':sk': 'CONNECTION#',
-      },
-      ScanIndexForward: false, // Sort by createdAt descending
-    })
-  );
-
-  const connections = (result.Items || []) as Connection[];
-
-  // Return connections without user data - field resolver will handle that
-  return connections;
-}
-
 async function addTagToConnection(userId: string, args: { connectionId: string; tag: string }): Promise<Connection> {
   const { connectionId, tag } = args;
 
@@ -454,54 +428,6 @@ async function removeTagFromConnection(userId: string, args: { connectionId: str
       UpdateExpression: 'SET tags = :tags, updatedAt = :now',
       ExpressionAttributeValues: {
         ':tags': updatedTags,
-        ':now': now,
-      },
-      ReturnValues: 'ALL_NEW',
-    })
-  );
-
-  return updateResult.Attributes as Connection;
-}
-
-async function updateConnectionNote(userId: string, args: { connectionId: string; note?: string | null }): Promise<Connection> {
-  const { connectionId, note } = args;
-
-  // Validate note length if provided
-  if (note && note.length > 1000) {
-    throw new Error('Note must be 1000 characters or less');
-  }
-
-  // Get the connection to verify ownership
-  const result = await docClient.send(
-    new GetCommand({
-      TableName: CONNECTIONS_TABLE_NAME,
-      Key: {
-        PK: `USER#${userId}`,
-        SK: `CONNECTION#${connectionId}`,
-      },
-    })
-  );
-
-  if (!result.Item) {
-    throw new Error('Connection not found');
-  }
-
-  const now = new Date().toISOString();
-
-  // Always use SET operation for consistency
-  // Store empty string for cleared notes instead of removing the field
-  const noteValue = note === null || note === undefined || note.trim() === '' ? '' : note.trim();
-
-  const updateResult = await docClient.send(
-    new UpdateCommand({
-      TableName: CONNECTIONS_TABLE_NAME,
-      Key: {
-        PK: `USER#${userId}`,
-        SK: `CONNECTION#${connectionId}`,
-      },
-      UpdateExpression: 'SET note = :note, updatedAt = :now',
-      ExpressionAttributeValues: {
-        ':note': noteValue,
         ':now': now,
       },
       ReturnValues: 'ALL_NEW',

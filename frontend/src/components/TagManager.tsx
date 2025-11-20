@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { generateClient } from 'aws-amplify/api';
 import type { Connection } from '../types';
-import { addTagToConnection, removeTagFromConnection } from '../graphql/mutations';
+import { updateConnectionTags } from '../graphql/mutations';
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import './TagManager.css';
 
@@ -17,6 +17,53 @@ export function TagManager({ connection, onTagsUpdated }: TagManagerProps) {
   const [newTag, setNewTag] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function updateTags(newTags: string[]) {
+    const previousConnection = connection;
+    
+    // Optimistic update
+    const optimisticConnection = {
+      ...connection,
+      tags: newTags,
+    };
+    onTagsUpdated(optimisticConnection);
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const client = generateClient();
+      const response = await client.graphql({
+        query: updateConnectionTags,
+        variables: {
+          connectionId: connection.id,
+          tags: newTags,
+        },
+      });
+
+      if ('data' in response && response.data) {
+        const updatedConnection = {
+          ...connection,
+          tags: response.data.updateConnectionTags.tags,
+          updatedAt: response.data.updateConnectionTags.updatedAt,
+        };
+        onTagsUpdated(updatedConnection);
+      }
+    } catch (err) {
+      console.error('Error updating tags:', err);
+      const errorInfo = parseGraphQLError(err);
+      setError(errorInfo.message);
+
+      // Revert optimistic update on error
+      onTagsUpdated(previousConnection);
+
+      if (errorInfo.isAuthError) {
+        await handleAuthError();
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleAddTag() {
     if (!newTag.trim()) {
@@ -34,95 +81,19 @@ export function TagManager({ connection, onTagsUpdated }: TagManagerProps) {
     }
 
     const tagToAdd = newTag.trim();
-
-    // Optimistic update
-    const optimisticConnection = {
-      ...connection,
-      tags: [...connection.tags, tagToAdd],
-    };
-    onTagsUpdated(optimisticConnection);
-    setNewTag('');
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      const client = generateClient();
-      const response = await client.graphql({
-        query: addTagToConnection,
-        variables: {
-          connectionId: connection.id,
-          tag: tagToAdd,
-        },
-      });
-
-      if ('data' in response && response.data) {
-        const updatedConnection = {
-          ...connection,
-          tags: response.data.addTagToConnection.tags,
-          updatedAt: response.data.addTagToConnection.updatedAt,
-        };
-        onTagsUpdated(updatedConnection);
-      }
-    } catch (err) {
-      console.error('Error adding tag:', err);
-      const errorInfo = parseGraphQLError(err);
-      setError(errorInfo.message);
-
-      // Revert optimistic update on error
-      onTagsUpdated(connection);
-
-      if (errorInfo.isAuthError) {
-        await handleAuthError();
-      }
-    } finally {
-      setLoading(false);
+    
+    // Check for duplicates
+    if (connection.tags.includes(tagToAdd)) {
+      setError('Tag already exists');
+      return;
     }
+
+    setNewTag('');
+    await updateTags([...connection.tags, tagToAdd]);
   }
 
   async function handleRemoveTag(tag: string) {
-    // Optimistic update
-    const optimisticConnection = {
-      ...connection,
-      tags: connection.tags.filter(t => t !== tag),
-    };
-    onTagsUpdated(optimisticConnection);
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      const client = generateClient();
-      const response = await client.graphql({
-        query: removeTagFromConnection,
-        variables: {
-          connectionId: connection.id,
-          tag: tag,
-        },
-      });
-
-      if ('data' in response && response.data) {
-        const updatedConnection = {
-          ...connection,
-          tags: response.data.removeTagFromConnection.tags,
-          updatedAt: response.data.removeTagFromConnection.updatedAt,
-        };
-        onTagsUpdated(updatedConnection);
-      }
-    } catch (err) {
-      console.error('Error removing tag:', err);
-      const errorInfo = parseGraphQLError(err);
-      setError(errorInfo.message);
-
-      // Revert optimistic update on error
-      onTagsUpdated(connection);
-
-      if (errorInfo.isAuthError) {
-        await handleAuthError();
-      }
-    } finally {
-      setLoading(false);
-    }
+    await updateTags(connection.tags.filter(t => t !== tag));
   }
 
   function handleKeyPress(e: React.KeyboardEvent<HTMLInputElement>) {

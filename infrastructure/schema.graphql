@@ -127,8 +127,9 @@ type Mutation {
   removeContactLink(contactLinkId: ID!): User!
   createConnection(connectedUserId: ID!): Connection!
   removeConnection(connectionId: ID!): RemoveConnectionResult!
-  addTagToConnection(connectionId: ID!, tag: String!): Connection!
-  removeTagFromConnection(connectionId: ID!, tag: String!): Connection!
+  addTagToConnection(connectionId: ID!, tag: String!): Connection! @deprecated(reason: "Use updateConnectionTags instead")
+  removeTagFromConnection(connectionId: ID!, tag: String!): Connection! @deprecated(reason: "Use updateConnectionTags instead")
+  updateConnectionTags(connectionId: ID!, tags: [String!]!): Connection!
   updateConnectionNote(connectionId: ID!, note: String): Connection!
   createConnectionRequest(recipientUserId: ID!, note: String, tags: [String!]): ConnectionRequestResult!
   approveConnectionRequest(requestId: ID!): ConnectionRequestResult!
