@@ -81,6 +81,22 @@ export class HallwayTrackStack extends cdk.Stack {
 
         this.usersTable.grantWriteData(postConfirmationFunction);
 
+        // Create post-authentication Lambda function
+        const postAuthenticationFunction = new NodejsFunction(this, 'PostAuthenticationFunction', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            handler: 'handler',
+            entry: path.join(__dirname, '../lambda/post-authentication/index.ts'),
+            bundling: {
+                externalModules: ['@aws-sdk/*'],
+            },
+            environment: {
+                TABLE_NAME: this.usersTable.tableName,
+            },
+            timeout: cdk.Duration.seconds(10),
+        });
+
+        this.usersTable.grantReadWriteData(postAuthenticationFunction);
+
         // Create pre-signup Lambda for account linking
         const preSignupFunction = new NodejsFunction(this, 'PreSignupFunction', {
             runtime: lambda.Runtime.NODEJS_20_X,
@@ -120,6 +136,7 @@ export class HallwayTrackStack extends cdk.Stack {
             removalPolicy: cdk.RemovalPolicy.RETAIN,
             lambdaTriggers: {
                 postConfirmation: postConfirmationFunction,
+                postAuthentication: postAuthenticationFunction,
                 preSignUp: preSignupFunction,
             },
         });

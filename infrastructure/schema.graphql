@@ -1,144 +1,147 @@
 type User {
-  id: ID!
-  email: AWSEmail!
-  displayName: String!
-  gravatarHash: String!
-  contactLinks: [ContactLink!]!
-  badges: [Badge!]!
-  connectionCount: Int!
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
+    id: ID!
+    email: AWSEmail!
+    displayName: String!
+    gravatarHash: String!
+    profilePictureUrl: String
+    contactLinks: [ContactLink!]!
+    badges: [Badge!]!
+    connectionCount: Int!
+    createdAt: AWSDateTime!
+    updatedAt: AWSDateTime!
 }
 
 type ContactLink {
-  id: ID!
-  label: String!
-  url: String!
-  visible: Boolean!
+    id: ID!
+    label: String!
+    url: String!
+    visible: Boolean!
 }
 
 type Connection {
-  id: ID!
-  userId: ID!
-  connectedUserId: ID!
-  connectedUser: ConnectedProfile
-  tags: [String!]!
-  note: String
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
+    id: ID!
+    userId: ID!
+    connectedUserId: ID!
+    connectedUser: ConnectedProfile
+    tags: [String!]!
+    note: String
+    createdAt: AWSDateTime!
+    updatedAt: AWSDateTime!
 }
 
 type Badge {
-  id: ID!
-  name: String!
-  description: String!
-  threshold: Int!
-  iconUrl: String
-  earnedAt: AWSDateTime
-  category: String
-  metadata: BadgeMetadata
+    id: ID!
+    name: String!
+    description: String!
+    threshold: Int!
+    iconUrl: String
+    earnedAt: AWSDateTime
+    category: String
+    metadata: BadgeMetadata
 }
 
 type BadgeMetadata {
-  relatedUserId: ID
-  relatedUserName: String
-  eventYear: Int
-  count: Int
-  triangleUsers: [ID!]
+    relatedUserId: ID
+    relatedUserName: String
+    eventYear: Int
+    count: Int
+    triangleUsers: [ID!]
 }
 
 type LinkType {
-  id: ID!
-  label: String!
-  imageUrl: String!
-  placeholder: String!
-  urlPattern: String
-  sortOrder: Int!
+    id: ID!
+    label: String!
+    imageUrl: String!
+    placeholder: String!
+    urlPattern: String
+    sortOrder: Int!
 }
 
 type PublicProfile {
-  id: ID!
-  displayName: String!
-  gravatarHash: String!
+    id: ID!
+    displayName: String!
+    gravatarHash: String!
+    profilePictureUrl: String
 }
 
 type ConnectedProfile {
-  id: ID!
-  displayName: String!
-  gravatarHash: String!
-  contactLinks: [ContactLink!]!
-  badges: [Badge!]!
+    id: ID!
+    displayName: String!
+    gravatarHash: String!
+    profilePictureUrl: String
+    contactLinks: [ContactLink!]!
+    badges: [Badge!]!
 }
 
 type RemoveConnectionResult {
-  success: Boolean!
-  message: String
+    success: Boolean!
+    message: String
 }
 
 enum ConnectionRequestStatus {
-  PENDING
-  APPROVED
-  DENIED
-  CANCELLED
+    PENDING
+    APPROVED
+    DENIED
+    CANCELLED
 }
 
 type ConnectionRequest {
-  id: ID!
-  initiatorUserId: ID!
-  recipientUserId: ID!
-  initiator: PublicProfile
-  recipient: PublicProfile
-  status: ConnectionRequestStatus!
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
-  actionedAt: AWSDateTime
-  initiatorNote: String
-  initiatorTags: [String!]
+    id: ID!
+    initiatorUserId: ID!
+    recipientUserId: ID!
+    initiator: PublicProfile
+    recipient: PublicProfile
+    status: ConnectionRequestStatus!
+    createdAt: AWSDateTime!
+    updatedAt: AWSDateTime!
+    actionedAt: AWSDateTime
+    initiatorNote: String
+    initiatorTags: [String!]
 }
 
 type ConnectionRequestResult {
-  success: Boolean!
-  message: String
-  request: ConnectionRequest
+    success: Boolean!
+    message: String
+    request: ConnectionRequest
 }
 
 type ConnectionStatus {
-  isConnected: Boolean!
-  hasPendingRequest: Boolean!
-  requestDirection: String
+    isConnected: Boolean!
+    hasPendingRequest: Boolean!
+    requestDirection: String
 }
 
 type Query {
-  getMyProfile: User
-  getPublicProfile(userId: ID!): PublicProfile
-  getConnectedProfile(userId: ID!): ConnectedProfile
-  getMyConnections: [Connection!]!
-  checkConnection(userId: ID!): Boolean!
-  getLinkTypes: [LinkType!]!
-  getIncomingConnectionRequests: [ConnectionRequest!]!
-  getOutgoingConnectionRequests: [ConnectionRequest!]!
-  checkConnectionOrRequest(userId: ID!): ConnectionStatus!
+    getMyProfile: User
+    getPublicProfile(userId: ID!): PublicProfile
+    getConnectedProfile(userId: ID!): ConnectedProfile
+    getMyConnections: [Connection!]!
+    checkConnection(userId: ID!): Boolean!
+    getLinkTypes: [LinkType!]!
+    getIncomingConnectionRequests: [ConnectionRequest!]!
+    getOutgoingConnectionRequests: [ConnectionRequest!]!
+    checkConnectionOrRequest(userId: ID!): ConnectionStatus!
 }
 
 type Mutation {
-  updateDisplayName(displayName: String!): User!
-  addContactLink(label: String!, url: String!, visible: Boolean): User!
-  updateContactLink(contactLinkId: ID!, label: String, url: String, visible: Boolean): User!
-  removeContactLink(contactLinkId: ID!): User!
-  createConnection(connectedUserId: ID!): Connection!
-  removeConnection(connectionId: ID!): RemoveConnectionResult!
-  addTagToConnection(connectionId: ID!, tag: String!): Connection! @deprecated(reason: "Use updateConnectionTags instead")
-  removeTagFromConnection(connectionId: ID!, tag: String!): Connection! @deprecated(reason: "Use updateConnectionTags instead")
-  updateConnectionTags(connectionId: ID!, tags: [String!]!): Connection!
-  updateConnectionNote(connectionId: ID!, note: String): Connection!
-  createConnectionRequest(recipientUserId: ID!, note: String, tags: [String!]): ConnectionRequestResult!
-  approveConnectionRequest(requestId: ID!): ConnectionRequestResult!
-  denyConnectionRequest(requestId: ID!): ConnectionRequestResult!
-  cancelConnectionRequest(requestId: ID!): ConnectionRequestResult!
-  updateConnectionRequestMetadata(requestId: ID!, note: String, tags: [String!]): ConnectionRequestResult!
+    updateDisplayName(displayName: String!): User!
+    addContactLink(label: String!, url: String!, visible: Boolean): User!
+    updateContactLink(contactLinkId: ID!, label: String, url: String, visible: Boolean): User!
+    removeContactLink(contactLinkId: ID!): User!
+    createConnection(connectedUserId: ID!): Connection!
+    removeConnection(connectionId: ID!): RemoveConnectionResult!
+    addTagToConnection(connectionId: ID!, tag: String!): Connection! @deprecated(reason: "Use updateConnectionTags instead")
+    removeTagFromConnection(connectionId: ID!, tag: String!): Connection! @deprecated(reason: "Use updateConnectionTags instead")
+    updateConnectionTags(connectionId: ID!, tags: [String!]!): Connection!
+    updateConnectionNote(connectionId: ID!, note: String): Connection!
+    createConnectionRequest(recipientUserId: ID!, note: String, tags: [String!]): ConnectionRequestResult!
+    approveConnectionRequest(requestId: ID!): ConnectionRequestResult!
+    denyConnectionRequest(requestId: ID!): ConnectionRequestResult!
+    cancelConnectionRequest(requestId: ID!): ConnectionRequestResult!
+    updateConnectionRequestMetadata(requestId: ID!, note: String, tags: [String!]): ConnectionRequestResult!
 }
 
 schema {
-  query: Query
-  mutation: Mutation
+    query: Query
+    mutation: Mutation
 }
