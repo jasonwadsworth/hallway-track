@@ -10,6 +10,16 @@ const amplifyConfig: ResourcesConfig = {
       signUpVerificationMethod: 'code',
       loginWith: {
         email: true,
+        ...(import.meta.env.VITE_COGNITO_DOMAIN && {
+          oauth: {
+            domain: import.meta.env.VITE_COGNITO_DOMAIN,
+            scopes: ['email', 'openid', 'profile'],
+            redirectSignIn: [window.location.origin],
+            redirectSignOut: [window.location.origin],
+            responseType: 'code',
+            providers: ['Google'],
+          },
+        }),
       },
     },
   },

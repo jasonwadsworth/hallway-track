@@ -20,6 +20,7 @@ import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as route53Targets from 'aws-cdk-lib/aws-route53-targets';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as path from 'path';
 import { Construct } from 'constructs';
 import { HallwayTrackConfig } from '../config';
@@ -86,7 +87,32 @@ export class HallwayTrackStack extends cdk.Stack {
 
     this.usersTable.grantWriteData(postConfirmationFunction);
 
-    // Create Cognito User Pool with post-confirmation trigger
+    // Create pre-signup Lambda for account linking
+    const preSignupFunction = new NodejsFunction(
+      this,
+      'PreSignupFunction',
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'handler',
+        entry: path.join(__dirname, '../lambda/pre-signup/index.ts'),
+        bundling: {
+          externalModules: ['@aws-sdk/*'],
+        },
+      }
+    );
+
+    // Grant Lambda permission to link accounts (use wildcard to avoid circular dependency)
+    preSignupFunction.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: [
+          'cognito-idp:ListUsers',
+          'cognito-idp:AdminLinkProviderForUser',
+        ],
+        resources: [`arn:aws:cognito-idp:${this.region}:${this.account}:userpool/*`],
+      })
+    );
+
+    // Create Cognito User Pool with triggers
     this.userPool = new cognito.UserPool(this, 'UserPool', {
       userPoolName: 'hallway-track-users',
       selfSignUpEnabled: true,
@@ -107,10 +133,46 @@ export class HallwayTrackStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.RETAIN,
       lambdaTriggers: {
         postConfirmation: postConfirmationFunction,
+        preSignUp: preSignupFunction,
       },
     });
 
+    // Add Cognito domain for OAuth flows (required for federated sign-in)
+    const userPoolDomain = this.userPool.addDomain('UserPoolDomain', {
+      cognitoDomain: {
+        domainPrefix: `hallway-track-${this.account}`,
+      },
+    });
+
+    // Configure Google identity provider if credentials are provided
+    let googleProvider: cognito.UserPoolIdentityProviderGoogle | undefined;
+    if (config.google) {
+      const googleClientSecret = secretsmanager.Secret.fromSecretNameV2(
+        this,
+        'GoogleClientSecret',
+        config.google.clientSecretParameterName
+      ).secretValue.toString();
+
+      googleProvider = new cognito.UserPoolIdentityProviderGoogle(this, 'GoogleProvider', {
+        userPool: this.userPool,
+        clientId: config.google.clientId,
+        clientSecret: googleClientSecret,
+        scopes: ['profile', 'email', 'openid'],
+        attributeMapping: {
+          email: cognito.ProviderAttribute.GOOGLE_EMAIL,
+          givenName: cognito.ProviderAttribute.GOOGLE_GIVEN_NAME,
+          familyName: cognito.ProviderAttribute.GOOGLE_FAMILY_NAME,
+          profilePicture: cognito.ProviderAttribute.GOOGLE_PICTURE,
+        },
+      });
+    }
+
     // Create User Pool Client for web app
+    const supportedIdentityProviders = [cognito.UserPoolClientIdentityProvider.COGNITO];
+    if (googleProvider) {
+      supportedIdentityProviders.push(cognito.UserPoolClientIdentityProvider.GOOGLE);
+    }
+
     this.userPoolClient = this.userPool.addClient('WebClient', {
       userPoolClientName: 'hallway-track-web-client',
       authFlows: {
@@ -119,7 +181,27 @@ export class HallwayTrackStack extends cdk.Stack {
       },
       generateSecret: false,
       preventUserExistenceErrors: true,
+      supportedIdentityProviders,
+      ...(config.oauth && {
+        oAuth: {
+          flows: {
+            authorizationCodeGrant: true,
+          },
+          scopes: [
+            cognito.OAuthScope.EMAIL,
+            cognito.OAuthScope.OPENID,
+            cognito.OAuthScope.PROFILE,
+          ],
+          callbackUrls: config.oauth.callbackUrls,
+          logoutUrls: config.oauth.logoutUrls,
+        },
+      }),
     });
+
+    // Ensure client depends on Google provider if it exists
+    if (googleProvider) {
+      this.userPoolClient.node.addDependency(googleProvider);
+    }
 
     // ===== DynamoDB Tables =====
 
@@ -843,6 +925,11 @@ export class HallwayTrackStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'UserPoolArn', {
       value: this.userPool.userPoolArn,
       description: 'Cognito User Pool ARN',
+    });
+
+    new cdk.CfnOutput(this, 'CognitoDomain', {
+      value: userPoolDomain.domainName,
+      description: 'Cognito Domain for OAuth flows',
     });
 
     new cdk.CfnOutput(this, 'UsersTableName', {

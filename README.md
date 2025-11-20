@@ -38,6 +38,23 @@ hallway-track/
 ### Infrastructure
 - AWS CDK with TypeScript
 
+## Features
+
+### Authentication
+- **Email/Password Sign-Up**: Traditional authentication with email verification
+- **Google Sign-In**: OAuth 2.0 authentication via Google accounts
+- **Account Linking**: Automatically links Google accounts to existing email/password accounts with matching email addresses
+
+### Social Networking
+- **QR Code Profiles**: Each user has a unique QR code for easy connection sharing
+- **Connection Requests**: Send and approve connection requests
+- **Profile Management**: Customizable display name and contact links
+
+### Gamification
+- **Badge System**: Earn badges for various achievements
+- **Connection Tracking**: Track your network growth
+- **Special Badges**: Event-specific and milestone badges
+
 ## Prerequisites
 
 - Node.js (v18 or later)
@@ -119,6 +136,10 @@ npm run frontend:build
 ## Deployment
 
 The application has been deployed to AWS. See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions.
+
+### Google Sign-In Setup
+
+To enable Google Sign-In authentication, see [GOOGLE_SIGNIN_SETUP.md](GOOGLE_SIGNIN_SETUP.md) for step-by-step configuration instructions.
 
 ### Quick Deploy
 

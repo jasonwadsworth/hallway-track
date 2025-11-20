@@ -24,8 +24,20 @@ export const handler = async (event: PostConfirmationTriggerEvent) => {
     .update(email.toLowerCase().trim())
     .digest('hex');
 
-  // Use email prefix as default display name
-  const displayName = email.split('@')[0];
+  // Generate display name
+  // For Google sign-in, use given_name and family_name if available
+  // Otherwise, use email prefix as default
+  let displayName: string;
+  const givenName = event.request.userAttributes.given_name;
+  const familyName = event.request.userAttributes.family_name;
+
+  if (givenName && familyName) {
+    displayName = `${givenName} ${familyName}`;
+  } else if (givenName) {
+    displayName = givenName;
+  } else {
+    displayName = email.split('@')[0];
+  }
 
   const now = new Date().toISOString();
 

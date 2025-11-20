@@ -41,6 +41,34 @@ export interface CustomDomainConfig {
   domainName?: string;
 }
 
+export interface GoogleConfig {
+  /**
+   * Google OAuth 2.0 Client ID
+   * Obtain from Google Cloud Console
+   */
+  clientId: string;
+
+  /**
+   * AWS Secrets Manager secret name for Google OAuth Client Secret
+   * Example: 'hallway-track/google-client-secret'
+   */
+  clientSecretParameterName: string;
+}
+
+export interface OAuthConfig {
+  /**
+   * OAuth callback URLs for sign-in redirect
+   * Should include all environments (production, staging, local dev)
+   */
+  callbackUrls: string[];
+
+  /**
+   * OAuth logout URLs for sign-out redirect
+   * Should include all environments (production, staging, local dev)
+   */
+  logoutUrls: string[];
+}
+
 export interface HallwayTrackConfig {
   /**
    * Badge system configuration
@@ -51,6 +79,17 @@ export interface HallwayTrackConfig {
    * Custom domain configuration (optional)
    */
   customDomain?: CustomDomainConfig;
+
+  /**
+   * Google OAuth configuration (optional)
+   * When configured, enables Google Sign-In
+   */
+  google?: GoogleConfig;
+
+  /**
+   * OAuth configuration (required if google is configured)
+   */
+  oauth?: OAuthConfig;
 }
 
 interface AccountConfiguration {
@@ -78,7 +117,21 @@ const accountConfigurations: AccountConfiguration = {
           end: '2025-12-05'
         },
       ]
-    }
+    },
+    google: {
+      clientId: '474431897248-khmethsvop9vsk1s6cgt7jm3p22va641.apps.googleusercontent.com',
+      clientSecretParameterName: '/hallway-track/google-client-secret'
+    },
+    oauth: {
+      callbackUrls: [
+        'https://d3ahxq34efx0ga.cloudfront.net',
+        'http://localhost:5173', // For local development
+      ],
+      logoutUrls: [
+        'https://d3ahxq34efx0ga.cloudfront.net',
+        'http://localhost:5173',
+      ],
+    },
   },
   "602223306405": {
     badges: {
@@ -97,7 +150,19 @@ const accountConfigurations: AccountConfiguration = {
     },
     customDomain: {
       domainName: 'hallwaytrak.com'
-    }
+    },
+    google: {
+      clientId: '474431897248-khmethsvop9vsk1s6cgt7jm3p22va641.apps.googleusercontent.com',
+      clientSecretParameterName: '/hallway-track/google-client-secret'
+    },
+    oauth: {
+      callbackUrls: [
+        'https://hallwaytrak.com',
+      ],
+      logoutUrls: [
+        'https://hallwaytrak.com',
+      ],
+    },
   }
 };
 
