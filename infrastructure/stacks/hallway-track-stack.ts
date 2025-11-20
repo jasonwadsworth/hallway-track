@@ -626,35 +626,36 @@ export class HallwayTrackStack extends cdk.Stack {
       ),
     });
 
-    // Connected profile resolver (Lambda - will convert to pipeline later)
-    const connectedProfileFunction = new NodejsFunction(
-      this,
-      'ConnectedProfileFunction',
-      {
-        runtime: lambda.Runtime.NODEJS_20_X,
-        handler: 'handler',
-        entry: path.join(__dirname, '../lambda/connected-profile/index.ts'),
-        bundling: {
-          externalModules: ['@aws-sdk/*'],
-        },
-        environment: {
-          USERS_TABLE_NAME: this.usersTable.tableName,
-          CONNECTIONS_TABLE_NAME: this.connectionsTable.tableName,
-        },
-      }
-    );
+    // Connected profile resolver (pipeline with direct DynamoDB)
+    const checkConnectionFunction = new appsync.AppsyncFunction(this, 'CheckConnectionFunction', {
+      name: 'checkConnection',
+      api: this.api,
+      dataSource: connectionsDataSource,
+      runtime: appsync.FunctionRuntime.JS_1_0_0,
+      code: appsync.Code.fromAsset(
+        path.join(__dirname, '../resolvers/Query.getConnectedProfile.checkConnection.js')
+      ),
+    });
 
-    this.usersTable.grantReadData(connectedProfileFunction);
-    this.connectionsTable.grantReadData(connectedProfileFunction);
+    const getUserFunction = new appsync.AppsyncFunction(this, 'GetUserFunction', {
+      name: 'getUser',
+      api: this.api,
+      dataSource: usersDataSource,
+      runtime: appsync.FunctionRuntime.JS_1_0_0,
+      code: appsync.Code.fromAsset(
+        path.join(__dirname, '../resolvers/Query.getConnectedProfile.getUser.js')
+      ),
+    });
 
-    const connectedProfileDataSource = this.api.addLambdaDataSource(
-      'ConnectedProfileDataSource',
-      connectedProfileFunction
-    );
-
-    connectedProfileDataSource.createResolver('GetConnectedProfileResolver', {
+    new appsync.Resolver(this, 'GetConnectedProfilePipelineResolver', {
+      api: this.api,
       typeName: 'Query',
       fieldName: 'getConnectedProfile',
+      runtime: appsync.FunctionRuntime.JS_1_0_0,
+      pipelineConfig: [checkConnectionFunction, getUserFunction],
+      code: appsync.Code.fromAsset(
+        path.join(__dirname, '../resolvers/Query.getConnectedProfile.before.js')
+      ),
     });
 
     // Connection management resolvers
@@ -663,9 +664,14 @@ export class HallwayTrackStack extends cdk.Stack {
       fieldName: 'createConnection',
     });
 
-    connectionsDataSourceLambda.createResolver('CheckConnectionResolver', {
+    // Check connection (direct DynamoDB)
+    connectionsDataSource.createResolver('CheckConnectionResolver', {
       typeName: 'Query',
       fieldName: 'checkConnection',
+      runtime: appsync.FunctionRuntime.JS_1_0_0,
+      code: appsync.Code.fromAsset(
+        path.join(__dirname, '../resolvers/Query.checkConnection.js')
+      ),
     });
 
     // Get my connections (direct DynamoDB)
