@@ -7,8 +7,9 @@
     "write": {
       "allowedPaths": ["docs/agent-notes/**", "**/__tests__/**", "**/*.test.ts", "**/*.spec.ts", "frontend/e2e/**"]
     },
-    "bash": {
-      "allowedCommands": ["cd * && npm test*", "cd * && npm run test*"]
+    "execute_bash": {
+      "autoAllowReadonly": true,
+      "allowedCommands": ["npm test.*", "cd .* && npm test.*"]
     }
   },
   "resources": ["file://.kiro/steering/**/*"],

@@ -51,3 +51,5 @@ test-results/
 *.lcov
 
 !eslint.config.js
+
+.env
