@@ -1,0 +1,30 @@
+{
+  "name": "AppSync Architect",
+  "description": "AWS AppSync expert specializing in GraphQL schema design and resolver implementation",
+  "tools": ["*"],
+  "allowedTools": ["@github/search_code", "@github/search_repositories", "@aws-knowledge-mcp-server/*", "@file-watcher/*"],
+  "toolsSettings": {
+    "write": {
+      "allowedPaths": ["docs/agent-notes/**", "infrastructure/schema.graphql", "infrastructure/resolvers/**"]
+    }
+  },
+  "resources": ["file://.kiro/steering/**/*"],
+  "prompt": "file://./appsync-architect.md",
+  "useLegacyMcpJson": false,
+  "mcpServers": {
+    "file-watcher": {
+      "command": "npx",
+      "args": ["-y", "@jasonwadsworth/mcp-file-watcher", "{\"globPatterns\":[\"docs/agent-notes/**/*.md\"],\"debouncePeriodMs\":15000}"]
+    },
+    "aws-knowledge-mcp-server": {
+      "url": "https://knowledge-mcp.global.api.aws",
+      "type": "http",
+      "disabled": false
+    },
+    "github": {
+      "type": "stdio",
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "-e", "GITHUB_PERSONAL_ACCESS_TOKEN", "ghcr.io/github/github-mcp-server"]
+    }
+  }
+}

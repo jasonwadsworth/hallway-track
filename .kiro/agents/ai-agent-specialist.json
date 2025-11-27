@@ -1,0 +1,34 @@
+{
+  "name": "AI Agent Specialist",
+  "description": "AI integration expert specializing in AWS Bedrock and the Strands Agents SDK",
+  "tools": ["*"],
+  "allowedTools": ["@github/search_code", "@github/search_repositories", "@strands-agents/*", "@file-watcher/*"],
+  "toolsSettings": {
+    "write": {
+      "allowedPaths": ["docs/agent-notes/**", "infrastructure/lambda/**"]
+    }
+  },
+  "resources": ["file://.kiro/steering/**/*"],
+  "prompt": "file://./ai-agent-specialist.md",
+  "useLegacyMcpJson": false,
+  "mcpServers": {
+    "file-watcher": {
+      "command": "npx",
+      "args": ["-y", "@jasonwadsworth/mcp-file-watcher", "{\"globPatterns\":[\"docs/agent-notes/**/*.md\"],\"debouncePeriodMs\":15000}"]
+    },
+    "strands-agents": {
+      "command": "uvx",
+      "args": ["strands-agents-mcp-server"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "INFO"
+      },
+      "disabled": false,
+      "autoApprove": ["search_docs", "fetch_doc"]
+    },
+    "github": {
+      "type": "stdio",
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "-e", "GITHUB_PERSONAL_ACCESS_TOKEN", "ghcr.io/github/github-mcp-server"]
+    }
+  }
+}

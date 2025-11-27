@@ -1,0 +1,23 @@
+{
+  "name": "Lead Engineer",
+  "description": "Agent acting as a lead engineer coordinating a software development team",
+  "prompt": "file://./lead-engineer.md",
+  "tools": ["*"],
+  "allowedTools": ["read", "write", "bash", "@file-watcher/*"],
+  "toolsSettings": {
+    "write": {
+      "allowedPaths": ["src/**", "**/agent-notes/**/*.md", ".kiro/specs/**"]
+    },
+    "bash": {
+      "allowedCommands": ["npm test *"]
+    }
+  },
+  "resources": ["file://.kiro/steering/**/*.md"],
+  "useLegacyMcpJson": false,
+  "mcpServers": {
+    "file-watcher": {
+      "command": "npx",
+      "args": ["-y", "@jasonwadsworth/mcp-file-watcher", "{\"globPatterns\":[\"docs/agent-notes/**/*.md\"],\"debouncePeriodMs\":15000}"]
+    }
+  }
+}

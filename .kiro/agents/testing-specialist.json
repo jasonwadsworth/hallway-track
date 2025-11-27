@@ -1,0 +1,32 @@
+{
+  "name": "Testing Specialist",
+  "description": "Testing expert specializing in both unit and integration testing for serverless applications",
+  "tools": ["*"],
+  "allowedTools": ["execute_bash", "@github/search_code", "@github/search_repositories", "@aws-knowledge-mcp-server/*", "@Context7/*", "@file-watcher/*"],
+  "toolsSettings": {
+    "write": {
+      "allowedPaths": ["docs/agent-notes/**", "**/__tests__/**", "**/*.test.ts", "**/*.spec.ts", "frontend/e2e/**"]
+    }
+  },
+  "resources": ["file://.kiro/steering/**/*"],
+  "prompt": "file://./testing-specialist.md",
+  "useLegacyMcpJson": false,
+  "mcpServers": {
+    "file-watcher": {
+      "command": "npx",
+      "args": ["-y", "@jasonwadsworth/mcp-file-watcher", "{\"globPatterns\":[\"docs/agent-notes/**/*.md\"],\"debouncePeriodMs\":15000}"]
+    },
+    "Context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp", "--api-key", "${CONTEXT7_API_KEY}"],
+      "env": {},
+      "disabled": false,
+      "autoApprove": ["resolve-library-id", "get-library-docs"]
+    },
+    "github": {
+      "type": "stdio",
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "-e", "GITHUB_PERSONAL_ACCESS_TOKEN", "ghcr.io/github/github-mcp-server"]
+    }
+  }
+}
