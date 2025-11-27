@@ -3,13 +3,13 @@
   "description": "Agent acting as a lead engineer coordinating a software development team",
   "prompt": "file://./lead-engineer.md",
   "tools": ["*"],
-  "allowedTools": ["read", "write", "bash", "@file-watcher/*"],
+  "allowedTools": ["@file-watcher/*", "@awslabs.frontend-mcp-server/*", "@aws-knowledge-mcp-server/*", "@Context7/*", "@github/*"],
   "toolsSettings": {
     "write": {
       "allowedPaths": ["src/**", "**/agent-notes/**/*.md", ".kiro/specs/**"]
     },
     "bash": {
-      "allowedCommands": ["npm test *"]
+      "allowedCommands": ["cd * && npm test *", "cd * && npm run test*"]
     }
   },
   "resources": ["file://.kiro/steering/**/*.md"],
@@ -18,6 +18,32 @@
     "file-watcher": {
       "command": "npx",
       "args": ["-y", "@jasonwadsworth/mcp-file-watcher", "{\"globPatterns\":[\"docs/agent-notes/**/*.md\"],\"debouncePeriodMs\":15000}"]
+    },
+    "awslabs.frontend-mcp-server": {
+      "command": "uvx",
+      "args": ["awslabs.frontend-mcp-server@latest"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": []
+    },
+    "aws-knowledge-mcp-server": {
+      "url": "https://knowledge-mcp.global.api.aws",
+      "type": "http",
+      "disabled": false
+    },
+    "Context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp", "--api-key", "${CONTEXT7_API_KEY}"],
+      "env": {},
+      "disabled": false,
+      "autoApprove": ["resolve-library-id", "get-library-docs"]
+    },
+    "github": {
+      "type": "stdio",
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "-e", "GITHUB_PERSONAL_ACCESS_TOKEN", "ghcr.io/github/github-mcp-server"]
     }
   }
 }

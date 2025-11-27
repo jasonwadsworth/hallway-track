@@ -2,10 +2,13 @@
   "name": "Testing Specialist",
   "description": "Testing expert specializing in both unit and integration testing for serverless applications",
   "tools": ["*"],
-  "allowedTools": ["execute_bash", "@github/search_code", "@github/search_repositories", "@aws-knowledge-mcp-server/*", "@Context7/*", "@file-watcher/*"],
+  "allowedTools": ["@github/search_code", "@github/search_repositories", "@awslabs.frontend-mcp-server/*", "@Context7/*", "@file-watcher/*"],
   "toolsSettings": {
     "write": {
       "allowedPaths": ["docs/agent-notes/**", "**/__tests__/**", "**/*.test.ts", "**/*.spec.ts", "frontend/e2e/**"]
+    },
+    "bash": {
+      "allowedCommands": ["cd * && npm test*", "cd * && npm run test*"]
     }
   },
   "resources": ["file://.kiro/steering/**/*"],
@@ -22,6 +25,15 @@
       "env": {},
       "disabled": false,
       "autoApprove": ["resolve-library-id", "get-library-docs"]
+    },
+    "awslabs.frontend-mcp-server": {
+      "command": "uvx",
+      "args": ["awslabs.frontend-mcp-server@latest"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": []
     },
     "github": {
       "type": "stdio",

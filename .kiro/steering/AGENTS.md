@@ -33,7 +33,8 @@ Writes unit tests (Vitest/Jest) and integration tests against deployed AWS resou
 ## Agent Communication
 
 Agents collaborate via `docs/agent-notes/`:
-- Each agent has a notes file: `docs/agent-notes/<agent-name>.md`
+- Only create a notes file (`docs/agent-notes/<agent-name>.md`) when you have work to request or completed work to report
+- Do NOT create empty or placeholder notes files
 - Tag other agents with `@<agent-name>` to request work
 - Mark completed work as **DONE** with details
 - After completing work, call `wait_for_changes` to monitor for new tasks
