@@ -3,32 +3,44 @@
 ## Lead Engineer
 Coordinates the team, validates work, runs tests/builds, and marks tasks complete. Delegates code changes to appropriate specialists.
 
-## CDK Expert
-Designs and implements AWS CDK infrastructure - stacks, constructs, Lambda configs, IAM roles, and cross-stack wiring.
+## Backend Engineer
+Designs and implements AWS infrastructure and serverless backend:
+- AWS CDK stacks, constructs, Lambda configs, IAM roles
+- TypeScript Lambda handlers for AppSync resolvers, Step Functions tasks, event processing
+- Step Functions state machines, EventBridge rules, SQS/SNS patterns, async workflows
 
-## AppSync Architect
-Designs GraphQL schemas and implements AppSync resolvers (VTL/JS direct resolvers preferred, Lambda when needed).
+## Data & API Engineer
+Designs data layer and GraphQL API:
+- GraphQL schemas and AppSync resolvers (VTL/JS direct resolvers preferred, Lambda when needed)
+- DynamoDB table schemas, access patterns, GSIs, and data relationships
 
-## Lambda Implementer
-Implements TypeScript Lambda handlers for AppSync resolvers, Step Functions tasks, and event processing.
+## Frontend Engineer
+Builds the React application:
+- React/TypeScript components
+- AppSync GraphQL integration
+- Cognito auth flows
+- Frontend tests
 
 ## AI Agent Specialist
 Implements AI agent workflows using Python, Strands Agents SDK, and AWS Bedrock.
 
-## Workflow Orchestrator
-Designs Step Functions state machines, EventBridge rules, SQS/SNS patterns, and async workflows.
+## Cross-Cutting Responsibilities
 
-## Data Modeling
-Designs DynamoDB table schemas, access patterns, GSIs, and data relationships.
+### Security
+All agents are responsible for security in their domain:
+- Backend Engineer: IAM policies, Lambda permissions
+- Data & API Engineer: AppSync authorization rules
+- Frontend Engineer: Cognito configuration, auth flows
 
-## Frontend Specialist
-Builds React/TypeScript components, integrates with AppSync GraphQL, and handles Cognito auth flows.
+### Testing
+Each agent writes tests for their own code when needed.
 
-## Security Reviewer
-Reviews IAM policies, authorization rules, Cognito configuration, and AI guardrails.
+## Tool Usage Guidelines
 
-## Testing Specialist
-Writes unit tests (Vitest/Jest) and integration tests against deployed AWS resources.
+### AWS Operations
+- Use `aws` tool for all AWS API calls
+- Do NOT use `shell` with `aws` CLI commands
+- `aws` tool provides structured input/output and doesn't require CLI installation
 
 ## Agent Communication
 
@@ -37,4 +49,4 @@ Agents collaborate via `docs/agent-notes/`:
 - Do NOT create empty or placeholder notes files
 - Tag other agents with `@<agent-name>` to request work
 - Mark completed work as **DONE** with details
-- After completing work, call `wait_for_changes` to monitor for new tasks
+- After completing work, print `[<agent-name>] waiting for changes...` then call `wait_for_changes` to monitor for new tasks
