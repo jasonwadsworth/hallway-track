@@ -7,6 +7,7 @@ import { ErrorMessage } from './ErrorMessage';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ConnectionRequestModal } from './ConnectionRequestModal';
 import { PullToRefresh } from './PullToRefresh';
+import { ProfilePicture } from './ProfilePicture';
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import './ConnectionRequestsManager.css';
 
@@ -272,10 +273,14 @@ export function ConnectionRequestsManager() {
                 {incomingRequests.map((request) => (
                   <div key={request.id} className="request-item">
                     <div className="request-user">
-                      <img
-                        src={`https://www.gravatar.com/avatar/${request.initiator?.gravatarHash}?d=identicon&s=100`}
-                        alt={request.initiator?.displayName || 'User'}
+                      <ProfilePicture
+                        uploadedProfilePictureUrl={request.initiator?.uploadedProfilePictureUrl}
+                        profilePictureUrl={request.initiator?.profilePictureUrl}
+                        gravatarHash={request.initiator?.gravatarHash || ''}
+                        displayName={request.initiator?.displayName || 'User'}
+                        size={50}
                         className="request-avatar"
+                        loading="lazy"
                       />
                       <div className="request-info">
                         <div className="request-name">
@@ -330,10 +335,14 @@ export function ConnectionRequestsManager() {
                 {outgoingRequests.map((request) => (
                   <div key={request.id} className="request-item">
                     <div className="request-user">
-                      <img
-                        src={`https://www.gravatar.com/avatar/${request.recipient?.gravatarHash}?d=identicon&s=100`}
-                        alt={request.recipient?.displayName || 'User'}
+                      <ProfilePicture
+                        uploadedProfilePictureUrl={request.recipient?.uploadedProfilePictureUrl}
+                        profilePictureUrl={request.recipient?.profilePictureUrl}
+                        gravatarHash={request.recipient?.gravatarHash || ''}
+                        displayName={request.recipient?.displayName || 'User'}
+                        size={50}
                         className="request-avatar"
+                        loading="lazy"
                       />
                       <div className="request-info">
                         <div className="request-name">

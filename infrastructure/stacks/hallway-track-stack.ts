@@ -870,6 +870,147 @@ export class HallwayTrackStack extends cdk.Stack {
             description: 'AppSync GraphQL API ID',
         });
 
+        // ===== Profile Pictures (S3 + CloudFront + Lambdas) =====
+
+        // Create S3 bucket for profile pictures
+        const profilePicturesBucket = new s3.Bucket(this, 'ProfilePicturesBucket', {
+            bucketName: `hallway-track-profile-pictures-${this.account}`,
+            publicReadAccess: false,
+            blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+            removalPolicy: cdk.RemovalPolicy.RETAIN,
+            encryption: s3.BucketEncryption.S3_MANAGED,
+            cors: [
+                {
+                    allowedMethods: [s3.HttpMethods.PUT],
+                    allowedOrigins: ['*'],
+                    allowedHeaders: ['*'],
+                    maxAge: 3000,
+                },
+            ],
+        });
+
+        // Create CloudFront distribution for profile pictures
+        const profilePicturesDistribution = new cloudfront.Distribution(this, 'ProfilePicturesDistribution', {
+            defaultBehavior: {
+                origin: origins.S3BucketOrigin.withOriginAccessControl(profilePicturesBucket),
+                viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+                compress: true,
+            },
+            priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
+            comment: 'Hallway Track Profile Pictures Distribution',
+        });
+
+        // Upload URL Generator Lambda
+        const profilePictureUploadFunction = new NodejsFunction(this, 'ProfilePictureUploadFunction', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            handler: 'handler',
+            entry: path.join(__dirname, '../lambda/profile-picture-upload/index.ts'),
+            architecture: lambda.Architecture.ARM_64,
+            timeout: cdk.Duration.seconds(10),
+            memorySize: 256,
+            bundling: {
+                externalModules: ['@aws-sdk/*'],
+            },
+            environment: {
+                PROFILE_PICTURES_BUCKET_NAME: profilePicturesBucket.bucketName,
+            },
+        });
+
+        profilePicturesBucket.grantPut(profilePictureUploadFunction);
+
+        // Profile Picture Handler Lambda (updates DynamoDB when S3 upload completes)
+        const profilePictureHandlerFunction = new NodejsFunction(this, 'ProfilePictureHandlerFunction', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            handler: 'handler',
+            entry: path.join(__dirname, '../lambda/profile-picture-handler/index.ts'),
+            architecture: lambda.Architecture.ARM_64,
+            timeout: cdk.Duration.seconds(30),
+            memorySize: 256,
+            bundling: {
+                externalModules: ['@aws-sdk/*'],
+            },
+            environment: {
+                USERS_TABLE_NAME: this.usersTable.tableName,
+                CLOUDFRONT_DISTRIBUTION_ID: profilePicturesDistribution.distributionId,
+                CLOUDFRONT_DOMAIN: profilePicturesDistribution.distributionDomainName,
+            },
+        });
+
+        this.usersTable.grantReadWriteData(profilePictureHandlerFunction);
+        profilePictureHandlerFunction.addToRolePolicy(
+            new iam.PolicyStatement({
+                actions: ['cloudfront:CreateInvalidation'],
+                resources: [`arn:aws:cloudfront::${this.account}:distribution/${profilePicturesDistribution.distributionId}`],
+            })
+        );
+
+        // S3 event notification for profile picture uploads
+        profilePictureHandlerFunction.addEventSource(
+            new lambdaEventSources.S3EventSource(profilePicturesBucket, {
+                events: [s3.EventType.OBJECT_CREATED],
+            })
+        );
+
+        // Remove Profile Picture Lambda
+        const profilePictureRemoveFunction = new NodejsFunction(this, 'ProfilePictureRemoveFunction', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            handler: 'handler',
+            entry: path.join(__dirname, '../lambda/profile-picture-remove/index.ts'),
+            architecture: lambda.Architecture.ARM_64,
+            timeout: cdk.Duration.seconds(30),
+            memorySize: 256,
+            bundling: {
+                externalModules: ['@aws-sdk/*'],
+            },
+            environment: {
+                PROFILE_PICTURES_BUCKET_NAME: profilePicturesBucket.bucketName,
+                USERS_TABLE_NAME: this.usersTable.tableName,
+                CLOUDFRONT_DISTRIBUTION_ID: profilePicturesDistribution.distributionId,
+            },
+        });
+
+        profilePicturesBucket.grantReadWrite(profilePictureRemoveFunction);
+        profilePicturesBucket.grantDelete(profilePictureRemoveFunction);
+        this.usersTable.grantReadWriteData(profilePictureRemoveFunction);
+        profilePictureRemoveFunction.addToRolePolicy(
+            new iam.PolicyStatement({
+                actions: ['cloudfront:CreateInvalidation'],
+                resources: [`arn:aws:cloudfront::${this.account}:distribution/${profilePicturesDistribution.distributionId}`],
+            })
+        );
+
+        // AppSync data sources for profile picture operations
+        const profilePictureUploadDataSource = this.api.addLambdaDataSource('ProfilePictureUploadDataSource', profilePictureUploadFunction);
+        const profilePictureRemoveDataSource = this.api.addLambdaDataSource('ProfilePictureRemoveDataSource', profilePictureRemoveFunction);
+
+        // AppSync resolvers for profile picture mutations
+        profilePictureUploadDataSource.createResolver('GenerateProfilePictureUploadUrlResolver', {
+            typeName: 'Mutation',
+            fieldName: 'generateProfilePictureUploadUrl',
+        });
+
+        profilePictureRemoveDataSource.createResolver('RemoveProfilePictureResolver', {
+            typeName: 'Mutation',
+            fieldName: 'removeProfilePicture',
+        });
+
+        // Profile Pictures Outputs
+        new cdk.CfnOutput(this, 'ProfilePicturesBucketName', {
+            value: profilePicturesBucket.bucketName,
+            description: 'S3 Bucket for Profile Pictures',
+        });
+
+        new cdk.CfnOutput(this, 'ProfilePicturesDistributionId', {
+            value: profilePicturesDistribution.distributionId,
+            description: 'CloudFront Distribution ID for Profile Pictures',
+        });
+
+        new cdk.CfnOutput(this, 'ProfilePicturesDistributionDomain', {
+            value: profilePicturesDistribution.distributionDomainName,
+            description: 'CloudFront Distribution Domain for Profile Pictures',
+        });
+
         // ===== Frontend Hosting (S3 + CloudFront) =====
 
         // Create S3 bucket for website hosting

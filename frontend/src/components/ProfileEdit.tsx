@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { generateClient } from 'aws-amplify/api';
 import type { User } from '../types';
 import { getMyProfile } from '../graphql/queries';
-import { updateDisplayName } from '../graphql/mutations';
-import { getGravatarUrl } from '../utils/gravatar';
+import { updateDisplayName, removeProfilePicture } from '../graphql/mutations';
+import { ProfilePicture } from './ProfilePicture';
+import { ProfilePictureUpload } from './ProfilePictureUpload';
 import { LoadingSpinner } from './LoadingSpinner';
 import { parseGraphQLError, handleAuthError } from '../utils/errorHandling';
 import './ProfileEdit.css';
@@ -18,7 +19,9 @@ export function ProfileEdit({ onCancel, onSave }: ProfileEditProps) {
   const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [removingPicture, setRemovingPicture] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showUpload, setShowUpload] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -37,17 +40,13 @@ export function ProfileEdit({ onCancel, onSave }: ProfileEditProps) {
         setProfile(userProfile);
         setDisplayName(userProfile.displayName);
       } else {
-        // Profile doesn't exist yet - this shouldn't happen but handle gracefully
         setError('Profile not found. Please try refreshing the page or contact support.');
       }
     } catch (err) {
       console.error('Error loading profile:', err);
       const errorInfo = parseGraphQLError(err);
       setError(errorInfo.message);
-
-      if (errorInfo.isAuthError) {
-        await handleAuthError();
-      }
+      if (errorInfo.isAuthError) await handleAuthError();
     } finally {
       setLoading(false);
     }
@@ -72,21 +71,38 @@ export function ProfileEdit({ onCancel, onSave }: ProfileEditProps) {
       const client = generateClient();
       await client.graphql({
         query: updateDisplayName,
-        variables: {
-          displayName: displayName.trim(),
-        },
+        variables: { displayName: displayName.trim() },
       });
       onSave();
     } catch (err) {
       console.error('Error updating profile:', err);
       const errorInfo = parseGraphQLError(err);
       setError(errorInfo.message);
-
-      if (errorInfo.isAuthError) {
-        await handleAuthError();
-      }
+      if (errorInfo.isAuthError) await handleAuthError();
       setSaving(false);
     }
+  }
+
+  async function handleRemovePicture() {
+    try {
+      setRemovingPicture(true);
+      setError(null);
+      const client = generateClient();
+      await client.graphql({ query: removeProfilePicture });
+      await loadProfile();
+    } catch (err) {
+      console.error('Error removing profile picture:', err);
+      const errorInfo = parseGraphQLError(err);
+      setError(errorInfo.message);
+      if (errorInfo.isAuthError) await handleAuthError();
+    } finally {
+      setRemovingPicture(false);
+    }
+  }
+
+  function handleUploadComplete() {
+    setShowUpload(false);
+    loadProfile();
   }
 
   if (loading) {
@@ -101,17 +117,44 @@ export function ProfileEdit({ onCancel, onSave }: ProfileEditProps) {
     return <div className="profile-edit">No profile found.</div>;
   }
 
+  if (showUpload) {
+    return (
+      <div className="profile-edit">
+        <h3>Upload Profile Picture</h3>
+        <ProfilePictureUpload
+          onUploadComplete={handleUploadComplete}
+          onCancel={() => setShowUpload(false)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="profile-edit">
       <div className="profile-header">
-        <img
-          src={getGravatarUrl(profile.gravatarHash)}
-          alt={profile.displayName}
+        <ProfilePicture
+          uploadedProfilePictureUrl={profile.uploadedProfilePictureUrl}
+          profilePictureUrl={profile.profilePictureUrl}
+          gravatarHash={profile.gravatarHash}
+          displayName={profile.displayName}
+          size={120}
           className="profile-avatar"
         />
-        <p className="gravatar-note">
-          Profile picture from <a href="https://gravatar.com" target="_blank" rel="noopener noreferrer">Gravatar</a>
-        </p>
+        <div className="profile-picture-actions">
+          <button type="button" onClick={() => setShowUpload(true)} className="btn-link">
+            Change Picture
+          </button>
+          {profile.uploadedProfilePictureUrl && (
+            <button
+              type="button"
+              onClick={handleRemovePicture}
+              className="btn-link btn-danger"
+              disabled={removingPicture}
+            >
+              {removingPicture ? 'Removing...' : 'Remove Picture'}
+            </button>
+          )}
+        </div>
       </div>
 
       <form onSubmit={handleSave} className="profile-form">
@@ -143,19 +186,10 @@ export function ProfileEdit({ onCancel, onSave }: ProfileEditProps) {
         {error && <div className="error-message">{error}</div>}
 
         <div className="form-actions">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="btn-secondary"
-            disabled={saving}
-          >
+          <button type="button" onClick={onCancel} className="btn-secondary" disabled={saving}>
             Cancel
           </button>
-          <button
-            type="submit"
-            className="btn-primary"
-            disabled={saving}
-          >
+          <button type="submit" className="btn-primary" disabled={saving}>
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>

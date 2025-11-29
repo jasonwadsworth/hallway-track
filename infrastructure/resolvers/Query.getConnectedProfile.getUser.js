@@ -37,6 +37,7 @@ export function response(ctx) {
         displayName: user.displayName,
         gravatarHash: user.gravatarHash,
         profilePictureUrl: user.profilePictureUrl,
+        uploadedProfilePictureUrl: user.uploadedProfilePictureUrl,
         contactLinks: visibleContactLinks,
         badges: user.badges || [],
     };

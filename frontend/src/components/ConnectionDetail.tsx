@@ -207,6 +207,7 @@ export function ConnectionDetail() {
 
             <div className="detail-header">
                 <ProfilePicture
+                    uploadedProfilePictureUrl={connectedUser.uploadedProfilePictureUrl}
                     profilePictureUrl={connectedUser.profilePictureUrl}
                     gravatarHash={connectedUser.gravatarHash}
                     displayName={connectedUser.displayName}

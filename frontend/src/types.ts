@@ -39,6 +39,7 @@ export interface User {
     displayName: string;
     gravatarHash: string;
     profilePictureUrl?: string;
+    uploadedProfilePictureUrl?: string;
     contactLinks: ContactLink[];
     badges: Badge[];
     connectionCount: number;
@@ -51,6 +52,7 @@ export interface PublicProfile {
     displayName: string;
     gravatarHash: string;
     profilePictureUrl?: string;
+    uploadedProfilePictureUrl?: string;
 }
 
 export interface ConnectedProfile {
@@ -58,6 +60,7 @@ export interface ConnectedProfile {
     displayName: string;
     gravatarHash: string;
     profilePictureUrl?: string;
+    uploadedProfilePictureUrl?: string;
     contactLinks: ContactLink[];
     badges: Badge[];
 }

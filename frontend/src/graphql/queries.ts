@@ -6,6 +6,7 @@ export const getMyProfile = /* GraphQL */ `
             displayName
             gravatarHash
             profilePictureUrl
+            uploadedProfilePictureUrl
             contactLinks {
                 id
                 label
@@ -42,6 +43,7 @@ export const getPublicProfile = /* GraphQL */ `
             displayName
             gravatarHash
             profilePictureUrl
+            uploadedProfilePictureUrl
         }
     }
 `;
@@ -53,6 +55,7 @@ export const getConnectedProfile = /* GraphQL */ `
             displayName
             gravatarHash
             profilePictureUrl
+            uploadedProfilePictureUrl
             contactLinks {
                 id
                 label
@@ -123,6 +126,7 @@ export const getIncomingConnectionRequests = /* GraphQL */ `
                 displayName
                 gravatarHash
                 profilePictureUrl
+                uploadedProfilePictureUrl
             }
             status
             createdAt
@@ -143,6 +147,7 @@ export const getOutgoingConnectionRequests = /* GraphQL */ `
                 displayName
                 gravatarHash
                 profilePictureUrl
+                uploadedProfilePictureUrl
             }
             status
             createdAt

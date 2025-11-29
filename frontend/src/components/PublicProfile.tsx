@@ -75,6 +75,7 @@ export function PublicProfile() {
         <div className="public-profile">
             <div className="profile-header">
                 <ProfilePicture
+                    uploadedProfilePictureUrl={profile.uploadedProfilePictureUrl}
                     profilePictureUrl={profile.profilePictureUrl}
                     gravatarHash={profile.gravatarHash}
                     displayName={profile.displayName}

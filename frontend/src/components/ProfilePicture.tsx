@@ -2,30 +2,53 @@ import { useState } from 'react';
 import { getGravatarUrl } from '../utils/gravatar';
 
 interface ProfilePictureProps {
+    uploadedProfilePictureUrl?: string;
     profilePictureUrl?: string;
     gravatarHash: string;
     displayName: string;
     size?: number;
     className?: string;
+    loading?: 'lazy' | 'eager';
 }
 
-export function ProfilePicture({ profilePictureUrl, gravatarHash, displayName, size = 200, className = '' }: ProfilePictureProps) {
-    const [imageError, setImageError] = useState(false);
+export function ProfilePicture({
+    uploadedProfilePictureUrl,
+    profilePictureUrl,
+    gravatarHash,
+    displayName,
+    size = 200,
+    className = '',
+    loading,
+}: ProfilePictureProps) {
+    const [uploadedError, setUploadedError] = useState(false);
+    const [googleError, setGoogleError] = useState(false);
 
-    // Use Google profile picture if available and hasn't errored
-    const imageUrl = profilePictureUrl && !imageError ? profilePictureUrl : getGravatarUrl(gravatarHash, size);
+    // Priority: Uploaded → Google → Gravatar
+    const getImageUrl = (): string => {
+        if (uploadedProfilePictureUrl && !uploadedError) {
+            return uploadedProfilePictureUrl;
+        }
+        if (profilePictureUrl && !googleError) {
+            return profilePictureUrl;
+        }
+        return getGravatarUrl(gravatarHash, size);
+    };
+
+    const handleError = () => {
+        if (uploadedProfilePictureUrl && !uploadedError) {
+            setUploadedError(true);
+        } else if (profilePictureUrl && !googleError) {
+            setGoogleError(true);
+        }
+    };
 
     return (
         <img
-            src={imageUrl}
+            src={getImageUrl()}
             alt={`${displayName}'s profile picture`}
             className={className}
-            onError={() => {
-                if (profilePictureUrl && !imageError) {
-                    // Fallback to Gravatar if Google image fails to load
-                    setImageError(true);
-                }
-            }}
+            loading={loading}
+            onError={handleError}
         />
     );
 }

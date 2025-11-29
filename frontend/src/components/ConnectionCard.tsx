@@ -29,11 +29,13 @@ export function ConnectionCard({ connection, onClick, onRemove }: ConnectionCard
                 {connectedUser ? (
                     <>
                         <ProfilePicture
+                            uploadedProfilePictureUrl={connectedUser.uploadedProfilePictureUrl}
                             profilePictureUrl={connectedUser.profilePictureUrl}
                             gravatarHash={connectedUser.gravatarHash}
                             displayName={connectedUser.displayName}
                             size={60}
                             className="card-avatar"
+                            loading="lazy"
                         />
                         <div className="card-info">
                             <h3 className="card-name">{connectedUser.displayName}</h3>

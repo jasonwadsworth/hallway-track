@@ -78,6 +78,7 @@ export function ProfileView() {
         <div className="profile-view">
             <div className="profile-header">
                 <ProfilePicture
+                    uploadedProfilePictureUrl={profile.uploadedProfilePictureUrl}
                     profilePictureUrl={profile.profilePictureUrl}
                     gravatarHash={profile.gravatarHash}
                     displayName={profile.displayName}

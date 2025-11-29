@@ -20,5 +20,6 @@ export function response(ctx) {
         displayName: ctx.result.displayName,
         gravatarHash: ctx.result.gravatarHash,
         profilePictureUrl: ctx.result.profilePictureUrl,
+        uploadedProfilePictureUrl: ctx.result.uploadedProfilePictureUrl,
     };
 }

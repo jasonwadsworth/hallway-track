@@ -216,3 +216,22 @@ export const updateConnectionRequestMetadata = /* GraphQL */ `
     }
   }
 `;
+
+export const generateProfilePictureUploadUrl = /* GraphQL */ `
+  mutation GenerateProfilePictureUploadUrl($filename: String!, $contentType: String!) {
+    generateProfilePictureUploadUrl(filename: $filename, contentType: $contentType) {
+      uploadUrl
+      key
+      expiresIn
+    }
+  }
+`;
+
+export const removeProfilePicture = /* GraphQL */ `
+  mutation RemoveProfilePicture {
+    removeProfilePicture {
+      id
+      uploadedProfilePictureUrl
+    }
+  }
+`;

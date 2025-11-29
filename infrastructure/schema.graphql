@@ -4,6 +4,7 @@ type User {
     displayName: String!
     gravatarHash: String!
     profilePictureUrl: String
+    uploadedProfilePictureUrl: String
     contactLinks: [ContactLink!]!
     badges: [Badge!]!
     connectionCount: Int!
@@ -62,6 +63,7 @@ type PublicProfile {
     displayName: String!
     gravatarHash: String!
     profilePictureUrl: String
+    uploadedProfilePictureUrl: String
 }
 
 type ConnectedProfile {
@@ -69,6 +71,7 @@ type ConnectedProfile {
     displayName: String!
     gravatarHash: String!
     profilePictureUrl: String
+    uploadedProfilePictureUrl: String
     contactLinks: [ContactLink!]!
     badges: [Badge!]!
 }
@@ -111,6 +114,12 @@ type ConnectionStatus {
     requestDirection: String
 }
 
+type ProfilePictureUploadUrl {
+    uploadUrl: String!
+    key: String!
+    expiresIn: Int!
+}
+
 type Query {
     getMyProfile: User
     getPublicProfile(userId: ID!): PublicProfile
@@ -139,6 +148,8 @@ type Mutation {
     denyConnectionRequest(requestId: ID!): ConnectionRequestResult!
     cancelConnectionRequest(requestId: ID!): ConnectionRequestResult!
     updateConnectionRequestMetadata(requestId: ID!, note: String, tags: [String!]): ConnectionRequestResult!
+    generateProfilePictureUploadUrl(filename: String!, contentType: String!): ProfilePictureUploadUrl!
+    removeProfilePicture: User!
 }
 
 schema {
