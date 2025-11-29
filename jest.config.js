@@ -6,7 +6,6 @@ module.exports = {
   collectCoverageFrom: [
     'infrastructure/lambda/**/*.ts',
     '!infrastructure/lambda/**/*.d.ts',
-    '!infrastructure/lambda/**/index.ts',
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],

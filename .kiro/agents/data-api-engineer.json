@@ -1,0 +1,44 @@
+{
+  "name": "Data & API Engineer",
+  "hooks": {
+    "postToolUse": [
+      {
+        "command": ".kiro/scripts/log-activity.sh data-api-engineer"
+      }
+    ]
+  },
+  "description": "AWS expert specializing in GraphQL API design, AppSync resolvers, and DynamoDB data modeling",
+  "tools": ["*"],
+  "allowedTools": ["@github/search_code", "@github/search_repositories", "@aws-knowledge-mcp-server/*", "@file-watcher/*"],
+  "toolsSettings": {
+    "write": {
+      "allowedPaths": ["docs/agent-notes/**", "infrastructure/schema.graphql", "infrastructure/resolvers/**", "infrastructure/stacks/**"]
+    },
+    "execute_bash": {
+      "autoAllowReadonly": true
+    },
+    "aws": {
+      "allowedServices": ["appsync", "dynamodb"],
+      "autoAllowReadonly": true
+    }
+  },
+  "resources": ["file://.kiro/steering/**/*"],
+  "prompt": "file://./data-api-engineer.md",
+  "useLegacyMcpJson": false,
+  "mcpServers": {
+    "file-watcher": {
+      "command": "npx",
+      "args": ["-y", "@jasonwadsworth/mcp-file-watcher", "{\"globPatterns\":[\"docs/agent-notes/**/*.md\"],\"debouncePeriodMs\":3000}"]
+    },
+    "aws-knowledge-mcp-server": {
+      "url": "https://knowledge-mcp.global.api.aws",
+      "type": "http",
+      "disabled": false
+    },
+    "github": {
+      "type": "stdio",
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "-e", "GITHUB_PERSONAL_ACCESS_TOKEN", "ghcr.io/github/github-mcp-server"]
+    }
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "name": "Lead Engineer",
+  "description": "Agent acting as a lead engineer coordinating a software development team",
+  "prompt": "file://./lead-engineer.md",
+  "tools": ["*"],
+  "allowedTools": [
+    "@file-watcher/*",
+    "@awslabs.frontend-mcp-server/*",
+    "@awslabs.cdk-mcp-server/*",
+    "@aws-knowledge-mcp-server/*",
+    "@Context7/*",
+    "@github/*",
+    "@playwright/*",
+    "@chrome-devtools/*"
+  ],
+  "toolsSettings": {
+    "write": {
+      "allowedPaths": ["**"]
+    },
+    "execute_bash": {
+      "autoAllowReadonly": true,
+      "allowedCommands": [
+        "npm .*",
+        "cd .* && npm .*",
+        "npx .*",
+        "cd .* && npx .*",
+        "git status.*",
+        "git diff.*",
+        "git log.*",
+        "git branch.*",
+        "git show.*",
+        "cd .* && git status.*",
+        "cd .* && git diff.*",
+        "cd .* && git log.*",
+        "cd .* && git branch.*",
+        "cd .* && git show.*",
+        "cdk .*",
+        "cd .* && cdk .*",
+        "mv .*/docs/agent-notes .*/\\.kiro/specs/.*",
+        "rm .*/\\.kiro/logs/activity-log"
+      ]
+    },
+    "aws": {
+      "allowedServices": ["appsync", "cloudformation", "cloudwatch"],
+      "autoAllowReadonly": true
+    }
+  },
+  "resources": ["file://.kiro/steering/**/*.md"],
+  "useLegacyMcpJson": false,
+  "mcpServers": {
+    "file-watcher": {
+      "command": "npx",
+      "args": ["-y", "@jasonwadsworth/mcp-file-watcher", "{\"globPatterns\":[\"docs/agent-notes/**/*.md\"],\"debouncePeriodMs\":3000}"]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["-y", "chrome-devtools-mcp@latest"]
+    },
+    "awslabs.frontend-mcp-server": {
+      "command": "uvx",
+      "args": ["awslabs.frontend-mcp-server@latest"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": []
+    },
+    "aws-knowledge-mcp-server": {
+      "url": "https://knowledge-mcp.global.api.aws",
+      "type": "http",
+      "disabled": false
+    },
+    "awslabs.cdk-mcp-server": {
+      "command": "uvx",
+      "args": ["awslabs.cdk-mcp-server@latest"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "timeout": 120000,
+      "disabled": false
+    },
+    "Context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp", "--api-key", "${CONTEXT7_API_KEY}"],
+      "env": {},
+      "disabled": false,
+      "autoApprove": ["resolve-library-id", "get-library-docs"]
+    },
+    "github": {
+      "type": "stdio",
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "-e", "GITHUB_PERSONAL_ACCESS_TOKEN", "ghcr.io/github/github-mcp-server"]
+    }
+  }
+}

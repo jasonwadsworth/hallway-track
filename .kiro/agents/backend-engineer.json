@@ -1,0 +1,94 @@
+{
+  "name": "Backend Engineer",
+  "hooks": {
+    "postToolUse": [
+      {
+        "command": ".kiro/scripts/log-activity.sh backend-engineer"
+      }
+    ]
+  },
+  "description": "AWS backend expert specializing in CDK infrastructure, Lambda functions, and serverless workflows",
+  "tools": ["*"],
+  "allowedTools": [
+    "@github/search_code",
+    "@github/search_repositories",
+    "@aws-knowledge-mcp-server/*",
+    "@awslabs.cdk-mcp-server/*",
+    "@Context7/*",
+    "@file-watcher/*"
+  ],
+  "toolsSettings": {
+    "write": {
+      "allowedPaths": [
+        "docs/agent-notes/**",
+        "infrastructure/**",
+        "**/cdk-construct.ts",
+        "**/*.asl.json"
+      ]
+    },
+    "execute_bash": {
+      "autoAllowReadonly": true,
+      "allowedCommands": [
+        "npm run build",
+        "npm test.*",
+        "npm run test.*",
+        "npm run cdk.*",
+        "npx vitest.*",
+        "cdk .*",
+        "cd .* && npm run build",
+        "cd .* && npm test.*",
+        "cd .* && npm run test.*",
+        "cd .* && npm run cdk.*",
+        "cd .* && npx vitest.*",
+        "cd .* && cdk .*"
+      ]
+    },
+    "aws": {
+      "allowedServices": [
+        "cloudformation",
+        "lambda",
+        "cloudwatch",
+        "stepfunctions",
+        "events",
+        "sqs",
+        "sns"
+      ],
+      "autoAllowReadonly": true
+    }
+  },
+  "resources": ["file://.kiro/steering/**/*"],
+  "prompt": "file://./backend-engineer.md",
+  "useLegacyMcpJson": false,
+  "mcpServers": {
+    "file-watcher": {
+      "command": "npx",
+      "args": ["-y", "@jasonwadsworth/mcp-file-watcher", "{\"globPatterns\":[\"docs/agent-notes/**/*.md\"],\"debouncePeriodMs\":3000}"]
+    },
+    "awslabs.cdk-mcp-server": {
+      "command": "uvx",
+      "args": ["awslabs.cdk-mcp-server@latest"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "timeout": 120000,
+      "disabled": false
+    },
+    "aws-knowledge-mcp-server": {
+      "url": "https://knowledge-mcp.global.api.aws",
+      "type": "http",
+      "disabled": false
+    },
+    "Context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp", "--api-key", "${CONTEXT7_API_KEY}"],
+      "env": {},
+      "disabled": false,
+      "autoApprove": ["resolve-library-id", "get-library-docs"]
+    },
+    "github": {
+      "type": "stdio",
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "-e", "GITHUB_PERSONAL_ACCESS_TOKEN", "ghcr.io/github/github-mcp-server"]
+    }
+  }
+}

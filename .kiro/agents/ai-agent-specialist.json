@@ -1,0 +1,54 @@
+{
+  "name": "AI Agent Specialist",
+  "hooks": {
+    "postToolUse": [
+      {
+        "command": ".kiro/scripts/log-activity.sh ai-agent-specialist"
+      }
+    ]
+  },
+  "description": "AI integration expert specializing in AWS Bedrock and the Strands Agents SDK",
+  "tools": ["*"],
+  "allowedTools": ["@github/search_code", "@github/search_repositories", "@strands-agents/*", "@file-watcher/*", "@aws-knowledge-mcp-server/*"],
+  "toolsSettings": {
+    "write": {
+      "allowedPaths": ["docs/agent-notes/**", "infrastructure/lambda/**"]
+    },
+    "execute_bash": {
+      "autoAllowReadonly": true,
+      "allowedCommands": ["pip .*", "python .*", "pytest .*", "uv .*", "cd .* && pip .*", "cd .* && python .*", "cd .* && pytest .*", "cd .* && uv .*"]
+    },
+    "aws": {
+      "allowedServices": ["bedrock", "bedrock-runtime", "bedrock-agent", "bedrock-agent-runtime"],
+      "autoAllowReadonly": true
+    }
+  },
+  "resources": ["file://.kiro/steering/**/*"],
+  "prompt": "file://./ai-agent-specialist.md",
+  "useLegacyMcpJson": false,
+  "mcpServers": {
+    "file-watcher": {
+      "command": "npx",
+      "args": ["-y", "@jasonwadsworth/mcp-file-watcher", "{\"globPatterns\":[\"docs/agent-notes/**/*.md\"],\"debouncePeriodMs\":3000}"]
+    },
+    "strands-agents": {
+      "command": "uvx",
+      "args": ["strands-agents-mcp-server"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "INFO"
+      },
+      "disabled": false,
+      "autoApprove": ["search_docs", "fetch_doc"]
+    },
+    "aws-knowledge-mcp-server": {
+      "url": "https://knowledge-mcp.global.api.aws",
+      "type": "http",
+      "disabled": false
+    },
+    "github": {
+      "type": "stdio",
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "-e", "GITHUB_PERSONAL_ACCESS_TOKEN", "ghcr.io/github/github-mcp-server"]
+    }
+  }
+}
