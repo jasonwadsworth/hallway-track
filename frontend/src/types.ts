@@ -120,3 +120,22 @@ export interface UpdateConnectionRequestMetadataInput {
     note?: string;
     tags?: string[];
 }
+
+// Leaderboard types
+export interface LeaderboardEntry {
+    rank: number;
+    userId: string;
+    displayName: string;
+    profilePictureUrl?: string;
+    uploadedProfilePictureUrl?: string;
+    gravatarHash: string;
+    connectionCount: number;
+    isCurrentUser: boolean;
+}
+
+export interface LeaderboardResult {
+    entries: LeaderboardEntry[];
+    currentUserEntry?: LeaderboardEntry;
+    hasMore: boolean;
+    nextToken?: string;
+}

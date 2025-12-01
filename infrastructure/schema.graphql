@@ -120,6 +120,24 @@ type ProfilePictureUploadUrl {
     expiresIn: Int!
 }
 
+type LeaderboardEntry {
+    rank: Int!
+    userId: ID!
+    displayName: String!
+    profilePictureUrl: String
+    uploadedProfilePictureUrl: String
+    gravatarHash: String!
+    connectionCount: Int!
+    isCurrentUser: Boolean!
+}
+
+type LeaderboardResult {
+    entries: [LeaderboardEntry!]!
+    currentUserEntry: LeaderboardEntry
+    hasMore: Boolean!
+    nextToken: String
+}
+
 type Query {
     getMyProfile: User
     getPublicProfile(userId: ID!): PublicProfile
@@ -130,6 +148,7 @@ type Query {
     getIncomingConnectionRequests: [ConnectionRequest!]!
     getOutgoingConnectionRequests: [ConnectionRequest!]!
     checkConnectionOrRequest(userId: ID!): ConnectionStatus!
+    getLeaderboard(limit: Int, nextToken: String): LeaderboardResult!
 }
 
 type Mutation {

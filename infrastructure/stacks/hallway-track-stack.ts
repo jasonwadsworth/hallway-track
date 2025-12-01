@@ -66,6 +66,19 @@ export class HallwayTrackStack extends cdk.Stack {
             stream: dynamodb.StreamViewType.NEW_AND_OLD_IMAGES,
         });
 
+        // Add GSI for leaderboard queries (sorted by connection count)
+        this.usersTable.addGlobalSecondaryIndex({
+            indexName: 'ByConnectionCount',
+            partitionKey: {
+                name: 'GSI2PK',
+                type: dynamodb.AttributeType.STRING,
+            },
+            sortKey: {
+                name: 'GSI2SK',
+                type: dynamodb.AttributeType.STRING,
+            },
+        });
+
         // Create post-confirmation Lambda function
         const postConfirmationFunction = new NodejsFunction(this, 'PostConfirmationFunction', {
             runtime: lambda.Runtime.NODEJS_20_X,
@@ -500,6 +513,25 @@ export class HallwayTrackStack extends cdk.Stack {
 
         this.connectionsTable.grantReadWriteData(connectionMigrationFunction);
 
+        // ===== Leaderboard Migration Lambda =====
+
+        // Create Lambda function for one-time leaderboard GSI migration
+        const leaderboardMigrationFunction = new NodejsFunction(this, 'LeaderboardMigrationFunction', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            handler: 'handler',
+            entry: path.join(__dirname, '../lambda/leaderboard-migration/index.ts'),
+            bundling: {
+                externalModules: ['@aws-sdk/*'],
+            },
+            environment: {
+                USERS_TABLE_NAME: this.usersTable.tableName,
+            },
+            timeout: cdk.Duration.minutes(15),
+            memorySize: 512,
+        });
+
+        this.usersTable.grantReadWriteData(leaderboardMigrationFunction);
+
         // ===== Connection Event Handlers =====
 
         // Connection Removed Handler
@@ -754,6 +786,32 @@ export class HallwayTrackStack extends cdk.Stack {
         connectionRequestsDataSource.createResolver('CheckConnectionOrRequestResolver', {
             typeName: 'Query',
             fieldName: 'checkConnectionOrRequest',
+        });
+
+        // ===== Leaderboard =====
+
+        // Create Lambda function for leaderboard queries
+        const leaderboardFunction = new NodejsFunction(this, 'LeaderboardFunction', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            handler: 'handler',
+            entry: path.join(__dirname, '../lambda/leaderboard/index.ts'),
+            bundling: {
+                externalModules: ['@aws-sdk/*'],
+            },
+            environment: {
+                USERS_TABLE_NAME: this.usersTable.tableName,
+            },
+            timeout: cdk.Duration.seconds(30),
+            memorySize: 256,
+        });
+
+        this.usersTable.grantReadData(leaderboardFunction);
+
+        const leaderboardDataSource = this.api.addLambdaDataSource('LeaderboardDataSource', leaderboardFunction);
+
+        leaderboardDataSource.createResolver('GetLeaderboardResolver', {
+            typeName: 'Query',
+            fieldName: 'getLeaderboard',
         });
 
         // ===== Field Resolvers =====

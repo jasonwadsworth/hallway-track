@@ -168,3 +168,32 @@ export const checkConnectionOrRequest = /* GraphQL */ `
         }
     }
 `;
+
+export const getLeaderboard = /* GraphQL */ `
+    query GetLeaderboard($limit: Int, $nextToken: String) {
+        getLeaderboard(limit: $limit, nextToken: $nextToken) {
+            entries {
+                rank
+                userId
+                displayName
+                profilePictureUrl
+                uploadedProfilePictureUrl
+                gravatarHash
+                connectionCount
+                isCurrentUser
+            }
+            currentUserEntry {
+                rank
+                userId
+                displayName
+                profilePictureUrl
+                uploadedProfilePictureUrl
+                gravatarHash
+                connectionCount
+                isCurrentUser
+            }
+            hasMore
+            nextToken
+        }
+    }
+`;
