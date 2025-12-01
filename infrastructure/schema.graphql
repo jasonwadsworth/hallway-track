@@ -138,6 +138,24 @@ type LeaderboardResult {
     nextToken: String
 }
 
+type BadgeLeaderboardEntry {
+    rank: Int!
+    userId: ID!
+    displayName: String!
+    profilePictureUrl: String
+    uploadedProfilePictureUrl: String
+    gravatarHash: String!
+    badgeCount: Int!
+    isCurrentUser: Boolean!
+}
+
+type BadgeLeaderboardResult {
+    entries: [BadgeLeaderboardEntry!]!
+    currentUserEntry: BadgeLeaderboardEntry
+    hasMore: Boolean!
+    nextToken: String
+}
+
 type Query {
     getMyProfile: User
     getPublicProfile(userId: ID!): PublicProfile
@@ -149,6 +167,7 @@ type Query {
     getOutgoingConnectionRequests: [ConnectionRequest!]!
     checkConnectionOrRequest(userId: ID!): ConnectionStatus!
     getLeaderboard(limit: Int, nextToken: String): LeaderboardResult!
+    getBadgeLeaderboard(limit: Int, nextToken: String): BadgeLeaderboardResult!
 }
 
 type Mutation {

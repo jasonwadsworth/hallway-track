@@ -197,3 +197,32 @@ export const getLeaderboard = /* GraphQL */ `
         }
     }
 `;
+
+export const getBadgeLeaderboard = /* GraphQL */ `
+    query GetBadgeLeaderboard($limit: Int, $nextToken: String) {
+        getBadgeLeaderboard(limit: $limit, nextToken: $nextToken) {
+            entries {
+                rank
+                userId
+                displayName
+                profilePictureUrl
+                uploadedProfilePictureUrl
+                gravatarHash
+                badgeCount
+                isCurrentUser
+            }
+            currentUserEntry {
+                rank
+                userId
+                displayName
+                profilePictureUrl
+                uploadedProfilePictureUrl
+                gravatarHash
+                badgeCount
+                isCurrentUser
+            }
+            hasMore
+            nextToken
+        }
+    }
+`;

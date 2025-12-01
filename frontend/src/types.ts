@@ -139,3 +139,22 @@ export interface LeaderboardResult {
     hasMore: boolean;
     nextToken?: string;
 }
+
+// Badge Leaderboard types
+export interface BadgeLeaderboardEntry {
+    rank: number;
+    userId: string;
+    displayName: string;
+    profilePictureUrl?: string;
+    uploadedProfilePictureUrl?: string;
+    gravatarHash: string;
+    badgeCount: number;
+    isCurrentUser: boolean;
+}
+
+export interface BadgeLeaderboardResult {
+    entries: BadgeLeaderboardEntry[];
+    currentUserEntry?: BadgeLeaderboardEntry;
+    hasMore: boolean;
+    nextToken?: string;
+}

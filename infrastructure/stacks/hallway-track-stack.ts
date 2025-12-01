@@ -79,6 +79,19 @@ export class HallwayTrackStack extends cdk.Stack {
             },
         });
 
+        // Add GSI for badge leaderboard queries (sorted by badge count)
+        this.usersTable.addGlobalSecondaryIndex({
+            indexName: 'ByBadgeCount',
+            partitionKey: {
+                name: 'GSI3PK',
+                type: dynamodb.AttributeType.STRING,
+            },
+            sortKey: {
+                name: 'GSI3SK',
+                type: dynamodb.AttributeType.STRING,
+            },
+        });
+
         // Create post-confirmation Lambda function
         const postConfirmationFunction = new NodejsFunction(this, 'PostConfirmationFunction', {
             runtime: lambda.Runtime.NODEJS_20_X,
@@ -532,6 +545,25 @@ export class HallwayTrackStack extends cdk.Stack {
 
         this.usersTable.grantReadWriteData(leaderboardMigrationFunction);
 
+        // ===== Badge Leaderboard Migration Lambda =====
+
+        // Create Lambda function for one-time badge leaderboard GSI migration
+        const badgeLeaderboardMigrationFunction = new NodejsFunction(this, 'BadgeLeaderboardMigrationFunction', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            handler: 'handler',
+            entry: path.join(__dirname, '../lambda/badge-leaderboard-migration/index.ts'),
+            bundling: {
+                externalModules: ['@aws-sdk/*'],
+            },
+            environment: {
+                USERS_TABLE_NAME: this.usersTable.tableName,
+            },
+            timeout: cdk.Duration.minutes(15),
+            memorySize: 512,
+        });
+
+        this.usersTable.grantReadWriteData(badgeLeaderboardMigrationFunction);
+
         // ===== Connection Event Handlers =====
 
         // Connection Removed Handler
@@ -812,6 +844,32 @@ export class HallwayTrackStack extends cdk.Stack {
         leaderboardDataSource.createResolver('GetLeaderboardResolver', {
             typeName: 'Query',
             fieldName: 'getLeaderboard',
+        });
+
+        // ===== Badge Leaderboard =====
+
+        // Create Lambda function for badge leaderboard queries
+        const badgeLeaderboardFunction = new NodejsFunction(this, 'BadgeLeaderboardFunction', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            handler: 'handler',
+            entry: path.join(__dirname, '../lambda/badge-leaderboard/index.ts'),
+            bundling: {
+                externalModules: ['@aws-sdk/*'],
+            },
+            environment: {
+                USERS_TABLE_NAME: this.usersTable.tableName,
+            },
+            timeout: cdk.Duration.seconds(30),
+            memorySize: 256,
+        });
+
+        this.usersTable.grantReadData(badgeLeaderboardFunction);
+
+        const badgeLeaderboardDataSource = this.api.addLambdaDataSource('BadgeLeaderboardDataSource', badgeLeaderboardFunction);
+
+        badgeLeaderboardDataSource.createResolver('GetBadgeLeaderboardResolver', {
+            typeName: 'Query',
+            fieldName: 'getBadgeLeaderboard',
         });
 
         // ===== Field Resolvers =====
