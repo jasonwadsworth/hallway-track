@@ -226,3 +226,45 @@ export const getBadgeLeaderboard = /* GraphQL */ `
         }
     }
 `;
+
+export const searchMyConnections = /* GraphQL */ `
+    query SearchMyConnections($query: String!) {
+        searchMyConnections(query: $query) {
+            results {
+                connection {
+                    id
+                    userId
+                    connectedUserId
+                    connectedUser {
+                        id
+                        displayName
+                        gravatarHash
+                        profilePictureUrl
+                        uploadedProfilePictureUrl
+                        contactLinks {
+                            id
+                            label
+                            url
+                            visible
+                        }
+                        badges {
+                            id
+                            name
+                            description
+                            threshold
+                            iconUrl
+                            earnedAt
+                            category
+                        }
+                    }
+                    tags
+                    note
+                    createdAt
+                    updatedAt
+                }
+                score
+            }
+            totalCount
+        }
+    }
+`;

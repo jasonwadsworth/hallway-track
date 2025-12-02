@@ -872,6 +872,34 @@ export class HallwayTrackStack extends cdk.Stack {
             fieldName: 'getBadgeLeaderboard',
         });
 
+        // ===== Connection Search =====
+
+        // Create Lambda function for connection search queries
+        const connectionSearchFunction = new NodejsFunction(this, 'ConnectionSearchFunction', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            handler: 'handler',
+            entry: path.join(__dirname, '../lambda/connection-search/index.ts'),
+            bundling: {
+                externalModules: ['@aws-sdk/*'],
+            },
+            environment: {
+                USERS_TABLE_NAME: this.usersTable.tableName,
+                CONNECTIONS_TABLE_NAME: this.connectionsTable.tableName,
+            },
+            timeout: cdk.Duration.seconds(30),
+            memorySize: 256,
+        });
+
+        this.usersTable.grantReadData(connectionSearchFunction);
+        this.connectionsTable.grantReadData(connectionSearchFunction);
+
+        const connectionSearchDataSource = this.api.addLambdaDataSource('ConnectionSearchDataSource', connectionSearchFunction);
+
+        connectionSearchDataSource.createResolver('SearchMyConnectionsResolver', {
+            typeName: 'Query',
+            fieldName: 'searchMyConnections',
+        });
+
         // ===== Field Resolvers =====
 
         // Connection.connectedUser field resolver (direct DynamoDB)

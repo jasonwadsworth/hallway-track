@@ -156,6 +156,16 @@ type BadgeLeaderboardResult {
     nextToken: String
 }
 
+type ConnectionSearchResult {
+    connection: Connection!
+    score: Float!
+}
+
+type SearchConnectionsResult {
+    results: [ConnectionSearchResult!]!
+    totalCount: Int!
+}
+
 type Query {
     getMyProfile: User
     getPublicProfile(userId: ID!): PublicProfile
@@ -168,6 +178,7 @@ type Query {
     checkConnectionOrRequest(userId: ID!): ConnectionStatus!
     getLeaderboard(limit: Int, nextToken: String): LeaderboardResult!
     getBadgeLeaderboard(limit: Int, nextToken: String): BadgeLeaderboardResult!
+    searchMyConnections(query: String!): SearchConnectionsResult!
 }
 
 type Mutation {

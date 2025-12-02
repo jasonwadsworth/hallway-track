@@ -158,3 +158,14 @@ export interface BadgeLeaderboardResult {
     hasMore: boolean;
     nextToken?: string;
 }
+
+// Connection Search types
+export interface ConnectionSearchResult {
+    connection: Connection;
+    score: number;
+}
+
+export interface SearchConnectionsResult {
+    results: ConnectionSearchResult[];
+    totalCount: number;
+}

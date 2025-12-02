@@ -1,7 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { EventBridgeEvent } from 'aws-lambda';
-import { randomUUID } from 'crypto';
 
 const dynamoClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoClient);
@@ -63,16 +62,16 @@ export const handler = async (event: EventBridgeEvent<'ConnectionRequestApproved
         // Step 1: Create bidirectional connections
         console.log(`Creating bidirectional connections between ${initiatorUserId} and ${recipientUserId}`);
 
-        const connectionId1 = randomUUID();
-        const connectionId2 = randomUUID();
+        // Use connectedUserId as the connection ID for direct lookups
+        // This allows getConnectedProfile to find connections by SK: CONNECTION#<connectedUserId>
 
         // Create connection record for initiator
         const connection1: Connection = {
             PK: `USER#${initiatorUserId}`,
-            SK: `CONNECTION#${connectionId1}`,
+            SK: `CONNECTION#${recipientUserId}`,
             GSI1PK: `CONNECTED#${recipientUserId}`,
             GSI1SK: now,
-            id: connectionId1,
+            id: recipientUserId,
             userId: initiatorUserId,
             connectedUserId: recipientUserId,
             tags: initiatorTags || [],
@@ -88,10 +87,10 @@ export const handler = async (event: EventBridgeEvent<'ConnectionRequestApproved
         // Create connection record for recipient
         const connection2: Connection = {
             PK: `USER#${recipientUserId}`,
-            SK: `CONNECTION#${connectionId2}`,
+            SK: `CONNECTION#${initiatorUserId}`,
             GSI1PK: `CONNECTED#${initiatorUserId}`,
             GSI1SK: now,
-            id: connectionId2,
+            id: initiatorUserId,
             userId: recipientUserId,
             connectedUserId: initiatorUserId,
             tags: [],
