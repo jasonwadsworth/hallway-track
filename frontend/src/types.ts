@@ -169,3 +169,16 @@ export interface SearchConnectionsResult {
     results: ConnectionSearchResult[];
     totalCount: number;
 }
+
+// Instant Connect types
+export interface InstantConnectToken {
+    token: string;
+    expiresAt: string;
+    url: string;
+}
+
+export interface InstantConnectResult {
+    success: boolean;
+    message?: string;
+    connectedUser?: PublicProfile;
+}

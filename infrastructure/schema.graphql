@@ -166,6 +166,18 @@ type SearchConnectionsResult {
     totalCount: Int!
 }
 
+type InstantConnectToken {
+    token: String!
+    expiresAt: AWSDateTime!
+    url: String!
+}
+
+type InstantConnectResult {
+    success: Boolean!
+    message: String
+    connectedUser: PublicProfile
+}
+
 type Query {
     getMyProfile: User
     getPublicProfile(userId: ID!): PublicProfile
@@ -199,6 +211,8 @@ type Mutation {
     updateConnectionRequestMetadata(requestId: ID!, note: String, tags: [String!]): ConnectionRequestResult!
     generateProfilePictureUploadUrl(filename: String!, contentType: String!): ProfilePictureUploadUrl!
     removeProfilePicture: User!
+    generateInstantConnectToken: InstantConnectToken!
+    redeemInstantConnectToken(token: String!): InstantConnectResult!
 }
 
 schema {

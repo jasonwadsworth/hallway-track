@@ -1,0 +1,102 @@
+.instant-connect-redeem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 2rem 1rem;
+}
+
+.redeem-result {
+  text-align: center;
+  max-width: 400px;
+  padding: 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.result-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.redeem-result h2 {
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.redeem-result.success h2 {
+  color: #2e7d32;
+}
+
+.redeem-result.error h2 {
+  color: #c62828;
+}
+
+.result-message {
+  color: #666;
+  font-size: 1rem;
+  margin: 0 0 1.5rem 0;
+  line-height: 1.5;
+}
+
+.result-message strong {
+  color: #333;
+}
+
+.result-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.primary-button {
+  padding: 0.75rem 1.5rem;
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  min-height: 44px;
+  transition: background-color 0.2s;
+}
+
+.primary-button:hover {
+  background-color: #1565c0;
+}
+
+.secondary-button {
+  padding: 0.75rem 1.5rem;
+  background-color: transparent;
+  color: #1976d2;
+  border: 1px solid #1976d2;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  min-height: 44px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.secondary-button:hover {
+  background-color: #e3f2fd;
+}
+
+@media (min-width: 768px) {
+  .instant-connect-redeem {
+    padding: 3rem;
+  }
+
+  .redeem-result {
+    padding: 3rem;
+  }
+
+  .result-actions {
+    flex-direction: row;
+    justify-content: center;
+  }
+}

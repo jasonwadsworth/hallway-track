@@ -70,11 +70,47 @@
 .qr-code-instruction {
   color: #666;
   font-size: 0.9rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.qr-code-expiry {
+  color: #888;
+  font-size: 0.8rem;
   margin: 0 0 1rem 0;
+  font-style: italic;
+}
+
+.qr-code-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+  width: 100%;
+}
+
+.refresh-button {
+  padding: 0.5rem 1rem;
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  min-height: 44px;
+  transition: background-color 0.2s;
+}
+
+.refresh-button:hover:not(:disabled) {
+  background-color: #e0e0e0;
+}
+
+.refresh-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .qr-share-button {
-  margin-top: 1rem;
+  margin-top: 0;
 }
 
 /* Landscape mode on mobile - optimize QR code size */

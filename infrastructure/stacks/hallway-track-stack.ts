@@ -33,6 +33,7 @@ export class HallwayTrackStack extends cdk.Stack {
     public readonly usersTable: dynamodb.Table;
     public readonly connectionsTable: dynamodb.Table;
     public readonly connectionRequestsTable: dynamodb.Table;
+    public readonly instantConnectTokensTable: dynamodb.Table;
     public readonly api: appsync.GraphqlApi;
     public readonly websiteBucket: s3.Bucket;
     public readonly distribution: cloudfront.Distribution;
@@ -287,6 +288,35 @@ export class HallwayTrackStack extends cdk.Stack {
             },
         });
 
+        // Create Instant Connect Tokens DynamoDB Table
+        this.instantConnectTokensTable = new dynamodb.Table(this, 'InstantConnectTokensTable', {
+            tableName: 'hallway-track-instant-connect-tokens',
+            partitionKey: {
+                name: 'PK',
+                type: dynamodb.AttributeType.STRING,
+            },
+            sortKey: {
+                name: 'SK',
+                type: dynamodb.AttributeType.STRING,
+            },
+            billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
+            timeToLiveAttribute: 'TTL',
+        });
+
+        // Add GSI for querying tokens by user ID
+        this.instantConnectTokensTable.addGlobalSecondaryIndex({
+            indexName: 'ByUser',
+            partitionKey: {
+                name: 'GSI1PK',
+                type: dynamodb.AttributeType.STRING,
+            },
+            sortKey: {
+                name: 'GSI1SK',
+                type: dynamodb.AttributeType.STRING,
+            },
+        });
+
         // ===== EventBridge for Badge System =====
 
         // Create EventBridge event bus for badge events
@@ -389,6 +419,30 @@ export class HallwayTrackStack extends cdk.Stack {
         this.badgeEventBus.grantPutEventsTo(connectionRequestsFunction);
 
         const connectionRequestsDataSource = this.api.addLambdaDataSource('ConnectionRequestsDataSource', connectionRequestsFunction);
+
+        // Create Lambda function for instant connect
+        const instantConnectFunction = new NodejsFunction(this, 'InstantConnectFunction', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            handler: 'handler',
+            entry: path.join(__dirname, '../lambda/instant-connect/index.ts'),
+            bundling: {
+                externalModules: ['@aws-sdk/*'],
+            },
+            environment: {
+                INSTANT_CONNECT_TOKENS_TABLE_NAME: this.instantConnectTokensTable.tableName,
+                USERS_TABLE_NAME: this.usersTable.tableName,
+                CONNECTIONS_TABLE_NAME: this.connectionsTable.tableName,
+                EVENT_BUS_NAME: this.badgeEventBus.eventBusName,
+                FRONTEND_URL: config.customDomain?.domainName ? `https://${config.customDomain.domainName}` : '',
+            },
+        });
+
+        this.instantConnectTokensTable.grantReadWriteData(instantConnectFunction);
+        this.usersTable.grantReadData(instantConnectFunction);
+        this.connectionsTable.grantReadData(instantConnectFunction);
+        this.badgeEventBus.grantPutEventsTo(instantConnectFunction);
+
+        const instantConnectDataSource = this.api.addLambdaDataSource('InstantConnectDataSource', instantConnectFunction);
 
         // ===== Badge Stream Processor =====
 
@@ -634,6 +688,40 @@ export class HallwayTrackStack extends cdk.Stack {
             ],
         });
 
+        // Instant Connect Redeemed Handler
+        const instantConnectRedeemedHandler = new NodejsFunction(this, 'InstantConnectRedeemedHandler', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            handler: 'handler',
+            entry: path.join(__dirname, '../lambda/event-handlers/instant-connect-redeemed/index.ts'),
+            bundling: {
+                externalModules: ['@aws-sdk/*'],
+            },
+            environment: {
+                CONNECTIONS_TABLE_NAME: this.connectionsTable.tableName,
+                USERS_TABLE_NAME: this.usersTable.tableName,
+            },
+            timeout: cdk.Duration.minutes(2),
+            memorySize: 512,
+        });
+
+        this.connectionsTable.grantReadWriteData(instantConnectRedeemedHandler);
+        this.usersTable.grantReadWriteData(instantConnectRedeemedHandler);
+
+        // Create EventBridge rule for InstantConnectRedeemed events
+        new events.Rule(this, 'InstantConnectRedeemedRule', {
+            eventBus: this.badgeEventBus,
+            eventPattern: {
+                source: ['hallway-track.instant-connect'],
+                detailType: ['InstantConnectRedeemed'],
+            },
+            targets: [
+                new targets.LambdaFunction(instantConnectRedeemedHandler, {
+                    deadLetterQueue: badgeDLQ,
+                    retryAttempts: 2,
+                }),
+            ],
+        });
+
         // Create Lambda data source for custom resolvers
         const resolverFunction = new lambda.Function(this, 'ResolverFunction', {
             runtime: lambda.Runtime.NODEJS_20_X,
@@ -820,6 +908,17 @@ export class HallwayTrackStack extends cdk.Stack {
             fieldName: 'checkConnectionOrRequest',
         });
 
+        // Instant connect resolvers
+        instantConnectDataSource.createResolver('GenerateInstantConnectTokenResolver', {
+            typeName: 'Mutation',
+            fieldName: 'generateInstantConnectToken',
+        });
+
+        instantConnectDataSource.createResolver('RedeemInstantConnectTokenResolver', {
+            typeName: 'Mutation',
+            fieldName: 'redeemInstantConnectToken',
+        });
+
         // ===== Leaderboard =====
 
         // Create Lambda function for leaderboard queries
@@ -1002,6 +1101,11 @@ export class HallwayTrackStack extends cdk.Stack {
         new cdk.CfnOutput(this, 'ConnectionRequestsTableName', {
             value: this.connectionRequestsTable.tableName,
             description: 'Connection Requests DynamoDB Table Name',
+        });
+
+        new cdk.CfnOutput(this, 'InstantConnectTokensTableName', {
+            value: this.instantConnectTokensTable.tableName,
+            description: 'Instant Connect Tokens DynamoDB Table Name',
         });
 
         new cdk.CfnOutput(this, 'GraphQLApiUrl', {

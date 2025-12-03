@@ -16,6 +16,7 @@ import { BadgeShowcase } from './components/BadgeShowcase';
 import { Leaderboard } from './components/Leaderboard';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { PWAInstallPrompt } from './components/PWAInstallPrompt';
+import { InstantConnectRedeem } from './components/InstantConnectRedeem';
 
 function App() {
     // Handle orientation changes to maintain scroll position
@@ -135,6 +136,14 @@ function App() {
                                 element={
                                     <ProtectedRoute>
                                         <QRCodeScanner />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/connect/:token"
+                                element={
+                                    <ProtectedRoute>
+                                        <InstantConnectRedeem />
                                     </ProtectedRoute>
                                 }
                             />
