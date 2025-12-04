@@ -221,6 +221,7 @@ export function ContactLinkManager() {
               <label htmlFor="linkType">Link Type</label>
               <select
                 id="linkType"
+                name="linkType"
                 value={selectedLinkType?.id || ''}
                 onChange={(e) => {
                   const linkType = linkTypes.find(type => type.id === e.target.value);
@@ -244,6 +245,7 @@ export function ContactLinkManager() {
               <input
                 type="text"
                 id="url"
+                name="url"
                 value={newUrl}
                 onChange={(e) => {
                   setNewUrl(e.target.value);

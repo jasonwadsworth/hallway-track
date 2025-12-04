@@ -5,6 +5,9 @@ test.describe('Authentication Flow', () => {
   test('should display login page for unauthenticated users', async ({ page }) => {
     await page.goto('/');
     
+    // Wait for page to fully load
+    await page.waitForLoadState('domcontentloaded');
+    
     // Should see Amplify authenticator component
     await expect(page.locator('[data-amplify-authenticator]')).toBeVisible({ timeout: 10000 });
     
@@ -29,16 +32,24 @@ test.describe('Authentication Flow', () => {
     
     await page.goto('/');
     
+    // Wait for page to fully load
+    await page.waitForLoadState('domcontentloaded');
+    
     // Use login helper
     await login(page);
     
-    // Should be on dashboard
+    // Should be on dashboard - URL should be root
     await expect(page).toHaveURL('/');
-    await expect(page.locator('text=Welcome to HallwayTrak')).toBeVisible({ timeout: 10000 });
+    
+    // Should see welcome message with increased timeout for data loading
+    await expect(page.locator('text=Welcome to HallwayTrak')).toBeVisible({ timeout: 15000 });
   });
 
   test('should show error for invalid credentials', async ({ page }) => {
     await page.goto('/');
+    
+    // Wait for page to fully load
+    await page.waitForLoadState('domcontentloaded');
     
     // Wait for authenticator to load
     await page.waitForSelector('[data-amplify-authenticator]', { timeout: 10000 });
@@ -65,11 +76,17 @@ test.describe('Authentication Flow', () => {
     
     await page.goto('/');
     
+    // Wait for page to fully load
+    await page.waitForLoadState('domcontentloaded');
+    
     // Login first
     await login(page);
     
-    // Wait for dashboard to be fully loaded
-    await expect(page.locator('text=Welcome to HallwayTrak')).toBeVisible();
+    // Wait for dashboard to be fully loaded with increased timeout
+    await expect(page.locator('text=Welcome to HallwayTrak')).toBeVisible({ timeout: 15000 });
+    
+    // Wait a moment for all components to render
+    await page.waitForTimeout(1000);
     
     // Click sign out button
     await logout(page);

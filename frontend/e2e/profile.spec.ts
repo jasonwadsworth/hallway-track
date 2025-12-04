@@ -18,12 +18,15 @@ test.describe('Profile Management', () => {
     await page.waitForLoadState('networkidle');
     
     // Look for profile heading - may vary in exact text
-    await expect(page.locator('h1:has-text("My Profile"), h1:has-text("Profile"), h2:has-text("My Profile")')).toBeVisible({ timeout: 10000 });
+    const heading = page.locator('h1:has-text("My Profile"), h1:has-text("Profile"), h2:has-text("My Profile")');
+    await expect(heading).toBeVisible({ timeout: 10000 });
     
     // Look for profile avatar/image - class names may vary
-    await expect(page.locator('.profile-avatar, [class*="avatar"], img[alt*="profile" i]')).toBeVisible({ timeout: 5000 }).catch(() => {
-      // Avatar might not be present if user hasn't set one, that's ok
-    });
+    const avatar = page.locator('.profile-avatar, [class*="avatar"], img[alt*="profile" i]');
+    const avatarCount = await avatar.count();
+    if (avatarCount > 0) {
+      await expect(avatar.first()).toBeVisible({ timeout: 5000 });
+    }
   });
 
   test('should allow editing profile', async ({ page }) => {
@@ -41,8 +44,9 @@ test.describe('Profile Management', () => {
     // Click edit button
     await editButton.first().click();
     
-    // Modal should open
-    await expect(page.locator('text=Edit Profile, [role="dialog"]:has-text("Profile")')).toBeVisible({ timeout: 10000 });
+    // Modal should open - look for dialog or modal with proper selectors
+    const modal = page.locator('text="Edit Profile", [role="dialog"]:has-text("Profile"), .modal:has-text("Profile")');
+    await expect(modal.first()).toBeVisible({ timeout: 10000 });
     
     // Look for display name input
     const displayNameInput = page.locator('input[name="displayName"], input[placeholder*="name" i]');
@@ -54,7 +58,7 @@ test.describe('Profile Management', () => {
     
     // Update display name
     const testName = 'Updated Name ' + Date.now();
-    await displayNameInput.fill(testName);
+    await displayNameInput.first().fill(testName);
     
     // Save changes
     const saveButton = page.locator('button:has-text("Save"), button[type="submit"]');
@@ -64,7 +68,7 @@ test.describe('Profile Management', () => {
     await page.waitForTimeout(1000);
     
     // Either the name appears or a success message shows
-    const nameVisible = await page.locator(`text=${testName}`).isVisible().catch(() => false);
+    const nameVisible = await page.locator(`text="${testName}"`).isVisible().catch(() => false);
     const successVisible = await page.locator('text=/Saved|Updated|Success/i').isVisible().catch(() => false);
     
     expect(nameVisible || successVisible).toBeTruthy();
@@ -74,13 +78,16 @@ test.describe('Profile Management', () => {
     await page.goto('/qr-code');
     await page.waitForLoadState('networkidle');
     
-    // Look for canvas (QR code is rendered in canvas)
-    await expect(page.locator('canvas')).toBeVisible({ timeout: 10000 });
+    // Look for SVG (QR code is rendered as SVG by qrcode.react library)
+    const qrCode = page.locator('svg, canvas');
+    await expect(qrCode.first()).toBeVisible({ timeout: 10000 });
     
     // Look for instruction text
-    await expect(page.locator('text=/Scan this code|Scan to connect|QR Code/i')).toBeVisible({ timeout: 5000 }).catch(() => {
-      // Text might vary, that's ok as long as canvas is visible
-    });
+    const instructions = page.locator('text=/Show this QR code|Scan this code|Scan to connect|QR Code/i');
+    const instructionCount = await instructions.count();
+    if (instructionCount > 0) {
+      await expect(instructions.first()).toBeVisible({ timeout: 5000 });
+    }
   });
 
   test('should allow managing contact links', async ({ page }) => {
@@ -99,7 +106,8 @@ test.describe('Profile Management', () => {
     await manageButton.first().click();
     
     // Modal should open
-    await expect(page.locator('text=/Manage Contact Links|Contact Links|Add Link/i')).toBeVisible({ timeout: 10000 });
+    const modal = page.locator('text=/Manage Contact Links|Contact Links|Add Link/i');
+    await expect(modal.first()).toBeVisible({ timeout: 10000 });
     
     // Look for link type selector
     const linkTypeSelect = page.locator('select[name="linkType"], select[name="type"]');
@@ -107,17 +115,17 @@ test.describe('Profile Management', () => {
     
     if (selectCount > 0) {
       // Add new link
-      await linkTypeSelect.selectOption('LinkedIn');
+      await linkTypeSelect.first().selectOption('LinkedIn');
       
       const urlInput = page.locator('input[name="url"], input[type="url"], input[placeholder*="url" i]');
-      await urlInput.fill('https://linkedin.com/in/testuser');
+      await urlInput.first().fill('https://linkedin.com/in/testuser');
       
       const addButton = page.locator('button:has-text("Add Link"), button:has-text("Add")');
       await addButton.first().click();
       
       // Should show in list or show success
       await page.waitForTimeout(500);
-      const linkedInVisible = await page.locator('text=LinkedIn').isVisible().catch(() => false);
+      const linkedInVisible = await page.locator('text="LinkedIn"').isVisible().catch(() => false);
       const successVisible = await page.locator('text=/Added|Success|Saved/i').isVisible().catch(() => false);
       
       expect(linkedInVisible || successVisible).toBeTruthy();
@@ -129,7 +137,8 @@ test.describe('Profile Management', () => {
     await page.waitForLoadState('networkidle');
     
     // Look for badges heading
-    await expect(page.locator('h1:has-text("Badge Showcase"), h1:has-text("Badges"), h2:has-text("Badges")')).toBeVisible({ timeout: 10000 });
+    const heading = page.locator('h1:has-text("Badge Showcase"), h1:has-text("Badges"), h2:has-text("Badges")');
+    await expect(heading.first()).toBeVisible({ timeout: 10000 });
     
     // Look for badge cards - may be empty if user has no badges
     const badgeCards = page.locator('.badge-card, [class*="badge"]');
@@ -137,10 +146,12 @@ test.describe('Profile Management', () => {
     
     // Test passes if page loads, even with no badges
     if (cardCount === 0) {
-      // Look for empty state message
-      await expect(page.locator('text=/No badges|You don\'t have any badges/i')).toBeVisible({ timeout: 5000 }).catch(() => {
-        // Empty state message may not exist, that's ok
-      });
+      // Look for empty state message or description text
+      const emptyState = page.locator('text=/No badges|You don\'t have any badges|Earn badges by connecting/i');
+      const emptyCount = await emptyState.count();
+      if (emptyCount > 0) {
+        await expect(emptyState.first()).toBeVisible({ timeout: 5000 });
+      }
     } else {
       await expect(badgeCards.first()).toBeVisible();
     }

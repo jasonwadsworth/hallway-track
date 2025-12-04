@@ -163,6 +163,7 @@ export function ProfileEdit({ onCancel, onSave }: ProfileEditProps) {
           <input
             type="text"
             id="displayName"
+            name="displayName"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             maxLength={50}

@@ -26,9 +26,13 @@ export async function login(page: Page): Promise<void> {
   const signInButton = page.locator('button[type="submit"]').first();
   await signInButton.click();
 
-  // Wait for navigation to complete - user should be on dashboard
+  // Wait for the authenticator to disappear (sign of successful login)
+  await page.waitForSelector('[data-amplify-authenticator]', { state: 'hidden', timeout: 30000 });
+  
+  // Wait for navigation to complete and page to be fully loaded
+  await page.waitForLoadState('networkidle', { timeout: 30000 });
+  
   // Wait for a dashboard element to confirm successful login
-  await page.waitForTimeout(2000); // Give time for auth to complete
   await page.waitForSelector('text=Welcome to HallwayTrak', { timeout: 30000 });
 }
 
@@ -36,12 +40,18 @@ export async function login(page: Page): Promise<void> {
  * Helper function to logout a user
  */
 export async function logout(page: Page): Promise<void> {
-  // Look for the sign out button - text may vary
-  const signOutButton = page.locator('button:has-text("Sign Out"), button:has-text("Sign out")').first();
-  await signOutButton.click();
+  // Look for the sign out button - use flexible selector that matches text with emoji
+  // The actual button text is "🚪 Sign Out" but :has-text should match partial text
+  const signOutButton = page.locator('button:has-text("Sign Out"), button:has-text("Sign out"), button.btn-signout');
+  
+  // Wait for the button to be visible and enabled
+  await signOutButton.first().waitFor({ state: 'visible', timeout: 10000 });
+  
+  // Click the button
+  await signOutButton.first().click();
 
-  // Wait for return to login page
-  await page.waitForSelector('[data-amplify-authenticator]', { timeout: 10000 });
+  // Wait for return to login page - authenticator should be visible again
+  await page.waitForSelector('[data-amplify-authenticator]', { state: 'visible', timeout: 10000 });
 }
 
 /**
