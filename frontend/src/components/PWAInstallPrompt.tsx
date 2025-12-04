@@ -2,15 +2,42 @@ import { useState, useEffect } from 'react';
 import { isIOS, isAndroid, isInstalled, canInstall, showInstallPrompt } from '../utils/pwa';
 import './PWAInstallPrompt.css';
 
+// Helper function to safely access localStorage
+const getStorageValue = (key: string, defaultValue: string): string => {
+  try {
+    const item = localStorage.getItem(key);
+    return item !== null ? item : defaultValue;
+  } catch (error) {
+    console.warn('localStorage access failed:', error);
+    return defaultValue;
+  }
+};
+
+const setStorageValue = (key: string, value: string): void => {
+  try {
+    localStorage.setItem(key, value);
+  } catch (error) {
+    console.warn('localStorage write failed:', error);
+  }
+};
+
 export function PWAInstallPrompt() {
   const [show, setShow] = useState(false);
   const [dismissed, setDismissed] = useState(() => {
-    return localStorage.getItem('pwa-install-dismissed') === 'true';
+    return getStorageValue('pwa-install-dismissed', 'false') === 'true';
   });
 
   useEffect(() => {
+    // Re-check localStorage on mount to handle any timing issues with Mobile Safari
+    const isDismissed = getStorageValue('pwa-install-dismissed', 'false') === 'true';
+    
+    if (isDismissed && !dismissed) {
+      setDismissed(true);
+      return;
+    }
+
     // Don't show if already installed or dismissed
-    if (isInstalled() || dismissed) {
+    if (isInstalled() || isDismissed) {
       return;
     }
 
@@ -34,7 +61,7 @@ export function PWAInstallPrompt() {
   const handleDismiss = () => {
     setShow(false);
     setDismissed(true);
-    localStorage.setItem('pwa-install-dismissed', 'true');
+    setStorageValue('pwa-install-dismissed', 'true');
   };
 
   if (!show) return null;

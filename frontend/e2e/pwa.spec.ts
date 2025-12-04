@@ -45,7 +45,18 @@ test.describe('PWA Functionality', () => {
     await page.goto('/');
     
     await page.waitForTimeout(3500);
+    
+    // Verify prompt is visible before dismissing
+    await expect(page.locator('.pwa-install-prompt')).toBeVisible();
+    
     await page.click('.pwa-dismiss');
+    
+    // Wait for prompt to be hidden after dismissing
+    await expect(page.locator('.pwa-install-prompt')).not.toBeVisible();
+    
+    // Verify localStorage was set before reloading
+    const dismissedValue = await page.evaluate(() => localStorage.getItem('pwa-install-dismissed'));
+    expect(dismissedValue).toBe('true');
     
     // Reload page
     await page.reload();
