@@ -60,6 +60,7 @@ jobs:
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     
     steps:
       - name: Checkout code
@@ -82,6 +83,7 @@ jobs:
       
       - name: Run E2E tests
         working-directory: frontend
+        timeout-minutes: 45
         run: npm run test:e2e
         env:
           BASE_URL: ${{ secrets.BASE_URL || 'https://d3ahxq34efx0ga.cloudfront.net' }}
