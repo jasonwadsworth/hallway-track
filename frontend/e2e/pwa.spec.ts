@@ -17,9 +17,11 @@ test.describe('PWA Functionality', () => {
       page.waitForSelector('text=Welcome to HallwayTrak', { timeout: 15000 }).catch(() => null)
     ]);
     
-    // Wait for React to fully mount and PWA component to initialize
-    // In test mode, PWA prompt shows after 100ms, so 1 second should be more than enough
-    await page.waitForTimeout(1000);
+    // Wait for PWA component container to be ready
+    await page.waitForSelector('[data-pwa-ready="true"]', { timeout: 5000 });
+    
+    // Wait additional time for the prompt timer to fire (50ms init delay + 100ms show delay + buffer)
+    await page.waitForTimeout(500);
     
     // Debug: Check environment state
     const debugInfo = await page.evaluate(() => {
@@ -58,8 +60,11 @@ test.describe('PWA Functionality', () => {
       page.waitForSelector('text=Welcome to HallwayTrak', { timeout: 15000 }).catch(() => null)
     ]);
     
-    // Wait for React to fully mount and PWA component to initialize
-    await page.waitForTimeout(1000);
+    // Wait for PWA component container to be ready
+    await page.waitForSelector('[data-pwa-ready="true"]', { timeout: 5000 });
+    
+    // Wait for timer to fire
+    await page.waitForTimeout(500);
     
     // Should show iOS share icon and instructions (in test mode, delay is only 100ms)
     await expect(page.locator('.ios-share')).toBeVisible({ timeout: 5000 });
@@ -78,8 +83,11 @@ test.describe('PWA Functionality', () => {
       page.waitForSelector('text=Welcome to HallwayTrak', { timeout: 15000 }).catch(() => null)
     ]);
     
-    // Wait for React to fully mount and PWA component to initialize
-    await page.waitForTimeout(1000);
+    // Wait for PWA component container to be ready
+    await page.waitForSelector('[data-pwa-ready="true"]', { timeout: 5000 });
+    
+    // Wait for timer to fire
+    await page.waitForTimeout(500);
     
     // Wait for prompt to appear (in test mode, delay is only 100ms)
     await expect(page.locator('.pwa-install-prompt')).toBeVisible({ timeout: 5000 });
@@ -103,8 +111,11 @@ test.describe('PWA Functionality', () => {
       page.waitForSelector('text=Welcome to HallwayTrak', { timeout: 15000 }).catch(() => null)
     ]);
     
-    // Wait for React to fully mount and PWA component to initialize
-    await page.waitForTimeout(1000);
+    // Wait for PWA component container to be ready
+    await page.waitForSelector('[data-pwa-ready="true"]', { timeout: 5000 });
+    
+    // Wait for timer to fire
+    await page.waitForTimeout(500);
     
     // Verify prompt is visible (in test mode, delay is only 100ms)
     await expect(page.locator('.pwa-install-prompt')).toBeVisible({ timeout: 5000 });
@@ -128,10 +139,10 @@ test.describe('PWA Functionality', () => {
       page.waitForSelector('text=Welcome to HallwayTrak', { timeout: 15000 }).catch(() => null)
     ]);
     
-    // Wait for React to fully mount
-    await page.waitForTimeout(1000);
+    // Wait for PWA component to mount
+    await page.waitForSelector('[data-pwa-ready="true"]', { timeout: 5000 });
     
-    // Wait a bit more to ensure timer would have fired if it was going to (100ms in test mode + buffer)
+    // Wait to ensure timer would have fired if it was going to (50ms init + 100ms show + buffer)
     await page.waitForTimeout(500);
     
     // Prompt should not reappear
