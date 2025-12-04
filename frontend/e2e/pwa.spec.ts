@@ -17,6 +17,9 @@ test.describe('PWA Functionality', () => {
       page.waitForSelector('text=Welcome to HallwayTrak', { timeout: 15000 }).catch(() => null)
     ]);
     
+    // Additional wait to ensure React has fully mounted and initialized
+    await page.waitForTimeout(500);
+    
     // Debug: Check environment state
     const debugInfo = await page.evaluate(() => {
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -32,11 +35,9 @@ test.describe('PWA Functionality', () => {
     });
     console.log('PWA Debug Info:', debugInfo);
     
-    // Wait for install prompt timer (3 second delay) plus additional buffer for render
-    await page.waitForTimeout(4000);
-    
-    // Should show install prompt
-    await expect(page.locator('.pwa-install-prompt')).toBeVisible({ timeout: 5000 });
+    // Should show install prompt (with built-in wait for the 3-second timer)
+    // Using a longer timeout to account for the 3-second delay plus render time
+    await expect(page.locator('.pwa-install-prompt')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('text=Install HallwayTrak')).toBeVisible();
   });
 
@@ -53,10 +54,11 @@ test.describe('PWA Functionality', () => {
       page.waitForSelector('text=Welcome to HallwayTrak', { timeout: 15000 }).catch(() => null)
     ]);
     
-    await page.waitForTimeout(4000);
+    // Additional wait to ensure React has fully mounted
+    await page.waitForTimeout(500);
     
-    // Should show iOS share icon and instructions
-    await expect(page.locator('.ios-share')).toBeVisible({ timeout: 5000 });
+    // Should show iOS share icon and instructions (with wait for timer)
+    await expect(page.locator('.ios-share')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('text=Add to Home Screen')).toBeVisible();
   });
 
@@ -72,10 +74,11 @@ test.describe('PWA Functionality', () => {
       page.waitForSelector('text=Welcome to HallwayTrak', { timeout: 15000 }).catch(() => null)
     ]);
     
-    await page.waitForTimeout(4000);
+    // Additional wait to ensure React has fully mounted
+    await page.waitForTimeout(500);
     
-    // Wait for prompt to appear before trying to dismiss
-    await expect(page.locator('.pwa-install-prompt')).toBeVisible({ timeout: 5000 });
+    // Wait for prompt to appear before trying to dismiss (with longer timeout for timer)
+    await expect(page.locator('.pwa-install-prompt')).toBeVisible({ timeout: 10000 });
     
     // Click dismiss button
     await page.click('.pwa-dismiss');
@@ -96,10 +99,11 @@ test.describe('PWA Functionality', () => {
       page.waitForSelector('text=Welcome to HallwayTrak', { timeout: 15000 }).catch(() => null)
     ]);
     
-    await page.waitForTimeout(4000);
+    // Additional wait to ensure React has fully mounted
+    await page.waitForTimeout(500);
     
-    // Verify prompt is visible before dismissing
-    await expect(page.locator('.pwa-install-prompt')).toBeVisible({ timeout: 5000 });
+    // Verify prompt is visible before dismissing (with longer timeout for timer)
+    await expect(page.locator('.pwa-install-prompt')).toBeVisible({ timeout: 10000 });
     
     await page.click('.pwa-dismiss');
     
@@ -120,6 +124,10 @@ test.describe('PWA Functionality', () => {
       page.waitForSelector('text=Welcome to HallwayTrak', { timeout: 15000 }).catch(() => null)
     ]);
     
+    // Additional wait to ensure React has fully mounted
+    await page.waitForTimeout(500);
+    
+    // Wait a bit more to ensure timer would have fired if it was going to
     await page.waitForTimeout(4000);
     
     // Prompt should not reappear

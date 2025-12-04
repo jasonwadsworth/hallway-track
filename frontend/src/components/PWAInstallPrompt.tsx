@@ -26,26 +26,54 @@ export function PWAInstallPrompt() {
   const [dismissed, setDismissed] = useState(() => {
     return getStorageValue('pwa-install-dismissed', 'false') === 'true';
   });
-
   useEffect(() => {
-    // Re-check localStorage on mount to handle any timing issues with Mobile Safari
+    // Debug logging for test environments
+    const debugInfo = {
+      userAgent: navigator.userAgent,
+      isIOSCheck: isIOS(),
+      isInstalledCheck: isInstalled(),
+      canInstallCheck: canInstall(),
+      dismissedState: dismissed,
+      localStorageDismissed: getStorageValue('pwa-install-dismissed', 'false'),
+    };
+    console.log('PWA Install Prompt - Mount Debug:', debugInfo);
+
+    // Re-check localStorage on mount to handle any timing issues
     const isDismissed = getStorageValue('pwa-install-dismissed', 'false') === 'true';
     
-    if (isDismissed && !dismissed) {
-      setDismissed(true);
+    if (isDismissed) {
+      console.log('PWA Install Prompt - Dismissed in localStorage, not showing');
+      if (!dismissed) {
+        setDismissed(true);
+      }
       return;
     }
 
-    // Don't show if already installed or dismissed
-    if (isInstalled() || isDismissed) {
+    // Don't show if already installed
+    if (isInstalled()) {
+      console.log('PWA Install Prompt - Already installed, not showing');
       return;
     }
 
     // Show for iOS users or when install prompt is available
-    if (isIOS() || canInstall()) {
+    const shouldShow = isIOS() || canInstall();
+    console.log('PWA Install Prompt - Should show?', shouldShow, '(iOS:', isIOS(), ', canInstall:', canInstall(), ')');
+    
+    if (shouldShow) {
+      console.log('PWA Install Prompt - Setting 3-second timer to show prompt');
+      
       // Delay showing to avoid overwhelming user immediately
-      const timer = setTimeout(() => setShow(true), 3000);
-      return () => clearTimeout(timer);
+      const timer = setTimeout(() => {
+        console.log('PWA Install Prompt - Timer fired, showing prompt now');
+        setShow(true);
+      }, 3000);
+      
+      return () => {
+        console.log('PWA Install Prompt - Cleaning up timer');
+        clearTimeout(timer);
+      };
+    } else {
+      console.log('PWA Install Prompt - Conditions not met, not showing');
     }
   }, [dismissed]);
 
@@ -59,17 +87,21 @@ export function PWAInstallPrompt() {
   };
 
   const handleDismiss = () => {
+    console.log('PWA Install Prompt - User dismissed prompt');
     setShow(false);
     setDismissed(true);
     setStorageValue('pwa-install-dismissed', 'true');
   };
 
+  console.log('PWA Install Prompt - Render, show:', show);
+  
   if (!show) return null;
 
   const platform = isIOS() ? 'ios' : isAndroid() ? 'android' : 'other';
+  console.log('PWA Install Prompt - Rendering with platform:', platform);
 
   return (
-    <div className="pwa-install-prompt">
+    <div className="pwa-install-prompt" data-testid="pwa-install-prompt">
       <button className="pwa-dismiss" onClick={handleDismiss} aria-label="Dismiss">
         ×
       </button>
