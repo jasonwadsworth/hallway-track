@@ -125,13 +125,13 @@ export function PWAInstallPrompt() {
   const platform = isIOS() ? 'ios' : isAndroid() ? 'android' : 'other';
   
   if (!show) {
-    // Render hidden marker for tests to verify component is mounted
+    // Render empty but visible marker for tests to verify component is mounted
     // Always set data-pwa-ready="true" since component is rendered and ready
+    // Don't use display:none as it makes the element not visible to Playwright tests
     return (
       <div 
         data-testid="pwa-install-prompt-container" 
         data-pwa-ready="true"
-        style={{ display: 'none' }}
       />
     );
   }
