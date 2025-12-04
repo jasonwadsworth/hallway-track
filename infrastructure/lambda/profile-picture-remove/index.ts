@@ -62,7 +62,7 @@ export const handler = async (event: AppSyncResolverEvent<Record<string, never>>
         await s3Client.send(
             new DeleteObjectsCommand({
                 Bucket: BUCKET_NAME,
-                Delete: { Objects: listResult.Contents.filter((obj) => obj.Key).map((obj) => ({ Key: obj.Key! })) },
+                Delete: { Objects: listResult.Contents.filter((obj: { Key?: string }) => obj.Key).map((obj: { Key?: string }) => ({ Key: obj.Key! })) },
             })
         );
     }

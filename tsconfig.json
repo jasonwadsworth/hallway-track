@@ -37,6 +37,9 @@
     "node_modules",
     "cdk.out",
     "frontend",
-    "dist"
+    "dist",
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.spec.ts"
   ]
 }
