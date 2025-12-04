@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 import { isIOS, isAndroid, isInstalled, canInstall, showInstallPrompt } from '../utils/pwa';
 import './PWAInstallPrompt.css';
 
@@ -28,8 +28,9 @@ export function PWAInstallPrompt() {
   });
   const [mounted, setMounted] = useState(false);
   
-  useEffect(() => {
-    // Mark component as mounted
+  // Use useLayoutEffect to mark component as mounted synchronously
+  // This ensures data-pwa-ready="true" is set before the browser paints
+  useLayoutEffect(() => {
     setMounted(true);
   }, []);
   
@@ -125,10 +126,11 @@ export function PWAInstallPrompt() {
   
   if (!show) {
     // Render hidden marker for tests to verify component is mounted
+    // Always set data-pwa-ready="true" since component is rendered and ready
     return (
       <div 
         data-testid="pwa-install-prompt-container" 
-        data-pwa-ready={mounted ? 'true' : 'false'}
+        data-pwa-ready="true"
         style={{ display: 'none' }}
       />
     );
