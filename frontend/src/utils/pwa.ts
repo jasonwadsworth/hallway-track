@@ -80,10 +80,18 @@ export const isInstalled = (): boolean => {
 
 // iOS-specific installation instructions
 export const isIOS = (): boolean => {
+  // Allow test override via window object
+  if (typeof window !== 'undefined' && (window as any).__TEST_IS_IOS__ !== undefined) {
+    return (window as any).__TEST_IS_IOS__;
+  }
   return /iPad|iPhone|iPod/.test(navigator.userAgent);
 };
 
 export const isAndroid = (): boolean => {
+  // Allow test override via window object
+  if (typeof window !== 'undefined' && (window as any).__TEST_IS_ANDROID__ !== undefined) {
+    return (window as any).__TEST_IS_ANDROID__;
+  }
   return /Android/.test(navigator.userAgent);
 };
 

@@ -72,40 +72,38 @@ export async function isAuthenticated(page: Page): Promise<boolean> {
  * This sets up the environment to make PWA prompt appear
  */
 export async function mockPWAConditions(page: Page, platform: 'ios' | 'android' | 'desktop' = 'ios', clearDismissed = true): Promise<void> {
-  // Determine user agent string
-  let userAgent = '';
-  if (platform === 'ios') {
-    userAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1';
-  } else if (platform === 'android') {
-    userAgent = 'Mozilla/5.0 (Linux; Android 11) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36';
-  } else {
-    userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
-  }
-  
   // Mock PWA detection functions to force prompt to show
-  await page.addInitScript(({ ua, shouldClearDismissed }: { ua: string; shouldClearDismissed: boolean }) => {
+  // This must run BEFORE the page loads so React mounts with these conditions
+  await page.addInitScript(({ platformType, shouldClearDismissed }: { platformType: string; shouldClearDismissed: boolean }) => {
     // Clear any previous dismissal only if requested
     if (shouldClearDismissed) {
       localStorage.removeItem('pwa-install-dismissed');
     }
     
-    // Override navigator.userAgent
-    Object.defineProperty(navigator, 'userAgent', {
-      get: () => ua,
-      configurable: true
-    });
+    // Set test flags for platform detection
+    // These are checked by the PWA utility functions
+    (window as any).__TEST_IS_IOS__ = platformType === 'ios';
+    (window as any).__TEST_IS_ANDROID__ = platformType === 'android';
     
     // Mock display-mode to not be standalone (app is not installed)
     // This ensures isInstalled() returns false
-    window.matchMedia = ((query: string) => ({
-      matches: false, // Always return false - app is not installed
-      media: query,
-      onchange: null,
-      addListener: () => {},
-      removeListener: () => {},
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      dispatchEvent: () => true,
-    })) as typeof window.matchMedia;
-  }, { ua: userAgent, shouldClearDismissed: clearDismissed });
+    const originalMatchMedia = window.matchMedia.bind(window);
+    window.matchMedia = function(query: string): MediaQueryList {
+      // For display-mode queries, always return false (not standalone)
+      if (query.includes('display-mode')) {
+        return {
+          matches: false,
+          media: query,
+          onchange: null,
+          addListener: () => {},
+          removeListener: () => {},
+          addEventListener: () => {},
+          removeEventListener: () => {},
+          dispatchEvent: () => true,
+        } as MediaQueryList;
+      }
+      // For other queries, use original behavior
+      return originalMatchMedia(query);
+    };
+  }, { platformType: platform, shouldClearDismissed: clearDismissed });
 }
