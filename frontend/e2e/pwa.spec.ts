@@ -11,8 +11,29 @@ test.describe('PWA Functionality', () => {
     
     await page.goto('/');
     
-    // Wait for install prompt to appear (3 second delay)
-    await page.waitForTimeout(3500);
+    // Wait for React app to mount - wait for either authenticator or main app content
+    await Promise.race([
+      page.waitForSelector('[data-amplify-authenticator]', { timeout: 15000 }).catch(() => null),
+      page.waitForSelector('text=Welcome to HallwayTrak', { timeout: 15000 }).catch(() => null)
+    ]);
+    
+    // Debug: Check environment state
+    const debugInfo = await page.evaluate(() => {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+      const dismissed = localStorage.getItem('pwa-install-dismissed');
+      return {
+        userAgent: navigator.userAgent,
+        isIOS,
+        isStandalone,
+        dismissed,
+        hasRoot: !!document.getElementById('root')
+      };
+    });
+    console.log('PWA Debug Info:', debugInfo);
+    
+    // Wait for install prompt timer (3 second delay) plus additional buffer for render
+    await page.waitForTimeout(4000);
     
     // Should show install prompt
     await expect(page.locator('.pwa-install-prompt')).toBeVisible({ timeout: 5000 });
@@ -26,7 +47,13 @@ test.describe('PWA Functionality', () => {
     
     await page.goto('/');
     
-    await page.waitForTimeout(3500);
+    // Wait for page to be ready
+    await Promise.race([
+      page.waitForSelector('[data-amplify-authenticator]', { timeout: 15000 }).catch(() => null),
+      page.waitForSelector('text=Welcome to HallwayTrak', { timeout: 15000 }).catch(() => null)
+    ]);
+    
+    await page.waitForTimeout(4000);
     
     // Should show iOS share icon and instructions
     await expect(page.locator('.ios-share')).toBeVisible({ timeout: 5000 });
@@ -39,7 +66,13 @@ test.describe('PWA Functionality', () => {
     
     await page.goto('/');
     
-    await page.waitForTimeout(3500);
+    // Wait for page to be ready
+    await Promise.race([
+      page.waitForSelector('[data-amplify-authenticator]', { timeout: 15000 }).catch(() => null),
+      page.waitForSelector('text=Welcome to HallwayTrak', { timeout: 15000 }).catch(() => null)
+    ]);
+    
+    await page.waitForTimeout(4000);
     
     // Wait for prompt to appear before trying to dismiss
     await expect(page.locator('.pwa-install-prompt')).toBeVisible({ timeout: 5000 });
@@ -57,7 +90,13 @@ test.describe('PWA Functionality', () => {
     
     await page.goto('/');
     
-    await page.waitForTimeout(3500);
+    // Wait for page to be ready
+    await Promise.race([
+      page.waitForSelector('[data-amplify-authenticator]', { timeout: 15000 }).catch(() => null),
+      page.waitForSelector('text=Welcome to HallwayTrak', { timeout: 15000 }).catch(() => null)
+    ]);
+    
+    await page.waitForTimeout(4000);
     
     // Verify prompt is visible before dismissing
     await expect(page.locator('.pwa-install-prompt')).toBeVisible({ timeout: 5000 });
@@ -71,10 +110,17 @@ test.describe('PWA Functionality', () => {
     const dismissedValue = await page.evaluate(() => localStorage.getItem('pwa-install-dismissed'));
     expect(dismissedValue).toBe('true');
     
-    // Reload page with same mocked conditions
-    await mockPWAConditions(page, 'ios');
+    // Reload page - keep mocked conditions but DON'T clear dismissed state
+    await mockPWAConditions(page, 'ios', false);
     await page.reload();
-    await page.waitForTimeout(3500);
+    
+    // Wait for page to be ready after reload
+    await Promise.race([
+      page.waitForSelector('[data-amplify-authenticator]', { timeout: 15000 }).catch(() => null),
+      page.waitForSelector('text=Welcome to HallwayTrak', { timeout: 15000 }).catch(() => null)
+    ]);
+    
+    await page.waitForTimeout(4000);
     
     // Prompt should not reappear
     await expect(page.locator('.pwa-install-prompt')).not.toBeVisible();

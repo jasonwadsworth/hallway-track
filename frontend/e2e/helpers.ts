@@ -69,32 +69,36 @@ export async function isAuthenticated(page: Page): Promise<boolean> {
 
 /**
  * Mock PWA conditions for testing
- * This injects code into the page to make PWA prompt appear
+ * This sets up the environment to make PWA prompt appear
  */
-export async function mockPWAConditions(page: Page, platform: 'ios' | 'android' | 'desktop' = 'ios'): Promise<void> {
-  // Mock the user agent
+export async function mockPWAConditions(page: Page, platform: 'ios' | 'android' | 'desktop' = 'ios', clearDismissed = true): Promise<void> {
+  // Determine user agent string
+  let userAgent = '';
   if (platform === 'ios') {
-    await page.addInitScript(() => {
-      Object.defineProperty(navigator, 'userAgent', {
-        get: () => 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1'
-      });
-    });
+    userAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1';
   } else if (platform === 'android') {
-    await page.addInitScript(() => {
-      Object.defineProperty(navigator, 'userAgent', {
-        get: () => 'Mozilla/5.0 (Linux; Android 11) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36'
-      });
-    });
+    userAgent = 'Mozilla/5.0 (Linux; Android 11) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36';
+  } else {
+    userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
   }
-
+  
   // Mock PWA detection functions to force prompt to show
-  await page.addInitScript(() => {
-    // Clear any previous dismissal
-    localStorage.removeItem('pwa-install-dismissed');
+  await page.addInitScript(({ ua, shouldClearDismissed }: { ua: string; shouldClearDismissed: boolean }) => {
+    // Clear any previous dismissal only if requested
+    if (shouldClearDismissed) {
+      localStorage.removeItem('pwa-install-dismissed');
+    }
     
-    // Mock display-mode to not be standalone
+    // Override navigator.userAgent
+    Object.defineProperty(navigator, 'userAgent', {
+      get: () => ua,
+      configurable: true
+    });
+    
+    // Mock display-mode to not be standalone (app is not installed)
+    // This ensures isInstalled() returns false
     window.matchMedia = ((query: string) => ({
-      matches: query === '(display-mode: standalone)' ? false : false,
+      matches: false, // Always return false - app is not installed
       media: query,
       onchange: null,
       addListener: () => {},
@@ -103,5 +107,5 @@ export async function mockPWAConditions(page: Page, platform: 'ios' | 'android' 
       removeEventListener: () => {},
       dispatchEvent: () => true,
     })) as typeof window.matchMedia;
-  });
+  }, { ua: userAgent, shouldClearDismissed: clearDismissed });
 }
