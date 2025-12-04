@@ -1,9 +1,13 @@
 import { test, expect } from '@playwright/test';
+import { mockPWAConditions } from './helpers';
 
 test.describe('PWA Functionality', () => {
   test('should display PWA install prompt on mobile', async ({ page, context }) => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
+    
+    // Mock PWA conditions before navigation
+    await mockPWAConditions(page, 'ios');
     
     await page.goto('/');
     
@@ -11,27 +15,34 @@ test.describe('PWA Functionality', () => {
     await page.waitForTimeout(3500);
     
     // Should show install prompt
-    await expect(page.locator('.pwa-install-prompt')).toBeVisible();
+    await expect(page.locator('.pwa-install-prompt')).toBeVisible({ timeout: 5000 });
     await expect(page.locator('text=Install HallwayTrak')).toBeVisible();
   });
 
   test('should show iOS-specific instructions on iOS', async ({ page }) => {
     // Mock iOS user agent
     await page.setViewportSize({ width: 375, height: 667 });
+    await mockPWAConditions(page, 'ios');
+    
     await page.goto('/');
     
     await page.waitForTimeout(3500);
     
     // Should show iOS share icon and instructions
-    await expect(page.locator('.ios-share')).toBeVisible();
+    await expect(page.locator('.ios-share')).toBeVisible({ timeout: 5000 });
     await expect(page.locator('text=Add to Home Screen')).toBeVisible();
   });
 
   test('should allow dismissing install prompt', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
+    await mockPWAConditions(page, 'ios');
+    
     await page.goto('/');
     
     await page.waitForTimeout(3500);
+    
+    // Wait for prompt to appear before trying to dismiss
+    await expect(page.locator('.pwa-install-prompt')).toBeVisible({ timeout: 5000 });
     
     // Click dismiss button
     await page.click('.pwa-dismiss');
@@ -42,12 +53,14 @@ test.describe('PWA Functionality', () => {
 
   test('should remember dismissed state', async ({ page, context }) => {
     await page.setViewportSize({ width: 375, height: 667 });
+    await mockPWAConditions(page, 'ios');
+    
     await page.goto('/');
     
     await page.waitForTimeout(3500);
     
     // Verify prompt is visible before dismissing
-    await expect(page.locator('.pwa-install-prompt')).toBeVisible();
+    await expect(page.locator('.pwa-install-prompt')).toBeVisible({ timeout: 5000 });
     
     await page.click('.pwa-dismiss');
     
@@ -58,7 +71,8 @@ test.describe('PWA Functionality', () => {
     const dismissedValue = await page.evaluate(() => localStorage.getItem('pwa-install-dismissed'));
     expect(dismissedValue).toBe('true');
     
-    // Reload page
+    // Reload page with same mocked conditions
+    await mockPWAConditions(page, 'ios');
     await page.reload();
     await page.waitForTimeout(3500);
     
