@@ -137,7 +137,11 @@ export function PWAInstallPrompt() {
   console.log('PWA Install Prompt - Rendering visible prompt with platform:', platform);
 
   return (
-    <div className="pwa-install-prompt" data-testid="pwa-install-prompt">
+    <div 
+      className="pwa-install-prompt" 
+      data-testid="pwa-install-prompt"
+      data-pwa-ready="true"
+    >
       <button className="pwa-dismiss" onClick={handleDismiss} aria-label="Dismiss">
         ×
       </button>
