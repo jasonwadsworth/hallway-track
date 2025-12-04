@@ -114,68 +114,58 @@ export function PWAInstallPrompt() {
 
   console.log('PWA Install Prompt - Render, show:', show, 'mounted:', mountedRef.current);
   
-  // Always render a container for testing, but only show content when appropriate
+  // Always render a stable container with data-pwa-ready attribute
+  // This ensures tests can reliably find the element from the first render
   const platform = isIOS() ? 'ios' : isAndroid() ? 'android' : 'other';
-  
-  if (!show) {
-    // Render empty but visible marker for tests to verify component is mounted
-    // Always set data-pwa-ready="true" since component is rendered and ready
-    // Don't use display:none as it makes the element not visible to Playwright tests
-    return (
-      <div 
-        data-testid="pwa-install-prompt-container" 
-        data-pwa-ready="true"
-      />
-    );
-  }
-
-  console.log('PWA Install Prompt - Rendering visible prompt with platform:', platform);
 
   return (
     <div 
-      className="pwa-install-prompt" 
-      data-testid="pwa-install-prompt"
+      data-testid="pwa-install-prompt-container" 
       data-pwa-ready="true"
     >
-      <button className="pwa-dismiss" onClick={handleDismiss} aria-label="Dismiss">
-        ×
-      </button>
-      
-      <div className="pwa-content">
-        <img src="/icons/icon-120x120.png" alt="HallwayTrak" className="pwa-icon" />
-        
-        <div className="pwa-text">
-          <strong>Install HallwayTrak</strong>
+      {show && (
+        <div className="pwa-install-prompt" data-testid="pwa-install-prompt">
+          <button className="pwa-dismiss" onClick={handleDismiss} aria-label="Dismiss">
+            ×
+          </button>
           
-          {platform === 'ios' && (
-            <div className="pwa-instructions">
-              <p>Tap <span className="share-icon ios-share">
-                <svg width="16" height="20" viewBox="0 0 16 20" fill="currentColor">
-                  <path d="M8 0L8 12M8 0L4 4M8 0L12 4M2 8V18C2 19.1 2.9 20 4 20H12C13.1 20 14 19.1 14 18V8"/>
-                </svg>
-              </span> then "Add to Home Screen"</p>
+          <div className="pwa-content">
+            <img src="/icons/icon-120x120.png" alt="HallwayTrak" className="pwa-icon" />
+            
+            <div className="pwa-text">
+              <strong>Install HallwayTrak</strong>
+              
+              {platform === 'ios' && (
+                <div className="pwa-instructions">
+                  <p>Tap <span className="share-icon ios-share">
+                    <svg width="16" height="20" viewBox="0 0 16 20" fill="currentColor">
+                      <path d="M8 0L8 12M8 0L4 4M8 0L12 4M2 8V18C2 19.1 2.9 20 4 20H12C13.1 20 14 19.1 14 18V8"/>
+                    </svg>
+                  </span> then "Add to Home Screen"</p>
+                </div>
+              )}
+              
+              {platform === 'android' && (
+                <div className="pwa-instructions">
+                  <p>Tap <span className="share-icon android-share">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
+                      <circle cx="3" cy="9" r="2"/>
+                      <circle cx="15" cy="9" r="2"/>
+                      <circle cx="9" cy="3" r="2"/>
+                    </svg>
+                  </span> then "Add to Home screen"</p>
+                </div>
+              )}
+              
+              {platform === 'other' && canInstall() && (
+                <button className="pwa-install-button" onClick={handleInstall}>
+                  Install App
+                </button>
+              )}
             </div>
-          )}
-          
-          {platform === 'android' && (
-            <div className="pwa-instructions">
-              <p>Tap <span className="share-icon android-share">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
-                  <circle cx="3" cy="9" r="2"/>
-                  <circle cx="15" cy="9" r="2"/>
-                  <circle cx="9" cy="3" r="2"/>
-                </svg>
-              </span> then "Add to Home screen"</p>
-            </div>
-          )}
-          
-          {platform === 'other' && canInstall() && (
-            <button className="pwa-install-button" onClick={handleInstall}>
-              Install App
-            </button>
-          )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
