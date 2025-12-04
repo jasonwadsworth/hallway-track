@@ -85,6 +85,9 @@ export async function mockPWAConditions(page: Page, platform: 'ios' | 'android' 
     (window as any).__TEST_IS_IOS__ = platformType === 'ios';
     (window as any).__TEST_IS_ANDROID__ = platformType === 'android';
     
+    // Set flag to indicate we're in test mode to skip/reduce delays
+    (window as any).__PWA_TEST_MODE__ = true;
+    
     // Mock display-mode to not be standalone (app is not installed)
     // This ensures isInstalled() returns false
     const originalMatchMedia = window.matchMedia.bind(window);

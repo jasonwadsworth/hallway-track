@@ -60,13 +60,17 @@ export function PWAInstallPrompt() {
     console.log('PWA Install Prompt - Should show?', shouldShow, '(iOS:', isIOS(), ', canInstall:', canInstall(), ')');
     
     if (shouldShow) {
-      console.log('PWA Install Prompt - Setting 3-second timer to show prompt');
+      // Check if we're in test mode to skip/reduce delay
+      const isTestMode = typeof window !== 'undefined' && (window as any).__PWA_TEST_MODE__;
+      const delay = isTestMode ? 100 : 3000; // Use 100ms in tests, 3s in production
+      
+      console.log('PWA Install Prompt - Setting timer to show prompt (delay:', delay, 'ms, test mode:', isTestMode, ')');
       
       // Delay showing to avoid overwhelming user immediately
       const timer = setTimeout(() => {
         console.log('PWA Install Prompt - Timer fired, showing prompt now');
         setShow(true);
-      }, 3000);
+      }, delay);
       
       return () => {
         console.log('PWA Install Prompt - Cleaning up timer');
