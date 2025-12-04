@@ -4,7 +4,7 @@ import { existsSync } from 'fs'
 import { resolve } from 'path'
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode }: { mode: string }) => {
   // Determine output directory based on mode
   const outputDir = mode && mode !== 'development' && mode !== 'production'
     ? `dist/${mode}`

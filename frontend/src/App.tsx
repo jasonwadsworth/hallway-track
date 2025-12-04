@@ -59,100 +59,102 @@ function App() {
     }, []);
 
     return (
-        <Authenticator>
-            {({ signOut }) => (
-                <BrowserRouter>
-                    <AppNav signOut={signOut} />
-                    <PWAInstallPrompt />
-                    <main>
-                        <Routes>
-                            <Route
-                                path="/"
-                                element={
-                                    <ProtectedRoute>
-                                        <Dashboard />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/profile"
-                                element={
-                                    <ProtectedRoute>
-                                        <Profile />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route path="/profile/:userId" element={<PublicProfile />} />
-                            <Route
-                                path="/connections"
-                                element={
-                                    <ProtectedRoute>
-                                        <ConnectionList />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/connections/:id"
-                                element={
-                                    <ProtectedRoute>
-                                        <ConnectionDetail />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/connection-requests"
-                                element={
-                                    <ProtectedRoute>
-                                        <ConnectionRequestsManager />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/badges"
-                                element={
-                                    <ProtectedRoute>
-                                        <BadgeShowcase />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/leaderboard"
-                                element={
-                                    <ProtectedRoute>
-                                        <Leaderboard />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/qr-code"
-                                element={
-                                    <ProtectedRoute>
-                                        <QRCodeDisplay />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/scan"
-                                element={
-                                    <ProtectedRoute>
-                                        <QRCodeScanner />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/connect/:token"
-                                element={
-                                    <ProtectedRoute>
-                                        <InstantConnectRedeem />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route path="*" element={<Navigate to="/" replace />} />
-                        </Routes>
-                    </main>
-                </BrowserRouter>
-            )}
-        </Authenticator>
+        <>
+            <PWAInstallPrompt />
+            <Authenticator>
+                {({ signOut }) => (
+                    <BrowserRouter>
+                        <AppNav signOut={signOut} />
+                        <main>
+                            <Routes>
+                                <Route
+                                    path="/"
+                                    element={
+                                        <ProtectedRoute>
+                                            <Dashboard />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/profile"
+                                    element={
+                                        <ProtectedRoute>
+                                            <Profile />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route path="/profile/:userId" element={<PublicProfile />} />
+                                <Route
+                                    path="/connections"
+                                    element={
+                                        <ProtectedRoute>
+                                            <ConnectionList />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/connections/:id"
+                                    element={
+                                        <ProtectedRoute>
+                                            <ConnectionDetail />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/connection-requests"
+                                    element={
+                                        <ProtectedRoute>
+                                            <ConnectionRequestsManager />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/badges"
+                                    element={
+                                        <ProtectedRoute>
+                                            <BadgeShowcase />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/leaderboard"
+                                    element={
+                                        <ProtectedRoute>
+                                            <Leaderboard />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/qr-code"
+                                    element={
+                                        <ProtectedRoute>
+                                            <QRCodeDisplay />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/scan"
+                                    element={
+                                        <ProtectedRoute>
+                                            <QRCodeScanner />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/connect/:token"
+                                    element={
+                                        <ProtectedRoute>
+                                            <InstantConnectRedeem />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route path="*" element={<Navigate to="/" replace />} />
+                            </Routes>
+                        </main>
+                    </BrowserRouter>
+                )}
+            </Authenticator>
+        </>
     );
 }
 

@@ -43,6 +43,9 @@ yarn-error.log*
 # OS
 .DS_Store
 
+# Agent temporary files
+.agents/
+
 # Testing
 coverage/
 .nyc_output/

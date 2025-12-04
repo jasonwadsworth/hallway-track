@@ -355,7 +355,7 @@ async function evaluateTriangleBadges(user: User, context: BadgeContext): Promis
             })
         );
 
-        const userConnectionIds = new Set((userConnectionsResult.Items || []).map((item) => (item as Connection).connectedUserId));
+        const userConnectionIds = new Set((userConnectionsResult.Items || []).map((item: unknown) => (item as Connection).connectedUserId));
 
         // Query connected user's connections
         const connectedUserConnectionsResult = await docClient.send(
@@ -370,7 +370,7 @@ async function evaluateTriangleBadges(user: User, context: BadgeContext): Promis
         );
 
         // Find mutual connections (excluding the new connection)
-        const mutualConnection = (connectedUserConnectionsResult.Items || []).find((item) => {
+        const mutualConnection = (connectedUserConnectionsResult.Items || []).find((item: unknown) => {
             const c = item as Connection;
             return userConnectionIds.has(c.connectedUserId) && c.connectedUserId !== user.id;
         });
