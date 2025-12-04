@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { isIOS, isAndroid, isInstalled, canInstall, showInstallPrompt } from '../utils/pwa';
 import './PWAInstallPrompt.css';
 
@@ -26,19 +26,12 @@ export function PWAInstallPrompt() {
   const [dismissed, setDismissed] = useState(() => {
     return getStorageValue('pwa-install-dismissed', 'false') === 'true';
   });
-  const [mounted, setMounted] = useState(false);
-  
-  // Use useLayoutEffect to mark component as mounted synchronously
-  // This ensures data-pwa-ready="true" is set before the browser paints
-  useLayoutEffect(() => {
-    setMounted(true);
-  }, []);
+  // Use ref instead of state to avoid re-renders that could cause timing issues
+  const mountedRef = useRef(false);
   
   useEffect(() => {
-    // Wait for component to mount before checking conditions
-    if (!mounted) {
-      return;
-    }
+    // Mark as mounted
+    mountedRef.current = true;
     
     // In test mode, add small delay to ensure init scripts have completed
     const isTestMode = typeof window !== 'undefined' && (window as any).__PWA_TEST_MODE__;
@@ -101,7 +94,7 @@ export function PWAInstallPrompt() {
     }, initDelay);
     
     return () => clearTimeout(checkTimer);
-  }, [dismissed, mounted]);
+  }, [dismissed]);
 
   const handleInstall = async () => {
     if (canInstall()) {
@@ -119,7 +112,7 @@ export function PWAInstallPrompt() {
     setStorageValue('pwa-install-dismissed', 'true');
   };
 
-  console.log('PWA Install Prompt - Render, show:', show, 'mounted:', mounted);
+  console.log('PWA Install Prompt - Render, show:', show, 'mounted:', mountedRef.current);
   
   // Always render a container for testing, but only show content when appropriate
   const platform = isIOS() ? 'ios' : isAndroid() ? 'android' : 'other';
